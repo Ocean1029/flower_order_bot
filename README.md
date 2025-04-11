@@ -5,23 +5,25 @@
 ---
 
 ## 目錄
-- [系統需求](#系統需求)
-- [安裝與設定](#安裝與設定)
-- [環境變數設定](#環境變數設定)
-- [執行應用程式](#執行應用程式)
-- [Webhook 配置](#webhook-配置)
-- [程式碼說明](#程式碼說明)
-- [授權](#授權)
+- [Flower Shop Order Chatbot](#flower-shop-order-chatbot)
+  - [目錄](#目錄)
+  - [系統需求](#系統需求)
+  - [安裝與設定](#安裝與設定)
+    - [1. 複製專案至本地端](#1-複製專案至本地端)
+    - [2. 建立虛擬環境（推薦步驟）](#2-建立虛擬環境推薦步驟)
+    - [3. 安裝必要套件](#3-安裝必要套件)
+  - [環境變數設定](#環境變數設定)
+  - [執行應用程式](#執行應用程式)
+  - [Webhook 配置](#webhook-配置)
+  - [程式碼說明](#程式碼說明)
+    - [核心檔案：`app.py`](#核心檔案apppy)
+  - [授權](#授權)
+  - [附錄](#附錄)
 
 ---
 ## 系統需求
 - **作業系統：** MacOS (此專案亦可在其他作業系統上運行)
 - **程式語言：** Python 3.7 或更新版本
-- **相關套件：**
-  - Flask
-  - python-dotenv
-  - line-bot-sdk
-  - openai
 
 ---
 
@@ -41,16 +43,11 @@ python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 3. 安裝必要套件（TODO）
+### 3. 安裝必要套件
 利用 pip 安裝 `requirements.txt` 中列舉的所有套件：
 ```bash
 pip install -r requirements.txt
 ```
-> **備註：** 請確認 `requirements.txt` 中包含以下項目：
-> - Flask
-> - python-dotenv
-> - line-bot-sdk
-> - openai
 
 ---
 
@@ -62,6 +59,8 @@ LINE_CHANNEL_ACCESS_TOKEN=你的LINE渠道存取令牌
 LINE_CHANNEL_SECRET=你的LINE渠道密鑰
 ```
 此設定將使程式能夠正確讀取 OpenAI 與 LINE Bot 所需的金鑰與密鑰。
+LINE CHANNEL ACCESS 可以從 http://manager.line.biz/ 註冊
+OPEN API KEY 可以從 https://platform.openai.com/docs/overview 註冊
 
 ---
 
