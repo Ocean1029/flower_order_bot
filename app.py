@@ -25,7 +25,7 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 # GPT Prompt 模板
 PROMPT_TEMPLATE = """
 你是一個花店訂單生成助手，請從以下對話內容中，整理出以下資訊：
-{   
+{{   
     "customer_name": "", 
     "phone_number": "", 
     "flower_type": "", 
@@ -35,7 +35,7 @@ PROMPT_TEMPLATE = """
     "pickup_date": "", 
     "pickup_time": "", 
     "Extra_requirements":"" 
-}
+}}
 
 請盡量確保內容正確性，如果你沒有辦法非常確定上面的資料，請填 NULL，或者是填寫原始對話在該欄位上。
 
@@ -44,6 +44,7 @@ PROMPT_TEMPLATE = """
 
 回傳的格式為 JSON 格式，並且請確保 JSON 格式正確，並且沒有多餘的空格或換行。
 """
+
 
 @app.route("/callback", methods=['POST']) 
 def callback():
