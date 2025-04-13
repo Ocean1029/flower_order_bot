@@ -6,6 +6,9 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from dotenv import load_dotenv
 from openai import OpenAI
 
+# TODOS:
+# 1. 建立資料庫，把上次該用戶是在什麼時候使用這個功能，以可以把過去的訂購資料過濾掉
+
 load_dotenv()
 
 # 讀取環境變數
@@ -14,31 +17,44 @@ LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
 
 app = Flask(__name__)
+openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-openai_client = OpenAI(api_key=OPENAI_API_KEY)
-
 # GPT Prompt 模板
 PROMPT_TEMPLATE = """
-你是一個花店訂單生成助手，從以下對話中，整理出顧客姓名、聯絡電話、花材種類、顏色、數量大小、取貨時間、特殊需求（如果沒有填空即可）：
+你是一個花店訂單生成助手，請從以下對話內容中，整理出以下資訊：
+{   
+    "customer_name": "", 
+    "phone_number": "", 
+    "flower_type": "", 
+    "quantity": , 
+    "budget": , 
+    "pickup_method": "", 
+    "pickup_date": "", 
+    "pickup_time": "", 
+    "Extra_requirements":"" 
+}
+
+請盡量確保內容正確性，如果你沒有辦法非常確定上面的資料，請填 NULL，或者是填寫原始對話在該欄位上。
 
 對話內容：
 {}
 
-回傳 JSON 格式。
 """
 
-@app.route("/callback", methods=['POST'])
+@app.route("/callback", methods=['POST']) 
 def callback():
     signature = request.headers['X-Line-Signature']
+    if not signature:
+        abort(400, description="Missing X-Line-Signature header")
     body = request.get_data(as_text=True)
 
     try:
-        handler.handle(body, signature)
+        handler.handle(body, signature) # 用 handler.add() 來處理事件
     except InvalidSignatureError:
-        abort(400)
+        abort(400, description="Invalid signature. Please check your channel access token and secret.")
     return 'OK'
 
 
@@ -47,7 +63,7 @@ def handle_message(event):
     user_message = event.message.text
 
     response = openai_client.chat.completions.create(
-        model="gpt-3.5-turbo",
+        model="gpt-4o-mini",
         messages=[
             {"role": "system", "content": PROMPT_TEMPLATE.format(user_message)},
         ],
