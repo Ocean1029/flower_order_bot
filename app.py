@@ -87,7 +87,7 @@ def handle_message(event):
         gpt_prompt = PROMPT_TEMPLATE.format(user_message=combined_text)
 
         response = openai_client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": gpt_prompt},
             ],
