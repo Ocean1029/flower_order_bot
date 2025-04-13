@@ -3,3 +3,6 @@ python-dotenv
 flask 
 line-bot-sdk
 gunicorn
+sqlalchemy
+datetime
+psycopg2-binary

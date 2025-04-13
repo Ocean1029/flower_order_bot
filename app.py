@@ -5,9 +5,8 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from dotenv import load_dotenv
 from openai import OpenAI
-
-# TODOS:
-# 1. 建立資料庫，把上次該用戶是在什麼時候使用這個功能，以可以把過去的訂購資料過濾掉
+from models import Message, SessionLocal
+from datetime import datetime, timedelta
 
 load_dotenv()
 
@@ -40,7 +39,7 @@ PROMPT_TEMPLATE = """
 請盡量確保內容正確性，如果你沒有辦法非常確定上面的資料，請填 NULL，或者是填寫原始對話在該欄位上。
 
 對話內容：
-{}
+{user_message}
 
 回傳的格式為 JSON 格式，並且請確保 JSON 格式正確，並且沒有多餘的空格或換行。
 """
@@ -62,25 +61,48 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
+
+    session = SessionLocal()
+    user_id = event.source.user_id
     user_message = event.message.text
 
-    response = openai_client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": PROMPT_TEMPLATE.format(user_message)},
-        ],
-        temperature=0
-    )
+    # 儲存訊息
+    msg = Message(user_id=user_id, text=user_message)
+    session.add(msg)
+    session.commit()
 
-    order_info = response.choices[0].message.content.strip()
-    # order_info = "test"
+    if user_message == "整理資料":
+        seven_days_ago = datetime.utcnow() - timedelta(days=7)
+        messages = session.query(Message)\
+            .filter(
+                Message.user_id == user_id,
+                Message.timestamp >= seven_days_ago
+            )\
+            .order_by(Message.timestamp.asc())\
+            .all()
+        
+        # 轉成一段文字對話紀錄
+        combined_text = "\n".join(reversed([m.text for m in messages]))
 
-    # 回覆訂單資訊給使用者
-    reply_text = f"以下是您的訂單資訊：\n{order_info}"
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
+        gpt_prompt = PROMPT_TEMPLATE.format(user_message=combined_text)
+
+        response = openai_client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": gpt_prompt},
+            ],
+            temperature=0
+        )
+        
+        reply = response.choices[0].message.content.strip()
+        reply_text = f"以下是整理好的訂單資訊：\n{reply}"
+        # 回覆用戶
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply)
+        )
+
+    session.close()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000)) # render deployment default port

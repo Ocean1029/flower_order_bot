@@ -1,5 +1,14 @@
+# env
 /.env
 /venv
 
+# test
 **/[Tt]est/
-# tetst
+
+# __pycache__
+__pycache__/
+
+# db
+*.db
+*.sqlite
+*.sqlite3
