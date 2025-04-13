@@ -42,6 +42,7 @@ PROMPT_TEMPLATE = """
 對話內容：
 {}
 
+回傳的格式為 JSON 格式，並且請確保 JSON 格式正確，並且沒有多餘的空格或換行。
 """
 
 @app.route("/callback", methods=['POST']) 
