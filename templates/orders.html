@@ -1,0 +1,64 @@
+<!doctype html>
+<html>
+<head>
+    <title>訂單列表</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; }
+        th { background-color: #f2f2f2; }
+        .download-btn {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header-container">
+        <h2>📦 花店訂單總覽</h2>
+        <a href="/orders.csv" class="download-btn">下載 CSV</a>
+    </div>
+    <table>
+        <tr>
+            <th>訂單ID</th>
+            <th>姓名</th>
+            <th>電話</th>
+            <th>花材</th>
+            <th>數量</th>
+            <th>預算</th>
+            <th>取貨方式</th>
+            <th>取貨日期</th>
+            <th>取貨時間</th>
+            <th>備註</th>
+        </tr>
+        {% for row in data %}
+        <tr>
+            <td>{{ row.id }}</td>
+            <td>{{ row.customer_name }}</td>
+            <td>{{ row.phone }}</td>
+            <td>{{ row.flower }}</td>
+            <td>{{ row.qty }}</td>
+            <td>{{ row.budget }}</td>
+            <td>{{ row.pickup_method }}</td>
+            <td>{{ row.pickup_date }}</td>
+            <td>{{ row.pickup_time }}</td>
+            <td>{{ row.note }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
