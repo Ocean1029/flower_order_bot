@@ -8,19 +8,51 @@
     <style>
         body {
             font-family: "Helvetica Neue", sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f0f2f5;
             padding: 2rem;
         }
         h2 {
             font-weight: bold;
+            color: #343a40;
         }
         .download-btn {
             font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover {
+            background-color: #218838;
         }
         table {
             background: white;
-            border-radius: 8px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             overflow: hidden;
+        }
+        table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        table td {
+            vertical-align: middle;
+        }
+        .table-container {
+            margin-top: 2rem;
+        }
+        .table-bordered {
+            border: 1px solid #dee2e6;
+        }
+        .table-hover tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        .table-responsive {
+            margin-top: 1rem;
         }
     </style>
 </head>
@@ -28,12 +60,12 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>📦 花店訂單總覽</h2>
-            <a href="/orders.csv" class="btn btn-success download-btn">下載 CSV</a>
+            <a href="/orders.csv" class="download-btn">下載 CSV</a>
         </div>
 
-        <div class="table-responsive">
+        <div class="table-responsive table-container">
             <table class="table table-bordered table-hover align-middle text-center">
-                <thead class="table-dark">
+                <thead>
                     <tr>
                         <th>訂單ID</th>
                         <th>姓名</th>
