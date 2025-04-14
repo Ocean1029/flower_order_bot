@@ -14,8 +14,11 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 
 from openai import OpenAI
 
-from models import Message, User, Order  # 確保有 import User 和 Order
 from models import SessionLocal
+from models.user import User
+from models.order import Order
+from models.message import Message
+
 
 load_dotenv()
 
