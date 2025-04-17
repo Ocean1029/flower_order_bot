@@ -69,6 +69,35 @@
         </div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/orders.js') }}"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const searchInput = document.getElementById('searchInput');
+            const tableBody = document.getElementById('orderTableBody');
+            const noResults = document.getElementById('noResults');
+            const rows = tableBody.getElementsByTagName('tr');
+
+            searchInput.addEventListener('input', function() {
+                const searchText = this.value.toLowerCase();
+                let hasResults = false;
+
+                for (let row of rows) {
+                    const cells = row.getElementsByTagName('td');
+                    let found = false;
+
+                    for (let cell of cells) {
+                        if (cell.textContent.toLowerCase().includes(searchText)) {
+                            found = true;
+                            break;
+                        }
+                    }
+
+                    row.style.display = found ? '' : 'none';
+                    if (found) hasResults = true;
+                }
+
+                noResults.style.display = hasResults ? 'none' : 'block';
+            });
+        });
+    </script>
 </body>
 </html>
