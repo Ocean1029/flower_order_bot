@@ -3,72 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>花店訂單總覽</title>
+    <title>花店訂單管理平台</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/orders.css') }}">
 </head>
 <body>
     <div class="main-container">
-        <div class="header d-flex justify-content-between align-items-center">
-            <h2><i class="fas fa-shopping-bag me-2"></i>花店訂單總覽</h2>
-            <a href="/orders.csv" class="download-btn">
-                <i class="fas fa-download"></i>
-                下載 CSV
-            </a>
-        </div>
+        <!-- 導航欄區塊 -->
+        <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+            <div class="container-fluid">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-store me-2"></i>花店管理平台
+                </a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#orders">訂單管理</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#conversations">對話記錄</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#statistics">數據統計</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
 
-        <div class="search-container">
-            <div class="input-group">
-                <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-search text-primary"></i>
-                </span>
-                <input type="text" id="searchInput" class="form-control search-input border-start-0" placeholder="搜尋訂單（姓名、電話、花材等）">
+        <!-- 訂單管理區塊 -->
+        <div id="orders" class="section">
+            <div class="header d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-shopping-bag me-2"></i>花店訂單總覽</h2>
+                <a href="/orders.csv" class="download-btn">
+                    <i class="fas fa-download"></i>
+                    下載 CSV
+                </a>
+            </div>
+
+            <div class="search-container">
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0">
+                        <i class="fas fa-search text-primary"></i>
+                    </span>
+                    <input type="text" id="searchInput" class="form-control search-input border-start-0" placeholder="搜尋訂單（姓名、電話、花材等）">
+                </div>
+            </div>
+
+            <div class="table-container">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr>
+                                <th>訂單ID</th>
+                                <th>姓名</th>
+                                <th>電話</th>
+                                <th>花材</th>
+                                <th>數量</th>
+                                <th>預算</th>
+                                <th>取貨方式</th>
+                                <th>取貨日期</th>
+                                <th>取貨時間</th>
+                                <th>備註</th>
+                            </tr>
+                        </thead>
+                        <tbody id="orderTableBody">
+                            {% for row in data %}
+                            <tr>
+                                <td>{{ row.id or '' }}</td>
+                                <td>{{ row.customer_name or '' }}</td>
+                                <td>{{ row.phone or '' }}</td>
+                                <td>{{ row.flower or '' }}</td>
+                                <td>{{ row.qty or '' }}</td>
+                                <td>{{ row.budget or '' }}</td>
+                                <td>{{ row.pickup_method or '' }}</td>
+                                <td>{{ row.pickup_date or '' }}</td>
+                                <td>{{ row.pickup_time or '' }}</td>
+                                <td>{{ row.note or '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                    <div id="noResults" class="no-results" style="display: none;">
+                        <i class="fas fa-search fa-2x mb-3"></i>
+                        <p>找不到符合條件的訂單</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="table-container">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead>
-                        <tr>
-                            <th>訂單ID</th>
-                            <th>姓名</th>
-                            <th>電話</th>
-                            <th>花材</th>
-                            <th>數量</th>
-                            <th>預算</th>
-                            <th>取貨方式</th>
-                            <th>取貨日期</th>
-                            <th>取貨時間</th>
-                            <th>備註</th>
-                        </tr>
-                    </thead>
-                    <tbody id="orderTableBody">
-                        {% for row in data %}
-                        <tr>
-                            <td>{{ row.id }}</td>
-                            <td>{{ row.customer_name }}</td>
-                            <td>{{ row.phone }}</td>
-                            <td>{{ row.flower }}</td>
-                            <td>{{ row.qty }}</td>
-                            <td>{{ row.budget }}</td>
-                            <td>{{ row.pickup_method }}</td>
-                            <td>{{ row.pickup_date }}</td>
-                            <td>{{ row.pickup_time }}</td>
-                            <td>{{ row.note }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-                <div id="noResults" class="no-results" style="display: none;">
-                    <i class="fas fa-search fa-2x mb-3"></i>
-                    <p>找不到符合條件的訂單</p>
+        <!-- 對話記錄區塊 -->
+        <div id="conversations" class="section mt-4">
+            <div class="header d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-comments me-2"></i>對話記錄</h2>
+                <div class="filter-container">
+                    <select class="form-select me-2" style="width: 150px;">
+                        <option value="all">全部顧客</option>
+                        <option value="today">今日對話</option>
+                        <option value="week">本週對話</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="conversation-list">
+                {% for conversation in conversations %}
+                <div class="conversation-item">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <div>
+                            <h5 class="mb-0">{{ conversation.customer_name or '' }}</h5>
+                            <small class="text-muted">{{ conversation.phone or '' }}</small>
+                        </div>
+                        {% if conversation.is_new %}
+                        <span class="badge bg-primary">新訊息</span>
+                        {% endif %}
+                    </div>
+                    <div class="conversation-preview">
+                        <p class="mb-0">{{ conversation.preview or '' }}</p>
+                        <small class="text-muted">{{ conversation.time or '' }}</small>
+                    </div>
+                    <button class="btn btn-link p-0 mt-2" data-conversation-id="{{ conversation.id or '' }}">查看完整對話</button>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 數據統計區塊 -->
+        <div id="statistics" class="section mt-4">
+            <div class="header">
+                <h2><i class="fas fa-chart-bar me-2"></i>數據統計</h2>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>今日訂單</h3>
+                        <p class="stat-number">{{ stats.today_orders or 0 }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>待處理</h3>
+                        <p class="stat-number">{{ stats.pending_orders or 0 }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>本月收入</h3>
+                        <p class="stat-number">${{ stats.monthly_income or 0 }}</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="stat-card">
+                        <h3>顧客數</h3>
+                        <p class="stat-number">{{ stats.total_customers or 0 }}</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="{{ url_for('static', filename='js/orders.js') }}"></script>
 </body>
 </html>
