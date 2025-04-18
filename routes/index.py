@@ -10,7 +10,7 @@ from datetime import datetime
 
 
 def setup_routes(app):
-    @app.route("/orders")
+    @app.route("/")
     def orders():
         session = SessionLocal()
         orders = session.query(Order).all()
@@ -74,7 +74,7 @@ def setup_routes(app):
             "total_customers": total_customers
         }
 
-        return render_template("orders.html", data=data, stats=stats, messages=messages, column_name=column_name)
+        return render_template("index.html", data=data, stats=stats, messages=messages, column_name=column_name)
 
 
     @app.route("/orders.csv")
