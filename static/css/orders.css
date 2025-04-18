@@ -1,0 +1,245 @@
+:root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #a29bfe;
+    --accent-color: #fd79a8;
+    --background-color: #f8f9fa;
+    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+    font-family: "Helvetica Neue", sans-serif;
+    background-color: var(--background-color);
+    padding: 2rem;
+    min-height: 100vh;
+}
+
+.main-container {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+}
+
+/* 導航欄樣式 */
+.navbar {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    border-radius: 15px;
+    padding: 1rem;
+    box-shadow: var(--card-shadow);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    color: rgba(255, 255, 255, 0.8) !important;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover, .nav-link.active {
+    color: white !important;
+}
+
+/* 區塊樣式 */
+.section {
+    background: white;
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--card-shadow);
+}
+
+.header {
+    margin-bottom: 1.5rem;
+}
+
+.header h2 {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* 按鈕樣式 */
+.download-btn {
+    background-color: var(--accent-color);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.download-btn:hover {
+    background-color: #e84393;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+/* 搜索框樣式 */
+.search-container {
+    margin-bottom: 1.5rem;
+}
+
+.search-input {
+    border-radius: 5px;
+    padding: 0.5rem;
+    border: 2px solid #f1f1f1;
+    transition: all 0.3s ease;
+}
+
+.search-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25);
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #a29bfe;
+}
+
+/* 表格樣式 */
+.table-container {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+table th {
+    background-color: var(--primary-color);
+    color: white;
+    font-weight: 600;
+    border: none;
+}
+
+table td {
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(108, 92, 231, 0.05);
+}
+
+/* 對話記錄樣式 */
+.conversation-list {
+    max-height: 500px;
+    overflow-y: auto;
+}
+
+.conversation-item {
+    padding: 1rem;
+    border-bottom: 1px solid #f1f1f1;
+    transition: all 0.3s ease;
+}
+
+.conversation-item:hover {
+    background-color: rgba(108, 92, 231, 0.05);
+}
+
+.conversation-preview {
+    color: #666;
+}
+
+/* 統計卡片樣式 */
+.stat-card {
+    background: white;
+    border-radius: 10px;
+    padding: 1.5rem;
+    text-align: center;
+    box-shadow: var(--card-shadow);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-5px);
+}
+
+.stat-card h3 {
+    color: #666;
+    font-size: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    color: var(--primary-color);
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+/* 付款狀態樣式 */
+.payment-status {
+    border: none;
+    background-color: transparent;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.payment-status:hover {
+    background-color: rgba(108, 92, 231, 0.05);
+}
+
+.payment-status option {
+    padding: 0.5rem;
+}
+
+.payment-status option.text-danger {
+    color: #dc3545;
+}
+
+.payment-status option.text-warning {
+    color: #ffc107;
+}
+
+.payment-status option.text-success {
+    color: #28a745;
+}
+
+.payment-status option.text-info {
+    color: #17a2b8;
+}
+
+/* 狀態標籤樣式 */
+.status-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.bg-success {
+    background-color: #28a745 !important;
+}
+
+.bg-warning {
+    background-color: #ffc107 !important;
+}
+
+.bg-danger {
+    background-color: #dc3545 !important;
+}
+
+.bg-info {
+    background-color: #17a2b8 !important;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+    body {
+        padding: 1rem;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .table-responsive {
+        overflow-x: auto;
+    }
+    
+    .stat-card {
+        margin-bottom: 1rem;
+    }
+} 
