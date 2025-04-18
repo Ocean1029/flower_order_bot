@@ -72,7 +72,8 @@
                             </tr>
                         </thead>
                         <tbody id="orderTableBody">
-                            {% for row in data %}
+                            {% for row in data %} 
+                            <!-- data 是從後端傳遞的訂單數據 -->
                             <tr>
                                 <td>{{ row.id or '' }}</td>
                                 <td>{{ row.customer_name or '' }}</td>
@@ -110,22 +111,22 @@
             </div>
 
             <div class="conversation-list">
-                {% for conversation in conversations %}
+                {% for message in messages %}
                 <div class="conversation-item">
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <div>
-                            <h5 class="mb-0">{{ conversation.customer_name or '' }}</h5>
-                            <small class="text-muted">{{ conversation.phone or '' }}</small>
+                            <h5 class="mb-0">{{ message.customer_name or '' }}</h5>
+                            <small class="text-muted">{{ message.phone or '' }}</small>
                         </div>
-                        {% if conversation.is_new %}
+                        <!-- {% if message.is_new %}
                         <span class="badge bg-primary">新訊息</span>
-                        {% endif %}
+                        {% endif %} -->
                     </div>
                     <div class="conversation-preview">
-                        <p class="mb-0">{{ conversation.preview or '' }}</p>
-                        <small class="text-muted">{{ conversation.time or '' }}</small>
+                        <p class="mb-0">{{ message.preview or '' }}</p>
+                        <small class="text-muted">{{ message.time or '' }}</small>
                     </div>
-                    <button class="btn btn-link p-0 mt-2" data-conversation-id="{{ conversation.id or '' }}">查看完整對話</button>
+                    <button class="btn btn-link p-0 mt-2" data-conversation-id="{{ message.id or '' }}">查看完整對話</button>
                 </div>
                 {% endfor %}
             </div>
