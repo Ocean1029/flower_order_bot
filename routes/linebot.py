@@ -15,6 +15,8 @@ from models.message import Message
 from models.user import User
 from models.order import Order
 
+# import order_prompt
+
 load_dotenv()
 
 # 加在全域暫存區（部署時可用 Redis or DB 儲存）
@@ -29,32 +31,6 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-# GPT Prompt 模板
-PROMPT_TEMPLATE = """
-你是一個花店訂單生成助手，請從以下對話內容中，並用合法 JSON 格式回傳。注意：
-
-- 每個欄位都必須填入值，若沒有請填 `null`
-- 不要有任何註解、多餘文字、換行
-
-格式如下：
-
-{{
-    "customer_name": "",
-    "phone_number": "",
-    "flower_type": "",
-    "quantity": null,
-    "budget": null,
-    "pickup_method": "",
-    "pickup_date": "",
-    "pickup_time": "",
-    "Extra_requirements": ""
-}}
-
-請盡量確保內容正確性，如果你沒有辦法非常確定上面的資料，請填 null。
-
-對話內容：
-{user_message}
-"""
 
 
 def setup_routes(app):
@@ -108,7 +84,7 @@ def setup_routes(app):
             # 轉成一段文字對話紀錄
             combined_text = "\n".join(reversed([m.text for m in messages]))
 
-            gpt_prompt = PROMPT_TEMPLATE.format(user_message=combined_text)
+            gpt_prompt = order_prompt.format(user_message=combined_text)
 
             response = openai_client.chat.completions.create(
                 model="gpt-4o",
@@ -125,14 +101,14 @@ def setup_routes(app):
                 "message_ids": [m.id for m in messages]
             }
 
-            reply_text = f"以下是整理好的訂單資訊：\n{reply}\n\n如無誤請回覆：資料正確。"
+            reply_text = f"以下是整理好的訂單資訊：\n{reply}\n\n如無誤請回覆：送出訂單。"
             # 回覆用戶
             line_bot_api.reply_message(
                 event.reply_token,
                 TextSendMessage(text=reply_text)
             )
         
-        elif user_message == "資料正確" and user_id in session_order_cache:
+        elif user_message == "送出定膽" and user_id in session_order_cache:
             try:
                 try:
                     parsed = json.loads(session_order_cache[user_id]["order_json"])
