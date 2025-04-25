@@ -42,14 +42,14 @@ def setup_routes(app):
         body = request.get_data(as_text=True)
 
         try:
-            handler.handle(body, signature) # 用 handler.add() 來處理事件
+            handler.handle(body, signature) # body 是原始請求的內容，signature 是 X-Line-Signature 的值
         except InvalidSignatureError:
             abort(400, description="Invalid signature. Please check your channel access token and secret.")
         return 'OK'
 
 
     @handler.add(MessageEvent, message=TextMessage)
-    def handle_message(event):
+    def handle_message(event): 
 
         session = SessionLocal()
         user_id = event.source.user_id
@@ -86,7 +86,7 @@ def setup_routes(app):
             gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text)
 
             response = openai_client.chat.completions.create(
-                model="gpt-4o",
+                model="gpt-4.1",
                 messages=[
                     {"role": "system", "content": gpt_prompt},
                 ],
@@ -107,7 +107,7 @@ def setup_routes(app):
                 TextSendMessage(text=reply_text)
             )
         
-        elif user_message == "送出定膽" and user_id in session_order_cache:
+        elif user_message == "送出訂單" and user_id in session_order_cache:
             try:
                 try:
                     parsed = json.loads(session_order_cache[user_id]["order_json"])
