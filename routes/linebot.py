@@ -15,7 +15,7 @@ from models.message import Message
 from models.user import User
 from models.order import Order
 
-# import order_prompt
+from managers.prompt_manager import PromptManager
 
 load_dotenv()
 
@@ -31,7 +31,7 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
-
+prompt_manager = PromptManager()
 
 def setup_routes(app):
     @app.route("/callback", methods=['POST']) 
@@ -80,11 +80,10 @@ def setup_routes(app):
                 session.close()
                 return
             
-
             # 轉成一段文字對話紀錄
             combined_text = "\n".join(reversed([m.text for m in messages]))
 
-            gpt_prompt = order_prompt.format(user_message=combined_text)
+            gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text)
 
             response = openai_client.chat.completions.create(
                 model="gpt-4o",
