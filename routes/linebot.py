@@ -7,7 +7,8 @@ from flask import Flask, request, abort
 
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
+from linebot.models import MessageEvent, FollowEvent, TextMessage, TextSendMessage, ButtonsTemplate, \
+    TemplateSendMessage, MessageTemplateAction
 from openai import OpenAI
 
 from models import SessionLocal
@@ -157,3 +158,30 @@ def setup_routes(app):
                 )
 
         session.close()
+
+
+    @handler.add(FollowEvent)
+    def handle_message(event):
+        buttons_template = ButtonsTemplate(
+            title='花店初始訊息',
+            text='請選一個你想要的服務：',
+            actions=[
+                MessageTemplateAction(
+                    label='查詢商品',
+                    text='我要查詢商品'
+                ),
+                MessageTemplateAction(
+                    label='聯絡客服',
+                    text='我要聯絡客服'
+                ),
+                MessageTemplateAction(
+                    label='最新活動',
+                    text='請告訴我最新活動'
+                )
+            ]
+        )
+        template_message = TemplateSendMessage(
+            alt_text='這裡是按鈕選單',
+            template=buttons_template
+        )
+        line_bot_api.reply_message(event.reply_token, template_message)
