@@ -1,14 +1,14 @@
 import os
 from flask import Flask
-from routes import health
-from routes import linebot
-from routes import index
+from routes.health import health_bp
+from routes.linebot import linebot_bp
+from routes.index import index_bp
 
 app = Flask(__name__)
 
-health.setup_routes(app)
-linebot.setup_routes(app)
-index.setup_routes(app)
+app.register_blueprint(health_bp)
+app.register_blueprint(linebot_bp)
+app.register_blueprint(index_bp)
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000)) # render deployment default port

@@ -1,5 +1,8 @@
-def setup_routes(app):
-    @app.route("/health")
-    def health():
-        return "OK", 200
+from flask import Blueprint
+
+health_bp = Blueprint("health", __name__)
+
+@health_bp.route("/health")
+def health():
+    return "OK", 200
 
