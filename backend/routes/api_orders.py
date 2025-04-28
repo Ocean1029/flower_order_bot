@@ -25,7 +25,7 @@ def export_orders_csv():
             o["pickup_time"],
             o["note"],
         ])
-
+     
     def generate():
         for row in output:
             yield ",".join([str(col) for col in row]) + "\n"
@@ -46,3 +46,4 @@ api_orders_bp = Blueprint('api_orders', __name__)
 def get_orders():
     orders = get_all_orders()
     return jsonify({"orders": orders})
+

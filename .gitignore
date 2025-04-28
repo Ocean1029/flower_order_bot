@@ -12,3 +12,6 @@ __pycache__/
 *.db
 *.sqlite
 *.sqlite3
+
+# apple
+*.DS_Store
