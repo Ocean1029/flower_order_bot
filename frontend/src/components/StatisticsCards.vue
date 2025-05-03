@@ -7,8 +7,6 @@ const props = defineProps({
   }
 })
 
-console.log('統計資料', props)
-
 const statList = computed(() => [
   { title: '今日訂單', value: props.statics.today_orders },
   { title: '待處理', value: props.statics.pending_orders },
