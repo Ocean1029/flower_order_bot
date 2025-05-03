@@ -1,6 +1,8 @@
-# env
-/.env
-/venv
+# .env
+**/.env*
+
+# venv
+**/venv*
 
 # test
 **/[Tt]est/
