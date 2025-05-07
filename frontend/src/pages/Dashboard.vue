@@ -9,7 +9,7 @@ import { getLatestMessages } from '@/api/messages'
 
 const columnName = [
   '訂單ID', '姓名', '電話', '花材', '數量', '預算',
-  '取貨方式', '取貨日期', '取貨時間', '備註'
+  '取貨方式', '取貨日期', '取貨時間', '付款狀態', '已付款金額', '備註'
 ]
 
 const orders = ref([])

@@ -5,12 +5,23 @@ import OrdersPage from '../pages/OrdersPage.vue'
 import MessagesPage from '../pages/MessagesPage.vue'
 import StatsPage from '../pages/StatsPage.vue'
 import Dashboard from '../pages/Dashboard.vue'
+import ChatList from '../pages/ChatList.vue'
+import ChatRoom from '../pages/ChatRoom.vue'
 
 const routes = [
   { path: '/', component: Dashboard },
   { path: '/orders', component: OrdersPage },
-  { path: '/messages', component: MessagesPage },
-  { path: '/stats', component: StatsPage },
+  { 
+    path: '/messages', 
+    component: ChatList 
+  },
+  { 
+    path: '/messages/chat/:id', 
+    name: 'chat-room',
+    component: ChatRoom,
+    props: true
+  },
+  { path: '/stats', component: StatsPage }
 ]
 
 const router = createRouter({
