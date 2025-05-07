@@ -16,13 +16,15 @@ const searchText = ref('')
 
 // 篩選符合搜尋文字的訂單
 const filteredData = computed(() => {
-  return Array.isArray(props.data)
-    ? props.data.filter(row =>
-        Object.values(row || {}).some(value =>
-          String(value).toLowerCase().includes(searchText.value.toLowerCase())
-        )
-      )
-    : []
+  if (!Array.isArray(props.data)) return []
+  
+  if (!searchText.value) return props.data
+  
+  return props.data.filter(row =>
+    Object.values(row || {}).some(value =>
+      String(value).toLowerCase().includes(searchText.value.toLowerCase())
+    )
+  )
 })
 
 // 匯出成 CSV 檔案
@@ -82,21 +84,17 @@ function downloadCSV() {
       <table class="table table-hover align-middle">
         <thead>
           <tr>
-            <th v-for="col in props.columnName" :key="col">{{ col }}</th>
+            <th v-for="column in columnName" :key="column">{{ column }}</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="row in filteredData" :key="row.id">
-            <td>{{ row.id }}</td>
-            <td>{{ row.customer_name }}</td>
-            <td>{{ row.phone }}</td>
-            <td>{{ row.flower }}</td>
-            <td>{{ row.qty }}</td>
-            <td>{{ row.budget }}</td>
-            <td>{{ row.pickup_method }}</td>
-            <td>{{ row.pickup_date }}</td>
-            <td>{{ row.pickup_time }}</td>
-            <td>{{ row.note }}</td>
+          <tr v-for="(row, index) in filteredData" :key="index">
+            <td v-for="column in columnName" :key="column">
+              <!-- 使用具名插槽來渲染自定義欄位 -->
+              <slot :name="column" :row="row">
+                {{ row[column] }}
+              </slot>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -108,3 +106,63 @@ function downloadCSV() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.section {
+  padding: 20px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.download-btn {
+  padding: 8px 16px;
+  background: #007AFF;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.download-btn:hover {
+  background: #0056b3;
+}
+
+.search-container {
+  margin-bottom: 20px;
+}
+
+.search-input {
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+
+.table-container {
+  margin-top: 20px;
+}
+
+.no-results {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+th, td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+}
+
+tr:hover {
+  background-color: #f8f9fa;
+}
+</style>

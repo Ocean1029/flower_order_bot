@@ -35,22 +35,22 @@ const router = useRouter()
 const chatRooms = ref([
   {
     id: '1',
-    name: '客服中心',
-    lastMessage: '您好，有什麼可以幫您的嗎？',
+    name: 'A',
+    lastMessage: '嗚嗚嗚',
     lastMessageTime: new Date(),
     unreadCount: 2
   },
   {
     id: '2',
-    name: '訂單查詢',
-    lastMessage: '您的訂單已經出貨',
+    name: 'B',
+    lastMessage: '嗨嗨嗨',
     lastMessageTime: new Date(Date.now() - 3600000),
     unreadCount: 0
   },
   {
     id: '3',
-    name: '商品諮詢',
-    lastMessage: '這個商品還有庫存嗎？',
+    name: 'C',
+    lastMessage: '我要買花？',
     lastMessageTime: new Date(Date.now() - 86400000),
     unreadCount: 1
   }

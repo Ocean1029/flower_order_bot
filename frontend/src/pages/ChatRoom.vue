@@ -50,15 +50,15 @@ const messagesContainer = ref(null)
 const mockMessages = [
   {
     id: 1,
-    sender: '用戶A',
-    text: '你好！',
+    sender: '鄭博宇',
+    text: '嗨',
     timestamp: new Date(),
     isSelf: false
   },
   {
     id: 2,
     sender: '我',
-    text: '你好啊！',
+    text: '略略略',
     timestamp: new Date(),
     isSelf: true
   }
