@@ -5,14 +5,24 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
+from enum import Enum
+from sqlalchemy import Enum as SAEnum
 
+class PaymentStatus(str, Enum):
+    PENDING = "pending"
+    PAID = "paid"
+    FAILED = "failed"
+    REFUNDED = "refunded"
 
 class Payment(Base):
     __tablename__ = "payment"
 
     id: Mapped[int] = mapped_column(primary_key=True)
     order_id: Mapped[int] = mapped_column(ForeignKey("order.id"))
-    status: Mapped[str] = mapped_column(String, default="pending")
+    status: Mapped[str] = mapped_column(
+        SAEnum(PaymentStatus, name="payment_status", validate_strings=True),
+        default=PaymentStatus.PENDING
+    )
     method_id: Mapped[int] = mapped_column(ForeignKey("payment_method.id"))
     amount: Mapped[float] = mapped_column(Numeric(10, 2))
     screenshot_url: Mapped[str] = mapped_column(Text, nullable=True)
@@ -20,6 +30,9 @@ class Payment(Base):
     confirmed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    order = relationship("Order", back_populates="payments")
+    method = relationship("PaymentMethod", backref="payments")
 
 class PaymentMethod(Base):
     __tablename__ = "payment_method"
