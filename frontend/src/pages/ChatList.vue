@@ -25,36 +25,22 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { format } from 'date-fns'
+import { mockChatRooms } from '@/mockData'
 
 const router = useRouter()
+const chatRooms = ref([])
 
-// 模擬聊天室數據
-const chatRooms = ref([
-  {
-    id: '1',
-    name: 'A',
-    lastMessage: '嗚嗚嗚',
-    lastMessageTime: new Date(),
-    unreadCount: 2
-  },
-  {
-    id: '2',
-    name: 'B',
-    lastMessage: '嗨嗨嗨',
-    lastMessageTime: new Date(Date.now() - 3600000),
-    unreadCount: 0
-  },
-  {
-    id: '3',
-    name: 'C',
-    lastMessage: '我要買花？',
-    lastMessageTime: new Date(Date.now() - 86400000),
-    unreadCount: 1
+onMounted(async () => {
+  try {
+    // In development, use mock data
+    chatRooms.value = mockChatRooms
+  } catch (error) {
+    console.error('Error fetching chat rooms:', error)
   }
-])
+})
 
 const formatTime = (timestamp) => {
   const now = new Date()

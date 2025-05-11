@@ -30,43 +30,20 @@
 <script setup>
 import { ref, onMounted, nextTick } from 'vue'
 import { format } from 'date-fns'
+import { mockChatMessages } from '@/mockData'
+import { useRoute } from 'vue-router'
 
-const props = defineProps({
-  roomId: {
-    type: String,
-    required: true
-  },
-  roomName: {
-    type: String,
-    required: true
-  }
-})
-
+const route = useRoute()
 const messages = ref([])
 const newMessage = ref('')
 const messagesContainer = ref(null)
 
-// 模擬訊息數據
-const mockMessages = [
-  {
-    id: 1,
-    sender: '鄭博宇',
-    text: '嗨',
-    timestamp: new Date(),
-    isSelf: false
-  },
-  {
-    id: 2,
-    sender: '我',
-    text: '略略略',
-    timestamp: new Date(),
-    isSelf: true
-  }
-]
+const roomId = route.params.id
+const roomName = route.state?.roomName || '聊天室'
 
 onMounted(() => {
-  // 模擬載入訊息
-  messages.value = mockMessages
+  // Load messages from mock data
+  messages.value = mockChatMessages[roomId] || []
   scrollToBottom()
 })
 

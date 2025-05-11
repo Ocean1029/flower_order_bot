@@ -1,39 +1,45 @@
 export const mockOrders = [
   {
-    id: 1,
-    customer_name: "王小明",
-    phone: "0912345678",
-    flower: "玫瑰花束",
-    qty: 2,
-    budget: 2000,
-    pickup_method: "自取",
-    pickup_date: "2024-03-20",
-    pickup_time: "14:00",
-    note: "要包裝漂亮一點"
+    '訂單ID': 1,
+    '姓名': "王小明",
+    '電話': "0912345678",
+    '花材': "玫瑰花束",
+    '數量': 2,
+    '預算': 2000,
+    '取貨方式': "自取",
+    '取貨日期': "2024-03-20",
+    '取貨時間': "14:00",
+    '付款狀態': "已付款",
+    '已付款金額': 2000,
+    '備註': "要包裝漂亮一點"
   },
   {
-    id: 2,
-    customer_name: "李小華",
-    phone: "0923456789",
-    flower: "百合花束",
-    qty: 1,
-    budget: 1500,
-    pickup_method: "外送",
-    pickup_date: "2024-03-21",
-    pickup_time: "15:30",
-    note: "要加卡片"
+    '訂單ID': 2,
+    '姓名': "李小華",
+    '電話': "0923456789",
+    '花材': "百合花束",
+    '數量': 1,
+    '預算': 1500,
+    '取貨方式': "外送",
+    '取貨日期': "2024-03-21",
+    '取貨時間': "15:30",
+    '付款狀態': "未付款",
+    '已付款金額': 0,
+    '備註': "要加卡片"
   },
   {
-    id: 3,
-    customer_name: "張小美",
-    phone: "0934567890",
-    flower: "向日葵花束",
-    qty: 3,
-    budget: 3000,
-    pickup_method: "自取",
-    pickup_date: "2024-03-22",
-    pickup_time: "16:00",
-    note: "要加緞帶"
+    '訂單ID': 3,
+    '姓名': "張小美",
+    '電話': "0934567890",
+    '花材': "向日葵花束",
+    '數量': 3,
+    '預算': 3000,
+    '取貨方式': "自取",
+    '取貨日期': "2024-03-22",
+    '取貨時間': "16:00",
+    '付款狀態': "已付款",
+    '已付款金額': 3000,
+    '備註': "要加緞帶"
   }
 ];
 
@@ -70,25 +76,25 @@ export const mockStats = {
 
 export const mockChatRooms = [
   {
-    id: "1",
-    name: "王小明",
-    lastMessage: "好的，謝謝！",
+    id: '1',
+    name: '王小明',
+    lastMessage: '好的，謝謝！',
     lastMessageTime: new Date(),
+    unreadCount: 2
+  },
+  {
+    id: '2',
+    name: '李小華',
+    lastMessage: '請問可以加卡片嗎？',
+    lastMessageTime: new Date(Date.now() - 3600000),
     unreadCount: 0
   },
   {
-    id: "2",
-    name: "李小華",
-    lastMessage: "請問可以加卡片嗎？",
-    lastMessageTime: new Date(Date.now() - 3600000),
-    unreadCount: 1
-  },
-  {
-    id: "3",
-    name: "張小美",
-    lastMessage: "我想要三束向日葵",
+    id: '3',
+    name: '張小美',
+    lastMessage: '我想要三束向日葵',
     lastMessageTime: new Date(Date.now() - 86400000),
-    unreadCount: 2
+    unreadCount: 1
   }
 ];
 
