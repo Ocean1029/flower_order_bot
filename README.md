@@ -121,3 +121,10 @@ https://your-domain.onrender.com/callback
 本專案採用 MIT License，歡迎自由修改與商用。
 
 ---
+跑前端使用
+
+Npm install
+
+Npm run dev
+
+---
