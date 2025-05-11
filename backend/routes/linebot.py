@@ -10,7 +10,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from openai import OpenAI
 
-from models import SessionLocal
+from core.database import SessionLocal
 from models.message import Message
 from models.user import User
 from models.order import Order

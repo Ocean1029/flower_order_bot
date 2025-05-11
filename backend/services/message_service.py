@@ -1,4 +1,4 @@
-from models import SessionLocal
+from core.database import SessionLocal
 from models.message import Message
 from models.user import User
 from sqlalchemy import func, desc

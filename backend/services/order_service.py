@@ -1,4 +1,4 @@
-from models import SessionLocal
+from core.database import SessionLocal
 from models.order import Order
 from models.user import User
 

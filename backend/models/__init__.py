@@ -1,21 +1,36 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+# models/__init__.py
+from core.database import Base  # 供 Alembic 使用
 
-import os
+# 依需求 import 各資料表檔案，使其在匯入時註冊到 Base
+# from .user import User
+# from .staff import StaffUser
+# from .chat import ChatRoom, ChatMessage
+# from .order import Order, OrderDraft
+# from .payment import Payment, PaymentMethod
+# from .logistics import Shipment
+# from .notification import Notification
+# from .audit import AuditLog
 
-Base = declarative_base() 
+# __all__ = (
+#     "User",
+#     "StaffUser",
+#     "ChatRoom",
+#     "ChatMessage",
+#     "Order",
+#     "OrderDraft",
+#     "Payment",
+#     "PaymentMethod",
+#     "Shipment",
+#     "Notification",
+#     "AuditLog",
+# )
 
-# 判斷是否有 DATABASE_URL（Render 在部署時會自動注入）
-db_url = os.getenv("DATABASE_URL", "sqlite:///messages.db")
+from .user import User
+from .order import Order
+from .message import Message
 
-# 修正 Render 的 PostgreSQL URL 格式
-if db_url.startswith("postgres://"):
-    db_url = db_url.replace("postgres://", "postgresql://", 1)
-
-engine = create_engine(db_url, echo=False)
-
-# 如果第一次執行，則會自動建立資料表，而如果資料表已存在，則不會重建
-Base.metadata.create_all(engine)
-
-SessionLocal = sessionmaker(bind=engine)
+__all__ = (
+    "User",
+    "Order",
+    "Message"
+)
