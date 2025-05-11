@@ -9,3 +9,4 @@ openai==1.75.0
 python-dateutil==2.9.0.post0
 stats==0.1.2a0
 psycopg2-binary==2.9.6
+alembic
