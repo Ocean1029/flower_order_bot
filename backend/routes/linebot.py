@@ -2,8 +2,7 @@ import os
 from dotenv import load_dotenv
 import json
 from datetime import datetime, timedelta
-from flask import Flask, request, abort, Blueprint
-
+from flask import request, abort, Blueprint
 
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
@@ -11,7 +10,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from openai import OpenAI
 
 from core.database import SessionLocal
-from models.message import Message
+from models.chat import ChatMessage
 from models.user import User
 from models.order import Order
 
@@ -57,21 +56,26 @@ def handle_message(event):
     user_message = event.message.text
 
     # 儲存訊息
-    msg = Message(user_id=user_id, text=user_message)
+    msg = ChatMessage(
+        room_id = None,  # 你要補上對應聊天室 ID，如果未來支援聊天室切換
+        direction = "incoming",
+        text = user_message,
+        status = "sent",
+    )
     session.add(msg)
     session.commit()
 
     if user_message == "整理資料":
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
-        messages = session.query(Message)\
-            .filter(
-                Message.user_id == user_id,
-                Message.timestamp >= seven_days_ago,
-                Message.used == False
-            )\
-            .order_by(Message.timestamp.asc())\
-            .all()
-        
+        messages = session.query(ChatMessage)\
+        .filter(
+            ChatMessage.room_id == None,  # 同上，要正確寫入 room_id
+            ChatMessage.created_at >= seven_days_ago,
+            ChatMessage.processed == False
+        )\
+        .order_by(ChatMessage.created_at.asc())\
+        .all()
+
         # 如果沒有找到符合條件的訊息，則回覆用戶，但理論上不會發生。
         if not messages:
             line_bot_api.reply_message(
@@ -118,12 +122,12 @@ def handle_message(event):
             message_ids = session_order_cache[user_id]["message_ids"]
 
             # 查或建使用者
-            user = session.query(User).filter_by(line_id=user_id).first()
+            user = session.query(User).filter_by(line_uid=user_id).first()
             if not user:
                 user = User(
-                    line_id=user_id,
-                    customer_name=parsed.get("customer_name"),
-                    phone_number=parsed.get("phone_number")
+                    line_uid=user_id,
+                    name=parsed.get("customer_name"),
+                    phone=parsed.get("phone_number")
                 )
                 session.add(user)
                 session.commit()
@@ -131,18 +135,21 @@ def handle_message(event):
             # 建立訂單
             order = Order(
                 user_id=user.id,
-                flower_type=parsed.get("flower_type"),
+                item_type=parsed.get("item_type"),
+                product_name=parsed.get("product_name"),
                 quantity=parsed.get("quantity"),
-                budget=parsed.get("budget"),
-                pickup_method=parsed.get("pickup_method"),
-                pickup_date=parsed.get("pickup_date"),
-                pickup_time=parsed.get("pickup_time"),
-                extra_requirements=parsed.get("Extra_requirements")
+                notes=parsed.get("notes"),
+                card_message=parsed.get("card_message"),
+                receipt_address=parsed.get("receipt_address"),
+                total_amount=parsed.get("total_amount", 0)
             )
             session.add(order)
 
             # 更新訊息 used 標記
-            session.query(Message).filter(Message.id.in_(message_ids)).update({"used": True}, synchronize_session=False)
+            session.query(ChatMessage).filter(
+                ChatMessage.id.in_(message_ids)
+            ).update({"processed": True}, synchronize_session=False)
+
             session.commit()
 
             line_bot_api.reply_message(

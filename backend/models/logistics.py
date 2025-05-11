@@ -6,13 +6,16 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 
-class User(Base):
-    __tablename__ = "user"
+
+class Shipment(Base):
+    __tablename__ = "shipment"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    line_uid: Mapped[str] = mapped_column(String, unique=True, nullable=True)
-    name: Mapped[str] = mapped_column(String)
-    phone: Mapped[str] = mapped_column(String, nullable=True)
-    has_ordered: Mapped[bool] = mapped_column(Boolean, default=False)
+    order_id: Mapped[int] = mapped_column(ForeignKey("order.id"), unique=True)
+    method: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, default="pending")
+    receiver_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    address: Mapped[str] = mapped_column(Text, nullable=True)
+    delivery_datetime: Mapped[datetime] = mapped_column(DateTime)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

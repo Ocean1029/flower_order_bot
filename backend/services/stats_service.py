@@ -12,7 +12,7 @@ def get_stats():
 
     today_orders = session.query(Order).filter(Order.created_at >= today_start).count()
     total_customers = session.query(User).count()
-    monthly_income = session.query(func.coalesce(func.sum(Order.budget), 0)).filter(Order.created_at >= month_start).scalar()
+    monthly_income = session.query(func.coalesce(func.sum(Order.total_amount), 0)).filter(Order.created_at >= month_start).scalar()
     pending_orders = session.query(Order).count()
 
     session.close()

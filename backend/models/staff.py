@@ -6,13 +6,13 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 
-class User(Base):
-    __tablename__ = "user"
+class StaffUser(Base):
+    __tablename__ = "staff_user"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    line_uid: Mapped[str] = mapped_column(String, unique=True, nullable=True)
+    line_uid: Mapped[str] = mapped_column(String, unique=True)
     name: Mapped[str] = mapped_column(String)
-    phone: Mapped[str] = mapped_column(String, nullable=True)
-    has_ordered: Mapped[bool] = mapped_column(Boolean, default=False)
+    role: Mapped[str] = mapped_column(String)
+    password_hash: Mapped[str] = mapped_column(String)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
