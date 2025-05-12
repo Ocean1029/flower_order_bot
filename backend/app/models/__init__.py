@@ -1,5 +1,5 @@
 # models/__init__.py
-from core.database import Base  # 供 Alembic 使用
+from app.core.database import Base  # 供 Alembic 使用
 
 from .user import User
 from .staff import StaffUser

@@ -1,4 +1,4 @@
-from core.database import SessionLocal
+from app.core.database import SessionLocal
 from models.order import Order
 from models.user import User 
 from sqlalchemy import func

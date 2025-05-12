@@ -2,7 +2,7 @@ from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
-from models import Base  # Import your Base class here
+from app.models import Base  # Import your Base class here
 
 import os
 from dotenv import load_dotenv

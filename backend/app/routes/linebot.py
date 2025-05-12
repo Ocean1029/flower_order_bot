@@ -2,17 +2,18 @@ import os
 from dotenv import load_dotenv
 import json
 from datetime import datetime, timedelta
-from flask import request, abort, Blueprint
+from fastapi import APIRouter, Request, HTTPException, Depends
+from fastapi.responses import PlainTextResponse
 
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from openai import OpenAI
 
-from core.database import SessionLocal
-from models.chat import ChatMessage
-from models.user import User
-from models.order import Order
+from app.core.database import SessionLocal, get_db
+from app.models.chat import ChatMessage
+from app.models.user import User
+from app.models.order import Order
 
 from managers.prompt_manager import PromptManager
 
@@ -32,25 +33,25 @@ openai_client = OpenAI(api_key=OPENAI_API_KEY)
 
 prompt_manager = PromptManager()
 
-linebot_bp = Blueprint("linebot", __name__)
+api_router = APIRouter()
 
-@linebot_bp.route("/callback", methods=['POST'])
-def callback():
-    signature = request.headers['X-Line-Signature']
+@api_router.post("/callback")
+async def callback(request: Request):
+    signature = request.headers.get('X-Line-Signature')
     if not signature:
-        abort(400, description="Missing X-Line-Signature header")
-    body = request.get_data(as_text=True)
+        raise HTTPException(status_code=400, detail="Missing X-Line-Signature header")
+    
+    body = await request.body()
+    body_str = body.decode('utf-8')
 
     try:
-        handler.handle(body, signature) # body 是原始請求的內容，signature 是 X-Line-Signature 的值
+        handler.handle(body_str, signature)
     except InvalidSignatureError:
-        abort(400, description="Invalid signature. Please check your channel access token and secret.")
-    return 'OK'
-
+        raise HTTPException(status_code=400, detail="Invalid signature. Please check your channel access token and secret.")
+    return PlainTextResponse('OK')
 
 @handler.add(MessageEvent, message=TextMessage)
-def handle_message(event): 
-
+def handle_message(event):
     session = SessionLocal()
     user_id = event.source.user_id
     user_message = event.message.text
