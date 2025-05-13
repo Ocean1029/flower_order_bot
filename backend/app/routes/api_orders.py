@@ -1,12 +1,19 @@
 from fastapi import APIRouter, Depends
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.order_service import get_all_orders
 from app.core.database import get_db
 import csv
+from typing import List
 from io import StringIO
+from app.schemas.order import OrderOut
 
 api_router = APIRouter()
+
+@api_router.get("/api/orders", response_model=List[OrderOut])
+async def get_orders(db: AsyncSession = Depends(get_db)):
+    return await get_all_orders(db)
+
 
 @api_router.get("/orders.csv")
 async def export_orders_csv(db: AsyncSession = Depends(get_db)):
@@ -47,9 +54,4 @@ async def export_orders_csv(db: AsyncSession = Depends(get_db)):
         media_type="text/csv",
         headers={"Content-Disposition": "attachment; filename=orders.csv"}
     )
-
-@api_router.get("/api/orders")
-async def get_orders(db: AsyncSession = Depends(get_db)):
-    orders = await get_all_orders(db)
-    return JSONResponse(content={"orders": orders})
 
