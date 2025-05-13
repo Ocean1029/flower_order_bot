@@ -16,5 +16,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <OrderTable :data="orders" :columnName="columnName" />
+  <div class="page-content">
+    <OrderTable :data="orders" :columnName="columnName" />
+  </div>
 </template>

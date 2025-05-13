@@ -1,5 +1,7 @@
 <template>
-  <ChatRoomWrapper :roomId="roomId" :roomName="roomName" />
+  <div class="page-content">
+    <ChatRoomWrapper :roomId="roomId" :roomName="roomName" />
+  </div>
 </template>
 
 <script setup>

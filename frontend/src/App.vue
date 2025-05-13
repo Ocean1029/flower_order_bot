@@ -1,10 +1,12 @@
 <script setup>
-import '@/assets/index.css'          // 全域樣式
+import '@/assets/index.css'// 全域樣式
 import Navbar from './components/Navbar.vue'
+import OrderTitle from './components/OrderTitle.vue'
 </script>
 
 <template>
   <Navbar />
+  <OrderTitle />
   <router-view />
 </template>
 
@@ -28,4 +30,7 @@ body {
   background: #f5f6fa;
   color: var(--text-main);
 }
+
 </style>
+
+
