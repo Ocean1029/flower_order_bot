@@ -1,5 +1,8 @@
 <template>
-  <ChatListWrapper :chatRooms="chatRooms" @selectRoom="goToRoom" />
+  <div class="page-content">
+    <ChatListWrapper :chatRooms="chatRooms" @selectRoom="goToRoom" />
+  </div>
+  
 </template>
 
 <script setup>

@@ -1,5 +1,19 @@
+<template>
+  <div class="stat-cards-container">
+    <div
+      v-for="card in statList"
+      :key="card.title"
+      class="stat-card"
+    >
+      <i :class="card.icon" class="stat-icon" />
+      <span class="stat-label">{{ card.title }}</span>
+      <span class="stat-number">{{ card.value }}</span>
+    </div>
+  </div>
+</template>
+
 <script setup>
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 const props = defineProps({
   statics: {
@@ -8,86 +22,75 @@ const props = defineProps({
   }
 })
 
-const activeIndex = ref(1) // 預設選中第二個卡片（溝通中訂單）
-
 const statList = computed(() => [
-  { title: '今日訂單', value: props.statics.today_orders, icon: 'fa-regular fa-calendar', color: '#007AFF' },
-  { title: '溝通中訂單', value: props.statics.pending_orders, icon: 'fa-regular fa-comments', color: '#4F8CFF' },
-  { title: '本月訂單', value: props.statics.monthly_orders, icon: 'fa-regular fa-list-alt', color: '#7B61FF' }, // 假資料
-  { title: '本月營業額', value: `$${props.statics.monthly_income}`, icon: 'fa-solid fa-dollar-sign', color: '#3DC9B3' } // 假資料
-  
+  { title: '今日訂單',    value: props.statics.today_orders,     icon: 'fas fa-calendar',     color: '#007AFF' },
+  { title: '溝通中訂單',  value: props.statics.pending_orders,   icon: 'fas fa-comments',     color: '#4F8CFF' },
+  { title: '本月訂單',    value: props.statics.monthly_orders,   icon: 'fas fa-list-alt',     color: '#7B61FF' },
+  { title: '本月營業額',  value: `$${props.statics.monthly_income}`, icon: 'fas fa-dollar-sign', color: '#3DC9B3' }
 ])
 </script>
 
-<template>
-  <div class="stat-cards-row">
-    <div
-      v-for="(card, idx) in statList"
-      :key="card.title"
-      class="stat-card"
-      :class="{ active: idx === activeIndex }"
-      :style="{ borderColor: card.color }"
-      @click="activeIndex = idx"
-    >
-      <div class="icon-circle" :style="{ background: card.color }">
-        <i :class="card.icon"></i>
-      </div>
-      <div class="stat-title">{{ card.title }}</div>
-      <div class="stat-value">{{ card.value }}</div>
-    </div>
-  </div>
-</template>
-
 <style scoped>
-.stat-cards-row {
+.stat-cards-container {
   display: flex;
-  gap: 32px;
-  margin: 32px 0 24px 0;
-  justify-content: flex-start;
+  gap: 36px;
 }
+
 .stat-card {
-  flex: 1;
+  position: relative;
+  width: 210px;
+  height: 144px;
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 4px 16px rgba(79,140,255,0.10);
-  padding: 28px 0 20px 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border: 2px solid transparent;
+  border-radius: 8px;
   cursor: pointer;
-  transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
-  min-width: 180px;
+  transition: background 0.2s;
 }
-.stat-card.active {
-  background: var(--gray-100);
-  border-color: var(--primary);
-  box-shadow: 0 8px 24px rgba(79,140,255,0.12);
+.stat-card:hover {
+  background: #D8EAFF;
 }
-.icon-circle {
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
+
+.stat-icon {
+  position: absolute;
+  top: 27px;
+  left: 27px;
+  width: 24px;
+  height: 24px;
+  font-size: 24px;
+  color: #6168FC;
+}
+
+.stat-label {
+  position: absolute;
+  top: 27px;
+  left: calc(27px + 24px + 8px);
+  width: 156px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  font-family: 'Noto Sans TC', '思源黑體', 'Microsoft JhengHei', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 28px;
+  letter-spacing: 0;
+  color: #6168FC;
+  padding: 0 8px;
+}
+
+.stat-number {
+  position: absolute;
+  top: 69px;
+  left: 81px;
+  width: 48px;
+  height: 50px;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: 1.7rem;
-  margin-bottom: 14px;
-}
-.stat-title {
-  font-size: 16px;
-  color: var(--primary-dark);
-  margin-bottom: 8px;
+  font-family: 'Noto Sans TC', '思源黑體', 'Microsoft JhengHei', Arial, sans-serif;
   font-weight: 700;
-  letter-spacing: 1px;
-}
-.stat-value {
-  font-size: 32px;
-  font-weight: bold;
-  color: var(--primary-dark);
-  letter-spacing: 1px;
-  margin-top: 2px;
+  font-size: 40px;
+  line-height: 50px;
+  text-align: center;
+  letter-spacing: 0;
+  color: #6168FC;
 }
 </style>
-  

@@ -15,7 +15,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div class="page-content">
     <StatisticsCards :statics="statics" />
   </div>
 </template>
