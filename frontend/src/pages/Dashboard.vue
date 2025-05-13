@@ -41,39 +41,3 @@ onMounted(async () => {
   <OrderTable :data="mockOrders" :columnName="columnName" />
   <ConversationList :messages="mockMessages" />
 </template>
-
-<style scoped>
-.dashboard-header {
-  margin-bottom: 18px;
-}
-.brand-bar {
-  width: 100%;
-  background: linear-gradient(90deg, #4F8CFF 0%, #7B61FF 100%);
-  border-radius: 12px 12px 0 0;
-  padding: 18px 32px 16px 32px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-.brand-icon {
-  font-size: 1.7rem;
-  color: #fff;
-  margin-right: 8px;
-}
-.brand-title {
-  color: #fff;
-  font-size: 1.25rem;
-  font-weight: 700;
-  letter-spacing: 1px;
-}
-.dashboard-title {
-  font-size: 2rem;
-  font-weight: 900;
-  color: var(--primary-dark);
-  margin: 0;
-  padding: 18px 0 0 32px;
-  border-bottom: 4px solid var(--primary);
-  width: 100%;
-  letter-spacing: 1.5px;
-}
-</style>
