@@ -6,6 +6,7 @@ import { onMounted, ref } from 'vue'
 import {  fetchOrders } from '@/api/orders'
 import { fetchStaticData } from '@/api/statics'
 import { getLatestMessages } from '@/api/messages'
+import { mockOrders, mockStats, mockMessages } from '@/mockData.js'
 
 const columnName = [
   '訂單ID', '姓名', '電話', '花材', '數量', '預算',
@@ -36,7 +37,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <StatisticsCards :statics="statics" />
-  <OrderTable :data="orders" :columnName="columnName" />
-  <ConversationList :messages="messages" />
+  <StatisticsCards :statics="mockStats" />
+  <OrderTable :data="mockOrders" :columnName="columnName" />
+  <ConversationList :messages="mockMessages" />
 </template>
