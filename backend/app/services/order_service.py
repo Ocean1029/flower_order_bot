@@ -1,16 +1,21 @@
-from app.core.database import SessionLocal
-from models.order import Order
-from models.user import User
-from models.logistics import Shipment
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from app.models.order import Order
+from app.models.user import User
+from app.models.logistics import Shipment
 
-def get_all_orders():
-    session = SessionLocal()
-    orders = session.query(Order).all()
+async def get_all_orders(session: AsyncSession) -> list:
     result = []
 
+    orders_result = await session.execute(select(Order))
+    orders = orders_result.scalars().all()
+
     for o in orders:
-        user = session.query(User).filter_by(id=o.user_id).first()
-        shipment = session.query(Shipment).filter_by(order_id=o.id).first()
+        user_result = await session.execute(select(User).filter_by(id=o.user_id))
+        user = user_result.scalar_one_or_none()
+
+        shipment_result = await session.execute(select(Shipment).filter_by(order_id=o.id))
+        shipment = shipment_result.scalar_one_or_none()
 
         result.append({
             "id": o.id,
@@ -24,5 +29,5 @@ def get_all_orders():
             "pickup_method": shipment.method if shipment else "未知",
             "pickup_datetime": shipment.delivery_datetime.strftime("%Y-%m-%d %H:%M") if shipment and shipment.delivery_datetime else "",
         })
-    session.close()
+
     return result
