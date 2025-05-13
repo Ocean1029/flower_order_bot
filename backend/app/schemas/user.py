@@ -24,7 +24,7 @@ class UserRead(UserBase):
 class StaffBase(BaseModel):
     line_uid: str
     name: str
-    role: StaffRole = Field(default=StaffRole.clerk)
+    role: StaffRole = Field(default=StaffRole.CLERK)
 
 class StaffCreate(StaffBase):
     password: str = Field(alias="password_hash")

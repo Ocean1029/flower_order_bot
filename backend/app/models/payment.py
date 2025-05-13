@@ -5,14 +5,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from enum import Enum
+from app.enums.payment import PaymentStatus
 from sqlalchemy import Enum as SAEnum
 
-class PaymentStatus(str, Enum):
-    PENDING = "pending"
-    PAID = "paid"
-    FAILED = "failed"
-    REFUNDED = "refunded"
 
 class Payment(Base):
     __tablename__ = "payment"
@@ -41,7 +36,7 @@ class PaymentMethod(Base):
     code: Mapped[str] = mapped_column(String, unique=True)
     display_name: Mapped[str] = mapped_column(String)
     display_image_url: Mapped[str] = mapped_column(Text, nullable=True)
-    instructions: Mapped[str] = mapped_column(Text)
+    instructions: Mapped[str] = mapped_column(Text, nullable=True)
     requires_manual_confirm: Mapped[bool] = mapped_column(Boolean, default=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     sort_order: Mapped[int] = mapped_column(Integer, default=0)

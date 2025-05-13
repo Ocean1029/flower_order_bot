@@ -6,7 +6,7 @@ from app.enums.payment import PaymentStatus
 
 class PaymentBase(BaseModel):
     order_id: int
-    status: PaymentStatus = PaymentStatus.pending
+    status: PaymentStatus = PaymentStatus.PENDING
     amount: float
     screenshot_url: Optional[str] = None
 

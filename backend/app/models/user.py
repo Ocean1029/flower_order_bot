@@ -5,8 +5,6 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from enum import Enum
-from sqlalchemy import Enum as SAEnum
 
 class User(Base):
     __tablename__ = "user"

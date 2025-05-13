@@ -7,7 +7,7 @@ from app.enums.shipment import ShipmentMethod, ShipmentStatus
 class ShipmentBase(BaseModel):
     order_id: int
     method: ShipmentMethod
-    status: ShipmentStatus = ShipmentStatus.pending
+    status: ShipmentStatus = ShipmentStatus.PENDING
     receiver_user_id: int
     address: Optional[str] = None
     delivery_datetime: Optional[datetime] = None

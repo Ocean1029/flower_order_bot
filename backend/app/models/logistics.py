@@ -6,19 +6,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 
-from enum import Enum
 from sqlalchemy import Enum as SAEnum
-
-class ShipmentMethod(str, Enum):
-    STORE_PICKUP = "store_pickup"
-    DELIVERY = "delivery"
-
-class ShipmentStatus(str, Enum):
-    PENDING = "pending"
-    DISPATCHED = "dispatched"
-    DELIVERED = "delivered"
-    RETURNED = "returned"
-    
+from app.enums.shipment import ShipmentMethod, ShipmentStatus
 class Shipment(Base):
     __tablename__ = "shipment"
 

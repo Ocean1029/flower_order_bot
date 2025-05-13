@@ -1,12 +1,12 @@
 from enum import Enum
 
 class OrderDraftStatus(str, Enum):
-    collecting = "collecting"
-    abandoned = "abandoned"
-    completed = "completed"
+    COLLECTING = "collecting"
+    ABANDONED = "abandoned"
+    COMPLETED = "completed"
 
 class OrderStatus(str, Enum):
-    pending = "pending"
-    confirmed = "confirmed"
-    cancelled = "cancelled"
-    completed = "completed" 
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed" 

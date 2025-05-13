@@ -5,20 +5,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from enum import Enum
+from app.enums.order import OrderDraftStatus, OrderStatus
 from sqlalchemy import Enum as SAEnum
 
-
-class OrderDraftStatus(str, Enum):
-    COLLECTING = "collecting"
-    ABANDONED = "abandoned"
-    COMPLETED = "completed"
-
-class OrderStatus(str, Enum):
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
-    COMPLETED = "completed"
 
 class OrderDraft(Base):
     __tablename__ = "order_draft"
@@ -30,7 +19,6 @@ class OrderDraft(Base):
         SAEnum(OrderDraftStatus, name="order_draft_status", validate_strings=True),
         default=OrderDraftStatus.COLLECTING
     )
-    payload_json: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

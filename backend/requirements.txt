@@ -16,3 +16,4 @@ pydantic==2.5.2
 uvicorn==0.23.2
 fastapi==0.103.1
 greenlet==4.0.0
+faker==19.0.0

@@ -5,13 +5,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from enum import Enum
+from app.enums.user import StaffRole
 from sqlalchemy import Enum as SAEnum
 
-class StaffRole(str, Enum):
-    OWNER = "owner"
-    CLERK = "clerk"
-    ADMIN = "admin"
 
 class StaffUser(Base):
     __tablename__ = "staff_user"

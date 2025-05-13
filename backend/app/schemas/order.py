@@ -8,8 +8,7 @@ from app.enums.shipment import ShipmentMethod
 class OrderDraftBase(BaseModel):
     room_id: int
     user_id: int
-    status: OrderDraftStatus = OrderDraftStatus.collecting
-    payload_json: Any
+    status: OrderDraftStatus = OrderDraftStatus.COLLECTING
 
 class OrderDraftCreate(OrderDraftBase):
     pass
@@ -25,7 +24,7 @@ class OrderDraftRead(OrderDraftBase):
 class OrderBase(BaseModel):
     user_id: int
     draft_id: int
-    status: OrderStatus = OrderStatus.pending
+    status: OrderStatus = OrderStatus.PENDING
     item_type: str
     product_name: str
     quantity: int
@@ -35,7 +34,7 @@ class OrderBase(BaseModel):
     total_amount: float
 
 class OrderCreate(OrderBase):
-    shipment_method: ShipmentMethod = ShipmentMethod.store_pickup  # 便於一次下單時帶入
+    shipment_method: ShipmentMethod = ShipmentMethod.STORE_PICKUP  # 便於一次下單時帶入
 
 class OrderRead(OrderBase):
     id: int

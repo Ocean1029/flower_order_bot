@@ -5,28 +5,8 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-
-from enum import Enum
+from app.enums import ChatRoomStage, ChatMessageStatus, ChatMessageDirection
 from sqlalchemy import Enum as SAEnum
-
-
-class ChatMessageStatus(str, Enum):
-    SENT = "sent"
-    RECEIVED = "received"
-    FAIL = "fail"
-
-# note: 'incoming | outgoing_by_bot | outgoing_by_staff'
-class ChatMessageDirection(str, Enum):
-    INCOMING = "incoming"
-    OUTGOING_BY_BOT = "outgoing_by_bot"
-    OUTGOING_BY_STAFF = "outgoing_by_staff"
-
-#  'welcome | idle | waiting_owner | bot_active', default: 'welcome']
-class ChatRoomStage(str, Enum):
-    WELCOME = "welcome"
-    IDLE = "idle"
-    WAITING_OWNER = "waiting_owner"
-    BOT_ACTIVE = "bot_active"
 
 
 class ChatRoom(Base):

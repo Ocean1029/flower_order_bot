@@ -3,10 +3,11 @@ from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.services.message_service import get_latest_messages
 from app.core.database import get_db
+from typing import List
 
 api_router = APIRouter()
 
-@api_router.get("/api/messages")
+@api_router.get("/api/messages", response_model=List[dict])
 async def get_messages(db: AsyncSession = Depends(get_db)):
     messages = await get_latest_messages(db)
     return JSONResponse(content={"messages": messages})

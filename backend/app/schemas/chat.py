@@ -7,7 +7,7 @@ from app.enums.chat import ChatRoomStage, ChatMessageStatus, ChatMessageDirectio
 class ChatRoomBase(BaseModel):
     user_id: Optional[int] = None
     assigned_staff_id: Optional[int] = None
-    stage: ChatRoomStage = ChatRoomStage.welcome
+    stage: ChatRoomStage = ChatRoomStage.WELCOME
     bot_step: int = 0
 
 class ChatRoomRead(ChatRoomBase):
@@ -23,7 +23,7 @@ class ChatRoomRead(ChatRoomBase):
 class ChatMessageBase(BaseModel):
     room_id: int
     text: str
-    status: ChatMessageStatus = ChatMessageStatus.sent
+    status: ChatMessageStatus = ChatMessageStatus.SENT
     direction: ChatMessageDirection
     image_url: Optional[str] = None
     line_msg_id: Optional[str] = None

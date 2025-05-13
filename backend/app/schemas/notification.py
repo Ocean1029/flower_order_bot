@@ -8,8 +8,7 @@ class NotificationBase(BaseModel):
     receiver_type: NotificationReceiverType
     receiver_id: int
     channel: str
-    payload: Any
-    status: NotificationStatus = NotificationStatus.queued
+    status: NotificationStatus = NotificationStatus.QUEUED
     send_at: Optional[datetime] = None
 
 class NotificationCreate(NotificationBase):

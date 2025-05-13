@@ -40,7 +40,6 @@ class Notification(Base):
         SAEnum(NotificationStatus, name="notification_status", validate_strings=True),
         default=NotificationStatus.QUEUED
     )
-    payload: Mapped[str] = mapped_column(Text)
     send_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 

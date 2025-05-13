@@ -1,11 +1,11 @@
 from enum import Enum
 
 class ShipmentMethod(str, Enum):
-    store_pickup = "store_pickup"
-    delivery = "delivery"
+    STORE_PICKUP = "store_pickup"
+    DELIVERY = "delivery"
 
 class ShipmentStatus(str, Enum):
-    pending = "pending"
-    dispatched = "dispatched"
-    delivered = "delivered"
-    returned = "returned" 
+    PENDING = "pending"
+    DISPATCHED = "dispatched"
+    DELIVERED = "delivered"
+    RETURNED = "returned" 
