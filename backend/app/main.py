@@ -1,13 +1,10 @@
-import os
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from app.routes.health import router as health_router
-from app.routes.api_orders import api_router as orders_router
-from app.routes.api_messages import api_router as messages_router
-from app.routes.api_stats import api_router as stats_router
+from app.routes.orders import api_router as orders_router
+from app.routes.statistics import api_router as stats_router
+from app.routes.messages import api_router as messages_router
 from app.routes.linebot import api_router as linebot_router
 
 app = FastAPI(
@@ -31,9 +28,9 @@ app.add_middleware(
 # === 將 APIRouter 掛進來 =================================================
 app.include_router(health_router, tags=["Health"])
 app.include_router(orders_router, tags=["Orders"])
-app.include_router(messages_router, tags=["Messages"])
-app.include_router(stats_router,   tags=["Dashboard"])
-app.include_router(linebot_router, tags=["LINE Bot"])
+app.include_router(messages_router, tags=["Chat"])
+app.include_router(stats_router,   tags=["Statistics"])
+app.include_router(linebot_router, tags=["LINE Bot Reply Messages"])
 
 # === 本地啟動指令 =======================================================
 # uvicorn app.main:app --reload --port 8000

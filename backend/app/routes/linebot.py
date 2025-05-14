@@ -61,6 +61,8 @@ async def handle_text_message(event: MessageEvent, db: Session):
     user_id = event.source.user_id
     user_message = event.message.text
 
+    # 輸出使用者 LINE ID 和訊息
+    print(f"User ID: {user_id}, Message: {user_message}")
     # 儲存訊息
     msg = ChatMessage(
         room_id=None,

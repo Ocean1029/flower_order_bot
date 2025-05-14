@@ -10,7 +10,7 @@ from app.schemas.order import OrderOut
 
 api_router = APIRouter()
 
-@api_router.get("/api/orders", response_model=List[OrderOut])
+@api_router.get("/orders", response_model=List[OrderOut])
 async def get_orders(db: AsyncSession = Depends(get_db)):
     return await get_all_orders(db)
 
