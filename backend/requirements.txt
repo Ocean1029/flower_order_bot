@@ -14,3 +14,5 @@ fastapi==0.103.1
 greenlet==3.2.2
 faker==19.0.0
 aiosqlite==0.21.0
+
+python-docx==1.1.2
