@@ -96,12 +96,12 @@ npm run dev
 啟動後預設運行於 `http://localhost:5173`
 
 #### 資料庫
+
 ```bash
 cd backend
 alembic upgrade head # 將資料表格式更新為最新版本
-PYTHONPATH=. python app/seed/seed_all.py # 產生 10 筆測試資料進入 messages.db
+PYTHONPATH=. python app/seeds/seed_all.py # 產生 10 筆測試資料進入 messages.db
 ```
-
 
 > 📦 可使用 [ngrok](https://ngrok.com) 來將 localhost 對外暴露給 LINE Webhook：
 
@@ -156,6 +156,7 @@ https://your-domain.onrender.com/callback
 
 * Vue 專案：提供聊天室介面、訂單列表等操作頁面
 * 其他待捕
+
 ---
 
 ## 📄 授權 License

@@ -15,5 +15,6 @@ sqlalchemy==2.0.20
 pydantic==2.5.2
 uvicorn==0.23.2
 fastapi==0.103.1
-greenlet==4.0.0
+greenlet==3.2.2
 faker==19.0.0
+aiosqlite==0.21.0

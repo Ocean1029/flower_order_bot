@@ -8,9 +8,6 @@
     <div class="dashboard-section">
       <OrderTable :data="orders" :columnName="columnName" />
     </div>
-    <div class="dashboard-section">
-      <ConversationList :messages="messages" />
-    </div>
   </div>
 </template>
 
@@ -46,7 +43,7 @@ onMounted(async () => {
     console.error('無法取得訊息資料', err)
   }
   try {
-    statics.value = await fetchStaticData()
+    statics.value = await fetchStaticData() 
   } catch (err) {
     console.error('無法取得統計資料', err)
   }
