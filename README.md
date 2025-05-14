@@ -150,7 +150,7 @@ https://your-domain.onrender.com/callback
 * `services`：實作各種資料庫 CRUD 功能
 * `schemas/`：定義資料 Input 與 Output 格式
 * `core/`：資料庫設定與 Alembic 支援
-* `seed/`：虛擬資料產生程式
+* `seeds/`：虛擬資料產生程式
 
 ### `frontend/` 前端（Vue）
 
