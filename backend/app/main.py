@@ -11,7 +11,7 @@ app = FastAPI(
     title="花店自動化系統 API",
     description="Backend for LINE Bot & Dashboard",
     version="1.0.0",
-    docs_url="/docs",  # Swagger UI 路徑
+    docs_url="/",  # Swagger UI 路徑
     redoc_url="/redoc",  # ReDoc 路徑
     openapi_url="/openapi.json"  # OpenAPI schema 路徑
 )
