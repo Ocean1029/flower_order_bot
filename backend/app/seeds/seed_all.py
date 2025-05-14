@@ -1,7 +1,7 @@
 import asyncio
-from app.seed.seed_user import create_random_user
-from app.seed.seed_order import create_random_order
-from app.seed.seed_message import create_random_message
+from app.seeds.seed_user import create_random_user
+from app.seeds.seed_order import create_random_order
+from app.seeds.seed_message import create_random_message
 from app.core.database import get_db
 
 async def main():
