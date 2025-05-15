@@ -13,7 +13,7 @@ async def seed_test_data(session, count: int = 10):
     for _ in range(count):
         user = await create_random_user(session)
         room = await create_random_message(session, user)
-        await create_random_order(session, user, room)
+        await create_random_order(session, user)
         
     await session.commit()
 
