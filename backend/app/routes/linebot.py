@@ -186,6 +186,7 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
                 .where(ChatMessage.id.in_(message_ids))\
                 .values(processed=True)
             await db.execute(stmt)
+            await db.commit()
             del session_order_cache[user_line_id]
 
             line_bot_api.reply_message(
