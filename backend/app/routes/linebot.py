@@ -14,7 +14,7 @@ from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
 from app.enums.chat import ChatRoomStage
 from app.enums.order import OrderDraftStatus
-from app.services.user_service import get_user_by_line_uid, create_user
+from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
 
 import os
@@ -23,11 +23,6 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
-
-# 加在全域暫存區（部署時可用 Redis or DB 儲存）
-session_order_cache = {}  # key: user_id, value: GPT 整理的 JSON
-
-# 讀取環境變數
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
@@ -123,72 +118,52 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             messages=[{"role": "system", "content": gpt_prompt}],
             temperature=0
         )
-        reply = response.choices[0].message.content.strip()
+        gpt_reply = response.choices[0].message.content.strip()
+        parsed_reply = json.loads(gpt_reply)
 
-        session_order_cache[user_line_id] = {
-            "order_json": reply,
-            "message_ids": [m.id for m in messages]
-        }
-
-        reply_text = f"以下是整理好的訂單資訊：\n{reply}\n\n如無誤請回覆：送出訂單。"
+        reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n，請確認資訊。"
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=reply_text)
         )
 
-    elif user_message == "送出訂單" and user_line_id in session_order_cache:
-        try:
-            try:
-                parsed = json.loads(session_order_cache[user_line_id]["order_json"])
-            except json.JSONDecodeError as e:
-                print("GPT 原始輸出：", session_order_cache[user_line_id]["order_json"])
-                raise e
 
-            message_ids = session_order_cache[user_line_id]["message_ids"]
+        user = await update_user_info(
+            db,
+            user.id,
+            name=parsed_reply.get("name"),
+            phone=parsed_reply.get("phone"),
+        )
 
-            stmt = select(User).where(User.line_uid == user_line_id)
-            result = await db.execute(stmt)
-            user = result.scalar_one_or_none()
-            
+        order_draft = OrderDraft(
+            user_id=user.id,
+            room_id=chat_room.id,
+            status=OrderDraftStatus.COLLECTING,
+            item_type=parsed_reply.get("item_type"),
+            product_name=parsed_reply.get("product_name"),
+            quantity=parsed_reply.get("quantity"),
+            notes=parsed_reply.get("notes", ""),
+            card_message=parsed_reply.get("card_message", ""),
+            receipt_address=parsed_reply.get("receipt_address", ""),
+            total_amount=parsed_reply.get("total_amount"),
+            shipment_method=parsed_reply.get("shipment_method"),
+            shipment_status=parsed_reply.get("shipment_status"),
+            # delivery_datetime=parsed_reply.get("delivery_datetime"),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        db.add(order_draft)
+        await db.commit()
+        await db.refresh(order_draft)
+    
+        stmt = update(ChatMessage)\
+            .where(ChatMessage.id.in_([message.id for message in messages]))\
+            .values(processed=True)
+        await db.execute(stmt)
+        await db.commit()
 
-            order_draft = OrderDraft(
-                user_id=user.id,
-                room_id=chat_room.id,
-                status=OrderDraftStatus.COLLECTING,
-                item_type=parsed.get("item_type"),
-                product_name=parsed.get("product_name"),
-                quantity=parsed.get("quantity"),
-                notes=parsed.get("notes"),
-                card_message=parsed.get("card_message"),
-                receipt_address=parsed.get("receipt_address"),
-                total_amount=parsed.get("total_amount"),
-                shipment_method=parsed.get("shipment_method"),
-                shipment_status=parsed.get("shipment_status"),
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
-            )
-            db.add(order_draft)
-            await db.commit()
-            await db.refresh(order_draft)
-            
-            stmt = update(ChatMessage)\
-                .where(ChatMessage.id.in_(message_ids))\
-                .values(processed=True)
-            await db.execute(stmt)
-            await db.commit()
-            del session_order_cache[user_line_id]
+        
 
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text="✅ 訂單已成功建立並儲存！感謝您！")
-            )
-
-        except Exception as e:
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text=f"❌ 發生錯誤，請確認格式或稍後再試：{str(e)}")
-            )
-            
 
 @handler.add(FollowEvent)
 async def handle_follow(event: FollowEvent, db: AsyncSession):
