@@ -36,3 +36,5 @@ app.include_router(linebot_router, tags=["LINE Bot Reply Messages"])
 # uvicorn app.main:app --reload --port 8000
 # Render 部署：確保 start 命令改成 uvicorn ↑↑
 
+from app.routes.export_docx import api_router
+app.include_router(api_router)
