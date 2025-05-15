@@ -24,9 +24,9 @@ const props = defineProps({
 
 const statList = computed(() => [
   { title: '今日訂單',    value: props.statics.today_orders,     icon: 'fas fa-calendar',     color: '#007AFF' },
-  { title: '溝通中訂單',  value: props.statics.pending_orders,   icon: 'fas fa-comment',     color: '#4F8CFF' },
-  { title: '本月訂單',    value: props.statics.monthly_orders,   icon: 'fas fa-list-alt',     color: '#7B61FF' },
-  { title: '本月營業額',  value: `$${props.statics.monthly_income}`, icon: 'fas fa-dollar-sign', color: '#3DC9B3' }
+  { title: '待處理訂單',  value: props.statics.pending_orders,   icon: 'fas fa-comment',     color: '#4F8CFF' },
+  { title: '本月營業額',  value: `$${props.statics.monthly_income}`, icon: 'fas fa-dollar-sign', color: '#3DC9B3' },
+  { title: '顧客總數',    value: props.statics.total_customers,   icon: 'fas fa-users',        color: '#FFB347' }
 ])
 </script>
 
