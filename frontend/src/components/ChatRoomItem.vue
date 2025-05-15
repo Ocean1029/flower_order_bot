@@ -1,14 +1,15 @@
 <template>
   <div class="chat-room-item" @click="$emit('click')">
+    <img class="avatar" :src="room.avatar" alt="avatar" />
     <div class="room-info">
-      <h3>{{ room.name }}</h3>
-      <p class="last-message">{{ room.lastMessage }}</p>
-    </div>
-    <div class="room-meta">
-      <span class="time">{{ formatTime(room.lastMessageTime) }}</span>
-      <span v-if="room.unreadCount" class="unread-badge">
-        {{ room.unreadCount }}
-      </span>
+      <div class="room-title-row">
+        <h3>{{ room.name }}</h3>
+        <span class="time">{{ formatTime(room.lastMessageTime) }}</span>
+      </div>
+      <div class="room-bottom-row">
+        <p class="last-message">{{ room.lastMessage }}</p>
+        <span v-if="room.unreadCount > 0" class="unread-dot"></span>
+      </div>
     </div>
   </div>
 </template>
@@ -27,55 +28,79 @@ function formatTime(timestamp) {
   return format(messageDate, 'MM/dd')
 }
 </script>
-
 <style scoped>
 .chat-room-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 1rem;
+  padding: 10px 12px;
   background-color: #fff;
   margin-bottom: 0.5rem;
   border-radius: 0.5rem;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-height: 64px;
 }
 .chat-room-item:hover {
   background-color: #f0f0f0;
 }
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-right: 12px;
+  background: #e9e9e9;
+}
 .room-info {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 0;
 }
-.room-info h3 {
-  margin: 0 0 0.25rem 0;
-  color: #333;
+.room-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.room-title-row h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  color: #222;
+  font-weight: 700;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.time {
+  font-size: 0.92rem;
+  color: #A3C8FF;
+  margin-left: 8px;
+  min-width: 56px;
+  text-align: right;
+}
+.room-bottom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 2px;
 }
 .last-message {
   margin: 0;
   color: #666;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px;
+  max-width: 140px;
 }
-.room-meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.25rem;
-}
-.time {
-  font-size: 0.8rem;
-  color: #999;
-}
-.unread-badge {
-  background-color: #007AFF;
-  color: white;
-  padding: 0.25rem 0.5rem;
-  border-radius: 1rem;
-  font-size: 0.8rem;
-  min-width: 1.5rem;
-  text-align: center;
+.unread-dot {
+  width: 10px;
+  height: 10px;
+  background: #4F8CFF;
+  border-radius: 50%;
+  display: inline-block;
+  margin-left: 10px;
 }
 </style> 

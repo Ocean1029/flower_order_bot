@@ -103,21 +103,45 @@ export const mockChatRooms = [
     name: '王小明',
     lastMessage: '好的，謝謝！',
     lastMessageTime: new Date(),
-    unreadCount: 2
+    unreadCount: 2,
+    status: '人工溝通',
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg'
   },
   {
     id: '2',
     name: '李小華',
     lastMessage: '請問可以加卡片嗎？',
     lastMessageTime: new Date(Date.now() - 3600000),
-    unreadCount: 0
+    unreadCount: 0,
+    status: '今日訂單',
+    avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
   },
   {
     id: '3',
     name: '張小美',
     lastMessage: '我想要三束向日葵',
     lastMessageTime: new Date(Date.now() - 86400000),
-    unreadCount: 1
+    unreadCount: 1,
+    status: '等待備貨',
+    avatar: 'https://randomuser.me/api/portraits/women/68.jpg'
+  },
+  {
+    id: '4',
+    name: '陳大明',
+    lastMessage: '自動回覆測試',
+    lastMessageTime: new Date(Date.now() - 7200000),
+    unreadCount: 3,
+    status: '自動回復',
+    avatar: 'https://randomuser.me/api/portraits/men/12.jpg'
+  },
+  {
+    id: '5',
+    name: '林小安',
+    lastMessage: '訂單已完成',
+    lastMessageTime: new Date(Date.now() - 1800000),
+    unreadCount: 0,
+    status: '所有訂單',
+    avatar: 'https://randomuser.me/api/portraits/men/56.jpg'
   }
 ];
 
@@ -126,37 +150,30 @@ export const mockChatMessages = {
     {
       id: 1,
       sender: "王小明",
-      text: "我想訂兩束玫瑰花",
+      text: "我想訂兩束玫瑰花，預算2000元",
       timestamp: new Date(Date.now() - 3600000),
       isSelf: false
     },
     {
       id: 2,
       sender: "我",
-      text: "好的，請問預算多少？",
+      text: "好的，請問要什麼顏色？",
       timestamp: new Date(Date.now() - 3500000),
       isSelf: true
     },
     {
       id: 3,
       sender: "王小明",
-      text: "預算2000元",
+      text: "紅色和白色都可以，謝謝！",
       timestamp: new Date(Date.now() - 3400000),
       isSelf: false
     },
     {
       id: 4,
       sender: "我",
-      text: "沒問題，請問要自取還是外送？",
+      text: "沒問題，預計明天可取貨。",
       timestamp: new Date(Date.now() - 3300000),
       isSelf: true
-    },
-    {
-      id: 5,
-      sender: "王小明",
-      text: "自取，謝謝！",
-      timestamp: new Date(Date.now() - 3200000),
-      isSelf: false
     }
   ],
   "2": [
@@ -180,6 +197,13 @@ export const mockChatMessages = {
       text: "一束就好，可以加卡片嗎？",
       timestamp: new Date(Date.now() - 7000000),
       isSelf: false
+    },
+    {
+      id: 4,
+      sender: "我",
+      text: "可以，請問卡片內容？",
+      timestamp: new Date(Date.now() - 6900000),
+      isSelf: true
     }
   ],
   "3": [
@@ -202,6 +226,59 @@ export const mockChatMessages = {
       sender: "張小美",
       text: "要，謝謝！",
       timestamp: new Date(Date.now() - 86200000),
+      isSelf: false
+    },
+    {
+      id: 4,
+      sender: "我",
+      text: "預計明天下午可取貨喔。",
+      timestamp: new Date(Date.now() - 86100000),
+      isSelf: true
+    }
+  ],
+  "4": [
+    {
+      id: 1,
+      sender: "陳大明",
+      text: "請問自動回覆是什麼？",
+      timestamp: new Date(Date.now() - 7200000),
+      isSelf: false
+    },
+    {
+      id: 2,
+      sender: "我",
+      text: "您好，這是系統自動回覆，請稍等客服回覆您。",
+      timestamp: new Date(Date.now() - 7190000),
+      isSelf: true
+    },
+    {
+      id: 3,
+      sender: "陳大明",
+      text: "好的，謝謝！",
+      timestamp: new Date(Date.now() - 7180000),
+      isSelf: false
+    }
+  ],
+  "5": [
+    {
+      id: 1,
+      sender: "林小安",
+      text: "請問我的訂單什麼時候可以取？",
+      timestamp: new Date(Date.now() - 1800000),
+      isSelf: false
+    },
+    {
+      id: 2,
+      sender: "我",
+      text: "預計明天下午三點後可取貨喔。",
+      timestamp: new Date(Date.now() - 1700000),
+      isSelf: true
+    },
+    {
+      id: 3,
+      sender: "林小安",
+      text: "收到，謝謝你！",
+      timestamp: new Date(Date.now() - 1600000),
       isSelf: false
     }
   ]

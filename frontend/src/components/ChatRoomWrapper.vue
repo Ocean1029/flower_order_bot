@@ -1,13 +1,13 @@
 <template>
   <div class="chat-room">
-    <ChatHeader :roomName="roomName" />
+    <ChatHeader :roomName="roomName" :avatar="avatar" :status="status" @showDetail="$emit('showDetail')" />
     <MessageList :messages="messages" ref="messagesContainer" />
     <MessageInput v-model="newMessage" @send="sendMessage" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, watch, onMounted, nextTick } from 'vue'
 import { mockChatMessages } from '@/mockData'
 import ChatHeader from './ChatHeader.vue'
 import MessageList from './MessageList.vue'
@@ -15,16 +15,21 @@ import MessageInput from './MessageInput.vue'
 
 const props = defineProps({
   roomId: String,
-  roomName: String
+  roomName: String,
+  avatar: String,
+  status: String
 })
+const emit = defineEmits(['showDetail'])
 const messages = ref([])
 const newMessage = ref('')
 const messagesContainer = ref(null)
 
-onMounted(() => {
+function loadMessages() {
   messages.value = mockChatMessages[props.roomId] || []
-  scrollToBottom()
-})
+}
+
+onMounted(loadMessages)
+watch(() => props.roomId, loadMessages)
 
 function sendMessage() {
   if (!newMessage.value.trim()) return
