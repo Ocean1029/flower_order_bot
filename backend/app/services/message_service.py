@@ -1,5 +1,3 @@
-# backend/app/services/chat.py
-
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
@@ -9,7 +7,7 @@ from typing import List, Optional
 from app.models.chat import ChatRoom, ChatMessage
 from app.schemas.chat import ChatRoomOut, ChatMessageOut, ChatMessageBase
 from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
-from app.utils.line import LINE_push_message
+from app.utils.line_push_message import LINE_push_message
 from app.services.user_service import get_user_by_line_uid
 
 async def get_latest_message(db: AsyncSession, room_id: int) -> Optional[ChatMessageOut]:
@@ -103,7 +101,6 @@ async def get_chat_messages(db: AsyncSession, room_id: int, after: Optional[date
             created_at=message.created_at
         ) for message in messages
     ]
-
 
 async def switch_chat_room_mode(db: AsyncSession, room_id: int, mode: str) -> None:
     stmt = (
