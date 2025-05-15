@@ -5,8 +5,8 @@ order_prompt = """
 如果你沒有辦法非常確定上面的資料，請讓它留空。回傳格式如下：
 
 {{
-    "customer_name": "",
-    "phone_number": "",
+    "user_name": "",
+    "phone": "",
     "item_type": "",                # 例如：花束、盆花等
     "product_name": "",             # 商品名稱（如：母親節限定）
     "quantity": , 
