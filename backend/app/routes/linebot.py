@@ -8,12 +8,12 @@ from openai import OpenAI
 from sqlalchemy import select, update
 
 from app.core.database import get_db
-from app.models.chat import ChatRoom
-from app.models.chat import ChatMessage
+from app.models.chat import ChatRoom, ChatMessage
 from app.models.user import User
-from app.models.order import Order
+from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
 from app.enums.chat import ChatRoomStage
+from app.enums.order import OrderDraftStatus
 from app.services.user_service import get_user_by_line_uid, create_user
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
 
@@ -151,33 +151,25 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             user = result.scalar_one_or_none()
             
 
-            # order = Order(
-            #     user_id=user.id,
-            #     draft_id=10, # mock
-            #     status="CONFIRMED",
-            #     item_type=parsed.get("item_type", "flowers"),
-            #     product_name=parsed.get("product_name", "百合花"),
-            #     quantity=parsed.get("quantity", 1),
-            #     notes=parsed.get("notes"),
-            #     card_message=parsed.get("card_message"),
-            #     receipt_address=parsed.get("receipt_address"),
-            #     total_amount=parsed.get("total_amount", 0),
-            #     created_at=datetime.utcnow(),
-            #     updated_at=datetime.utcnow()
-            # )
-            # db.add(order)
-
-            # shipment = Shipment(
-            #     order_id=order.id,
-            #     method=parsed.get("delivery_method", "123"),
-            #     status="PENDING",
-            #     receiver_user_id=user.id,
-            #     address=parsed.get("receipt_address", "123"),
-            #     delivery_datetime=parsed.get("delivery_datetime", "123"),
-            #     created_at=datetime.utcnow(),
-            #     updated_at=datetime.utcnow()
-            # )
-            # db.add(shipment)
+            order_draft = OrderDraft(
+                user_id=user.id,
+                room_id=chat_room.id,
+                status=OrderDraftStatus.COLLECTING,
+                item_type=parsed.get("item_type"),
+                product_name=parsed.get("product_name"),
+                quantity=parsed.get("quantity"),
+                notes=parsed.get("notes"),
+                card_message=parsed.get("card_message"),
+                receipt_address=parsed.get("receipt_address"),
+                total_amount=parsed.get("total_amount"),
+                shipment_method=parsed.get("shipment_method"),
+                shipment_status=parsed.get("shipment_status"),
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
+            )
+            db.add(order_draft)
+            await db.commit()
+            await db.refresh(order_draft)
             
             stmt = update(ChatMessage)\
                 .where(ChatMessage.id.in_(message_ids))\
