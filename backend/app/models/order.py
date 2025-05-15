@@ -16,12 +16,36 @@ class OrderDraft(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("chat_room.id"))
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
+    receiver_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=True)
     status: Mapped[str] = mapped_column(
         SAEnum(OrderDraftStatus, name="order_draft_status", validate_strings=True),
         default=OrderDraftStatus.COLLECTING
     )
+    item_type: Mapped[str] = mapped_column(String, nullable=True)
+    product_name: Mapped[str] = mapped_column(Text, nullable=True)
+    quantity: Mapped[int] = mapped_column(Integer, nullable=True)
+    total_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
+    notes: Mapped[str] = mapped_column(Text, nullable=True)
+    card_message: Mapped[str] = mapped_column(Text, nullable=True)
+    shipment_method: Mapped[str] = mapped_column(
+        SAEnum(ShipmentMethod, name="shipment_method", validate_strings=True),
+        default=ShipmentMethod.STORE_PICKUP,
+        nullable=True
+    )
+    shipment_status: Mapped[str] = mapped_column(
+        SAEnum(ShipmentStatus, name="shipment_status", validate_strings=True),
+        default=ShipmentStatus.PENDING,
+        nullable=True
+    )
+    receipt_address: Mapped[str] = mapped_column(String, nullable=True)
+    delivery_address: Mapped[str] = mapped_column(Text, nullable=True)
+    delivery_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    user = relationship("User", foreign_keys=[user_id], back_populates="order_drafts")
+    receiver = relationship("User", foreign_keys=[receiver_user_id], back_populates="received_order_drafts")
+    room = relationship("ChatRoom", back_populates="order_drafts")
 
 class Order(Base):
     __tablename__ = "order"

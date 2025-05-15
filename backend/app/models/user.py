@@ -19,3 +19,5 @@ class User(Base):
 
     orders = relationship("Order", foreign_keys="Order.user_id", back_populates="user")
     received_orders = relationship("Order", foreign_keys="Order.receiver_user_id", back_populates="receiver")
+    order_drafts = relationship("OrderDraft", foreign_keys="OrderDraft.user_id", back_populates="user")
+    received_order_drafts = relationship("OrderDraft", foreign_keys="OrderDraft.receiver_user_id", back_populates="receiver")
