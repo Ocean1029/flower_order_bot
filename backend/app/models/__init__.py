@@ -6,7 +6,6 @@ from .staff import StaffUser
 from .chat import ChatRoom, ChatMessage
 from .order import Order, OrderDraft
 from .payment import Payment, PaymentMethod
-from .logistics import Shipment
 from .operation import Notification
 from .operation import AuditLog
 

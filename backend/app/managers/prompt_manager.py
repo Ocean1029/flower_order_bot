@@ -3,7 +3,7 @@
 import os
 
 class PromptManager:
-    def __init__(self, prompt_dir: str = "prompts"):
+    def __init__(self, prompt_dir: str = "app/prompts"):
         """
         初始化 PromptManager，指定 prompt 檔案資料夾路徑。
         """

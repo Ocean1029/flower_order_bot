@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.enums.order import OrderDraftStatus, OrderStatus
-from app.enums.shipment import ShipmentMethod
+from app.enums.shipment import ShipmentMethod, ShipmentStatus
 
 class OrderDraftBase(BaseModel):
     room_id: int
@@ -21,21 +21,33 @@ class OrderDraftRead(OrderDraftBase):
     class Config:
         from_attributes = True
 
+class OrderBase(BaseModel):
+    user_id: int
+    receiver_user_id: int
+    draft_id: int
+    status: OrderStatus = OrderStatus.PENDING
+    item_type: str
+    product_name: str
+    quantity: int
+    total_amount: float
+    notes: Optional[str] = None
+    card_message: Optional[str] = None
+    shipment_method: ShipmentMethod = ShipmentMethod.STORE_PICKUP
+    shipment_status: ShipmentStatus = ShipmentStatus.PENDING
+    receipt_address: Optional[str] = None
+    delivery_address: Optional[str] = None
+    delivery_datetime: Optional[datetime] = None
 
+class OrderCreate(OrderBase):
+    pass
 
-class OrderCreate(BaseModel):
-    customer_name: str
-    phone: str
-    flower: str
-    qty: int
-    budget: float
-    pickup_method: str
-    pickup_date: str  # 若為 datetime 請改為 datetime
-    pickup_time: str
-    note: Optional[str]
+class OrderRead(OrderBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class OrderOut(BaseModel):
     id: int
