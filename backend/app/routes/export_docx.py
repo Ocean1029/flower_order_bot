@@ -16,6 +16,22 @@ async def export_order_docx(order_id: int, db: AsyncSession = Depends(get_db)):
     if not order:
         return {"error": "Order not found"}
 
+    # 處理 send_datetime 與中文星期
+    send_datetime_str = ""
+    weekday_str = ""
+    if getattr(order, "send_datetime", None):
+        send_datetime_str = order.send_datetime.strftime("%Y-%m-%d %H:%M")
+        WEEKDAY_MAP = {
+            "Monday": "星期一",
+            "Tuesday": "星期二",
+            "Wednesday": "星期三",
+            "Thursday": "星期四",
+            "Friday": "星期五",
+            "Saturday": "星期六",
+            "Sunday": "星期日",
+        }
+        weekday_str = WEEKDAY_MAP.get(order.send_datetime.strftime("%A"), "")
+
     context = {
         "customer_name": order.customer_name,
         "phone": order.customer_phone,
@@ -26,8 +42,8 @@ async def export_order_docx(order_id: int, db: AsyncSession = Depends(get_db)):
         "payway": getattr(order, "payway", ""),
         "note": order.note,
         "card_message": getattr(order, "card_message", ""),
-        "weekday": getattr(order, "weekday", ""),
-        "send_datetime": getattr(order, "send_datetime", ""),
+        "weekday": weekday_str,
+        "send_datetime": send_datetime_str,
         "receiver_name": getattr(order, "receiver_name", ""),
         "receiver_phone": getattr(order, "receiver_phone", ""),
         "delivery_address": getattr(order, "delivery_address", "")
