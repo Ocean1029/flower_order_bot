@@ -4,6 +4,7 @@ from fastapi.responses import PlainTextResponse
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FollowEvent
+from linebot.models import QuickReply, QuickReplyButton, MessageAction
 from openai import OpenAI
 from sqlalchemy import select, update
 
@@ -16,6 +17,8 @@ from app.enums.chat import ChatRoomStage
 from app.enums.order import OrderDraftStatus
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
+from app.utils.line import send_quick_reply_message
+from app.utils.line import send_confirm
 
 import os
 import json
@@ -90,6 +93,25 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
     await db.refresh(message)
 
     print(f"User {user_line_id} 發送訊息：{user_message}")
+
+    if user_message == "Again":
+        # 回到 welcome, -1
+        chat_room.stage = ChatRoomStage.WELCOME
+        chat_room.bot_step = -1
+        await db.commit()
+        db.refresh(chat_room)
+        print("回到 welcome")
+        return
+
+    if chat_room.stage == ChatRoomStage.WELCOME:
+        await run_welcome_flow(chat_room, user_message, event, db)
+        return
+
+    # Bot 自動回覆流程
+    if chat_room.stage == ChatRoomStage.BOT_ACTIVE:
+        await run_bot_flow(chat_room, user_message, event, db)
+        return
+
 
 
     if user_message == "整理資料":
@@ -191,11 +213,62 @@ async def handle_follow(event: FollowEvent, db: AsyncSession):
     await run_bot_flow(chat_room, "", event, db)
 
 
+
+# Welcome 流程 By Benjamin
+
+# ──────────────────────────────────────────────────────────────
+# Welcome flow：先確認是否要走客製化花束流程
+async def run_welcome_flow(
+    chat_room: ChatRoom,
+    user_text: str,
+    event: MessageEvent,
+    db: AsyncSession,
+):
+    """
+    1) 第一次進入時 (bot_step == -1) -> 發出詢問
+    2) 第二次收到使用者回覆 -> 根據答案切換 stage
+       - yes / 是  -> BOT_ACTIVE
+       - 其他      -> WAITING_OWNER
+    """
+    if chat_room.bot_step == -1:  # 第一次進入
+        send_confirm(
+            event.reply_token,
+            "想要客製化花束嗎？",
+            yes_txt="是",
+            no_txt="否",
+            yes_reply="啟動智慧訂購流程",
+            no_reply="直接轉接老闆"
+        )
+        chat_room.bot_step = 0  # 記錄 bot_step 為 0，表示已詢問過
+        await db.commit()
+        db.refresh(chat_room)
+        print("已詢問使用者是否要客製化花束")
+        return
+    
+    # 第二次收到使用者回覆
+    if user_text == "啟動智慧訂購流程":
+        chat_room.stage = ChatRoomStage.BOT_ACTIVE
+        chat_room.bot_step = 0  # reset for bot flow start
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage("了解！我們開始客製化流程～")
+        )
+    else:
+        chat_room.stage = ChatRoomStage.WAITING_OWNER
+        chat_room.bot_step = -1
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage("好的！已轉交給客服人員，請稍候。")
+        )
+
+    await db.commit()
+
+
 # 控制 bot 自動回覆流程  By Benjamin
 async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
     STEP_MAP = {
         0: ask_color,
-        1: ask_budget,
+        2: ask_budget,
         # 2: ask_special,
         # 3: final_confirm,
     }
@@ -218,26 +291,33 @@ async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: 
         chat_room.bot_step = -1
     else:
         chat_room.bot_step = next_step
-        if next_step == -1:
+        if next_step == -1:  # flow finished
             chat_room.stage = ChatRoomStage.WAITING_OWNER
 
     await db.commit()
 
 async def ask_color(user_text, event, db):
-    line_bot_api.reply_message(
+    """
+    Step 0: ask color by quick‑reply buttons.
+    This function is called twice:
+    1) When bot_step == 0 and bot still waits for user -> just ask the question.
+    2) After user clicks a quick‑reply button -> capture answer and move on.
+    """
+    if user_text == "":  # first entry triggered by FollowEvent
+        send_quick_reply_message(
+            event.reply_token,
+            "想要什麼顏色的客製化花束？",
+            ["紅", "白", "粉", "其他"]
+        )
+        return 0, False  # stay on the same step waiting for input
+    # second round: user answered → proceed
+    # TODO: persist `color` into draft table
+    send_quick_reply_message(
         event.reply_token,
-        TextSendMessage("想要什麼顏色的客製化花束？")
+        "好的～預算大概多少呢？",
+        ["500以下", "500-1000", "1000以上"]
     )
-    return 0, False   # stay on step 0 等用戶回答
-
-    # 第二回合：收集使用者顏色
-    color = user_text.strip()
-    # TODO validate color, save into draft table
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage("好的～預算大概多少呢？")
-    )
-    return 1, False   # 下一節點 = 1（ask_budget）
+    return 2, False
 
 # ── 2. 預算詢問
 async def ask_budget(user_text, event, db):
@@ -251,5 +331,5 @@ async def ask_budget(user_text, event, db):
 
 # ── 3. 特別需求詢問 之類的
 
-
 # Handler 到這裡結束
+
