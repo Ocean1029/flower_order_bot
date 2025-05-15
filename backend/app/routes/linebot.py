@@ -15,6 +15,7 @@ from app.models.order import Order
 from app.managers.prompt_manager import PromptManager
 
 
+import enum
 import os
 import json
 from datetime import datetime, timedelta
@@ -38,6 +39,13 @@ prompt_manager = PromptManager()
 
 api_router = APIRouter()
 
+# 定義 ChatRoom 狀態 (確保方便之後擴充)  By Benjamin
+class ChatStage(enum.StrEnum):      # keep it short & API-friendly
+    MANUAL      = "MANUAL"
+    BOT_ACTIVE  = "BOT_ACTIVE"
+    ORDER_DONE  = "ORDER_DONE"
+
+
 @api_router.post("/callback")
 async def callback(request: Request, db: AsyncSession = Depends(get_db)):
     signature = request.headers.get('X-Line-Signature')
@@ -57,6 +65,78 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
             await handle_text_message(event, db)
 
     return PlainTextResponse('OK')
+
+# 控制 bot 自動回覆流程  By Benjamin
+async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
+    STEP_MAP = {
+        0: ask_color,
+        1: ask_budget,
+        # 2: ask_special,
+        # 3: final_confirm,
+    }
+    # ── 1. 根據 bot_step 叫對的 handler
+    handler = STEP_MAP.get(chat_room.bot_step, None)  # Handler 一定會回傳 (nextstep, manual_override)
+
+    if handler is None: # 如果找不到對應的 handler，表示 bot_step 錯誤
+        # Safety fallback: reset to manual
+        print(f"Error: No handler for bot_step {chat_room.bot_step}, reset bot_step to 0")
+        # chat_room.stage    = ChatStage.MANUAL
+        chat_room.bot_step = 0
+        await db.commit()
+        return
+    
+    # ── 2. 執行該節點邏輯，並取得下一步
+    next_step, manual_override = await handler(chat_room, text, db)
+
+    # ── 3. 如果 user 想退出 → 切 MANUAL
+    if manual_override:
+        chat_room.stage    = ChatStage.MANUAL
+        chat_room.bot_step = -1
+    else:
+        chat_room.bot_step = next_step
+        # 樹走完就切 ORDER_DONE / MANUAL
+
+        # 這裡還沒想好怎麼處理 笑死
+        if next_step == -1:
+            chat_room.stage = ChatStage.ORDER_DONE   # 或 MANUAL 由你決定
+    
+    await db.commit()
+
+# Handler 如下：  By Benjamin
+# ── 1. 顏色詢問
+async def ask_color(chat_room, user_text, db):
+    if chat_room.bot_step == 0:
+        # 這是第一回合要問用戶
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage("想要什麼顏色的客製化花束？")
+        )
+        return 0, False   # stay on step 0 等用戶回答
+
+    # 第二回合：收集使用者顏色
+    color = user_text.strip()
+    # TODO validate color, save into draft table
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage("好的～預算大概多少呢？")
+    )
+    return 1, False   # 下一節點 = 1（ask_budget）
+
+# ── 2. 預算詢問
+async def ask_budget(chat_room, user_text, db):
+    budget = user_text.strip()
+    # TODO validate, save
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
+    )
+    return -1, False  # -1 = flow finished
+
+# ── 3. 特別需求詢問 之類的
+
+
+# Handler 到這裡結束
+
 
 @handler.add(MessageEvent, message=TextMessage)
 async def handle_text_message(event: MessageEvent, db: AsyncSession):
@@ -99,6 +179,13 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
     db.add(message)
     await db.commit()
     await db.refresh(message)
+
+    print(f"User {user_line_id} 發送訊息：{user_message}")
+
+    if chat_room.stage == ChatStage.BOT_ACTIVE:
+        print("開始自動回覆流程")
+        await run_bot_flow(chat_room, user_message, event, db)
+        return
 
     if user_message == "整理資料":
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
@@ -199,3 +286,4 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
                 event.reply_token,
                 TextSendMessage(text=f"❌ 發生錯誤，請確認格式或稍後再試：{str(e)}")
             )
+            
