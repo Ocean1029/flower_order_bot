@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import PlainTextResponse
-from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
+from linebot.models import MessageEvent, TextMessage, TextSendMessage, FollowEvent
 from openai import OpenAI
 from sqlalchemy import select, update
 
@@ -13,9 +13,10 @@ from app.models.chat import ChatMessage
 from app.models.user import User
 from app.models.order import Order
 from app.managers.prompt_manager import PromptManager
+from app.enums.chat import ChatRoomStage
+from app.services.user_service import get_user_by_line_uid, create_user
+from app.services.message_service import get_chat_room_by_user_id, create_chat_room
 
-
-import enum
 import os
 import json
 from datetime import datetime, timedelta
@@ -39,13 +40,6 @@ prompt_manager = PromptManager()
 
 api_router = APIRouter()
 
-# 定義 ChatRoom 狀態 (確保方便之後擴充)  By Benjamin
-class ChatStage(enum.StrEnum):      # keep it short & API-friendly
-    MANUAL      = "MANUAL"
-    BOT_ACTIVE  = "BOT_ACTIVE"
-    ORDER_DONE  = "ORDER_DONE"
-
-
 @api_router.post("/callback")
 async def callback(request: Request, db: AsyncSession = Depends(get_db)):
     signature = request.headers.get('X-Line-Signature')
@@ -66,103 +60,23 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
 
     return PlainTextResponse('OK')
 
-# 控制 bot 自動回覆流程  By Benjamin
-async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
-    STEP_MAP = {
-        0: ask_color,
-        1: ask_budget,
-        # 2: ask_special,
-        # 3: final_confirm,
-    }
-    # ── 1. 根據 bot_step 叫對的 handler
-    handler = STEP_MAP.get(chat_room.bot_step, None)  # Handler 一定會回傳 (nextstep, manual_override)
-
-    if handler is None: # 如果找不到對應的 handler，表示 bot_step 錯誤
-        # Safety fallback: reset to manual
-        print(f"Error: No handler for bot_step {chat_room.bot_step}, reset bot_step to 0")
-        # chat_room.stage    = ChatStage.MANUAL
-        chat_room.bot_step = 0
-        await db.commit()
-        return
-    
-    # ── 2. 執行該節點邏輯，並取得下一步
-    next_step, manual_override = await handler(chat_room, text, db)
-
-    # ── 3. 如果 user 想退出 → 切 MANUAL
-    if manual_override:
-        chat_room.stage    = ChatStage.MANUAL
-        chat_room.bot_step = -1
-    else:
-        chat_room.bot_step = next_step
-        # 樹走完就切 ORDER_DONE / MANUAL
-
-        # 這裡還沒想好怎麼處理 笑死
-        if next_step == -1:
-            chat_room.stage = ChatStage.ORDER_DONE   # 或 MANUAL 由你決定
-    
-    await db.commit()
-
-# Handler 如下：  By Benjamin
-# ── 1. 顏色詢問
-async def ask_color(chat_room, user_text, db):
-    if chat_room.bot_step == 0:
-        # 這是第一回合要問用戶
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage("想要什麼顏色的客製化花束？")
-        )
-        return 0, False   # stay on step 0 等用戶回答
-
-    # 第二回合：收集使用者顏色
-    color = user_text.strip()
-    # TODO validate color, save into draft table
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage("好的～預算大概多少呢？")
-    )
-    return 1, False   # 下一節點 = 1（ask_budget）
-
-# ── 2. 預算詢問
-async def ask_budget(chat_room, user_text, db):
-    budget = user_text.strip()
-    # TODO validate, save
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
-    )
-    return -1, False  # -1 = flow finished
-
-# ── 3. 特別需求詢問 之類的
-
-
-# Handler 到這裡結束
-
-
 @handler.add(MessageEvent, message=TextMessage)
 async def handle_text_message(event: MessageEvent, db: AsyncSession):
     user_line_id = event.source.user_id # LINE ID
     user_message = event.message.text
 
-    stmt = select(User).where(User.line_uid == user_line_id)
-    result = await db.execute(stmt)
-    user = result.scalar_one_or_none()
-
-    # 1. 先用 user_line_id 查 User
+    user = await get_user_by_line_uid(db, user_line_id)
     if not user:
-        user = User(line_uid=user_line_id, name=None) # TODO 調整 constructor 沒錯
-        # TODO 主動發訊息跟顧客確認 Name
-        db.add(user)
-        await db.flush() 
+        user = await create_user(db, user_line_id, "Profile Name")
+        print(f"新使用者 {user_line_id} 已創建")
+    else:
+        print(f"使用者 {user_line_id} 已存在")
     
-    # 2. 再用 user.id 查 ChatRoom
-    stmt = select(ChatRoom).where(ChatRoom.user_id == user.id)
-    result = await db.execute(stmt)
-    chat_room = result.scalar_one_or_none()
-
+    # 取得或創建聊天室
+    chat_room = await get_chat_room_by_user_id(db, user.id)
     if not chat_room:
-        chat_room = ChatRoom(user_id=user_line_id, created_at=datetime.utcnow())
-        db.add(chat_room)
-        await db.flush() 
+        chat_room = await create_chat_room(db, user.id)
+        print(f"新聊天室已創建，使用者 {user_line_id} 的聊天室 ID：{chat_room.id}")
 
     # 儲存訊息
     message = ChatMessage(
@@ -182,10 +96,6 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
     print(f"User {user_line_id} 發送訊息：{user_message}")
 
-    if chat_room.stage == ChatStage.BOT_ACTIVE:
-        print("開始自動回覆流程")
-        await run_bot_flow(chat_room, user_message, event, db)
-        return
 
     if user_message == "整理資料":
         seven_days_ago = datetime.utcnow() - timedelta(days=7)
@@ -287,3 +197,92 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
                 TextSendMessage(text=f"❌ 發生錯誤，請確認格式或稍後再試：{str(e)}")
             )
             
+
+@handler.add(FollowEvent)
+async def handle_follow(event: FollowEvent, db: AsyncSession):
+
+    """
+        1. get or create user
+        2. get or create chat room
+        3. send welcome template message
+    """
+
+    user_line_id = event.source.user_id
+    user = await get_user_by_line_uid(db, user_line_id)
+    if not user:
+        user = await create_user(db, user_line_id, "Profile Name")
+        print(f"新使用者 {user_line_id} 已創建")
+    else:
+        print(f"使用者 {user_line_id} 已存在")
+    
+    chat_room = await get_chat_room_by_user_id(db, user.id)
+    if not chat_room:
+        chat_room = await create_chat_room(db, user.id)
+        print(f"新聊天室已創建，使用者 {user_line_id} 的聊天室 ID：{chat_room.id}")
+
+    print("開始自動回覆流程")
+    await run_bot_flow(chat_room, "", event, db)
+
+
+# 控制 bot 自動回覆流程  By Benjamin
+async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
+    STEP_MAP = {
+        0: ask_color,
+        1: ask_budget,
+        # 2: ask_special,
+        # 3: final_confirm,
+    }
+
+    # ── 1. 根據 bot_step 叫對的 handler
+    handler = STEP_MAP.get(chat_room.bot_step)  # Handler 一定會回傳 (nextstep, manual_override)
+
+    if handler is None: # 如果找不到對應的 handler，表示 bot_step 錯誤
+        print(f"Error: No handler for bot_step {chat_room.bot_step}, reset bot_step to 0")
+        chat_room.bot_step = 0
+        chat_room.stage = ChatRoomStage.MANUAL
+        await db.commit()
+        return
+
+    # ── 2. 執行該節點邏輯，並取得下一步
+    next_step, manual_override = await handler(text, event, db)
+
+    if manual_override:
+        chat_room.stage = ChatRoomStage.WAITING_OWNER
+        chat_room.bot_step = -1
+    else:
+        chat_room.bot_step = next_step
+        if next_step == -1:
+            chat_room.stage = ChatRoomStage.WAITING_OWNER
+
+    await db.commit()
+
+async def ask_color(user_text, event, db):
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage("想要什麼顏色的客製化花束？")
+    )
+    return 0, False   # stay on step 0 等用戶回答
+
+    # 第二回合：收集使用者顏色
+    color = user_text.strip()
+    # TODO validate color, save into draft table
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage("好的～預算大概多少呢？")
+    )
+    return 1, False   # 下一節點 = 1（ask_budget）
+
+# ── 2. 預算詢問
+async def ask_budget(user_text, event, db):
+    budget = user_text.strip() 
+    # TODO validate, save
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
+    )
+    return -1, False  # -1 = flow finished
+
+# ── 3. 特別需求詢問 之類的
+
+
+# Handler 到這裡結束

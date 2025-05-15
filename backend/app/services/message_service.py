@@ -10,7 +10,6 @@ from app.models.user import User
 from app.schemas.chat import ChatRoomOut, ChatMessageOut, ChatMessageCreate
 from app.utils.line import LINE_push_message
 
-
 async def get_chat_room_list(db: AsyncSession) -> List[ChatRoomOut]:
     stmt = (
         select(ChatRoom)
@@ -45,6 +44,32 @@ async def get_chat_room_list(db: AsyncSession) -> List[ChatRoomOut]:
 
     return response
 
+async def get_chat_room_by_room_id(db: AsyncSession, room_id: int) -> Optional[ChatRoom]:
+    stmt = (
+        select(ChatRoom)
+        .options(joinedload(ChatRoom.user))
+        .where(ChatRoom.id == room_id)
+    )
+    result = await db.execute(stmt)
+    room = result.scalar_one_or_none()
+    return room
+
+async def get_chat_room_by_user_id(db: AsyncSession, user_id: int) -> Optional[ChatRoom]:
+    stmt = (
+        select(ChatRoom)
+        .options(joinedload(ChatRoom.user))
+        .where(ChatRoom.user_id == user_id)
+    )
+    result = await db.execute(stmt)
+    room = result.scalar_one_or_none()
+    return room
+
+async def create_chat_room(db: AsyncSession, user_id: int) -> ChatRoom:
+    room = ChatRoom(user_id=user_id, stage="bot_active", created_at=datetime.utcnow())
+    db.add(room)
+    await db.commit()
+    await db.refresh(room)
+    return room
 
 async def get_chat_messages(db: AsyncSession, room_id: int, after: Optional[datetime] = None) -> List[ChatMessageOut]:
     stmt = select(ChatMessage).where(ChatMessage.room_id == room_id)
@@ -110,7 +135,6 @@ async def create_staff_message(db: AsyncSession, room_id: int, data: ChatMessage
         updated_at=datetime.utcnow()
     )
     db.add(message)
-
 
     await db.commit()
     await db.refresh(message)
