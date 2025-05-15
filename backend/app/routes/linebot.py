@@ -12,7 +12,6 @@ from app.models.chat import ChatRoom
 from app.models.chat import ChatMessage
 from app.models.user import User
 from app.models.order import Order
-from app.models.logistics import Shipment
 from app.managers.prompt_manager import PromptManager
 
 
