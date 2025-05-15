@@ -6,6 +6,7 @@ from app.routes.orders import api_router as orders_router
 from app.routes.statistics import api_router as stats_router
 from app.routes.messages import api_router as messages_router
 from app.routes.linebot import api_router as linebot_router
+from app.routes.export_docx import api_router
 
 app = FastAPI(
     title="花店自動化系統 API",
@@ -31,10 +32,8 @@ app.include_router(orders_router, tags=["Orders"])
 app.include_router(messages_router, tags=["Chat"])
 app.include_router(stats_router,   tags=["Statistics"])
 app.include_router(linebot_router, tags=["LINE Bot Reply Messages"])
+app.include_router(api_router)
 
 # === 本地啟動指令 =======================================================
 # uvicorn app.main:app --reload --port 8000
 # Render 部署：確保 start 命令改成 uvicorn ↑↑
-
-from app.routes.export_docx import api_router
-app.include_router(api_router)
