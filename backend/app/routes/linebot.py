@@ -23,6 +23,18 @@ import json
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
+# ──── 缺資料互動暫存（user_line_id -> dict） ────
+order_confirm_cache: dict[str, dict] = {}
+
+# 欄位 prompt 對應
+FIELD_PROMPT_MAP = {
+    "name": "收件人姓名",
+    "phone": "聯絡電話",
+    "item_type": "商品類型",
+    "product_name": "商品名稱",
+    "quantity": "數量",
+}
+
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
@@ -105,6 +117,12 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         await run_welcome_flow(chat_room, user_message, event, db)
         return
 
+    if chat_room.stage == ChatRoomStage.ORDER_CONFIRM:
+        await run_order_confirm_flow(
+            chat_room, user_message, user_line_id, event, db
+        )
+        return
+
     # Bot 自動回覆流程
     if chat_room.stage == ChatRoomStage.BOT_ACTIVE:
         await run_bot_flow(chat_room, user_message, event, db)
@@ -141,12 +159,11 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         gpt_reply = response.choices[0].message.content.strip()
         parsed_reply = json.loads(gpt_reply)
 
-        reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n，請確認資訊。"
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply_text)
-        )
-
+        # reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n，請確認資訊。"
+        # line_bot_api.reply_message(
+        #     event.reply_token,
+        #     TextSendMessage(text=reply_text)
+        # )
 
         user = await update_user_info(
             db,
@@ -172,18 +189,37 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )
+
         db.add(order_draft)
         await db.commit()
         await db.refresh(order_draft)
-    
+        # ---------- 檢查必填欄位 ----------
+        required_fields = ["name", "phone", "item_type", "product_name", "quantity"]
+        missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
+        if missing_fields:
+            # 進入 ORDER_CONFIRM 流程，逐欄位詢問
+            order_confirm_cache[user_line_id] = {
+                "missing": missing_fields,
+                "current_idx": 0,
+                "order_data": parsed_reply
+            }
+            chat_room.stage = ChatRoomStage.ORDER_CONFIRM
+            chat_room.bot_step = 0
+            await db.commit()
+
+            first_field = missing_fields[0]
+            display = FIELD_PROMPT_MAP.get(first_field, first_field)
+            line_bot_api.reply_message(
+                event.reply_token,
+                TextSendMessage(text=f"請補充「{display}」：")
+            )
+            return  # 先跳出，不建草稿
+
         stmt = update(ChatMessage)\
             .where(ChatMessage.id.in_([message.id for message in messages]))\
             .values(processed=True)
         await db.execute(stmt)
         await db.commit()
-
-        
-
 
 @handler.add(FollowEvent)
 async def handle_follow(event: FollowEvent, db: AsyncSession):
@@ -262,7 +298,106 @@ async def run_welcome_flow(
     await db.commit()
 
 
-# 控制 bot 自動回覆流程  By Benjamin
+# 控制 bot 檢查訂單缺少資料 流程  By Benjamin
+#
+# ──────────────────────────────────────────────────────────────
+async def run_order_confirm_flow(
+    chat_room: ChatRoom,
+    user_text: str,
+    user_line_id: str,
+    event: MessageEvent,
+    db: AsyncSession
+):
+    """
+    逐欄位收集缺少的資料，全部補齊後轉成正式 Order。
+    """
+    cache = order_confirm_cache.get(user_line_id)
+    if not cache:
+        # safety fallback
+        chat_room.stage = ChatRoomStage.WAITING_OWNER
+        await db.commit()
+        return
+
+    missing = cache["missing"]
+    idx = cache["current_idx"]
+    order_data = cache["order_data"]
+
+    # 使用者剛回覆 -> 存進 order_data
+    if idx < len(missing):
+        field = missing[idx]
+        order_data[field] = user_text.strip()
+        idx += 1
+        cache["current_idx"] = idx
+
+    # 還有下一個欄位要問
+    if idx < len(missing):
+        next_field = missing[idx]
+        disp = FIELD_PROMPT_MAP.get(next_field, next_field)
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=f"謝謝！請再提供給我「{disp}」：")
+        )
+        return
+
+    # ---- 全部資料已補齊 ----
+    user = await update_user_info(
+        db, chat_room.user_id,
+        name=order_data.get("name"),
+        phone=order_data.get("phone"),
+    )
+
+    order_draft = OrderDraft(
+        user_id=user.id,
+        room_id=chat_room.id,
+        status=OrderDraftStatus.COLLECTING,
+        item_type=order_data.get("item_type"),
+        product_name=order_data.get("product_name"),
+        quantity=order_data.get("quantity"),
+        notes=order_data.get("notes", ""),
+        card_message=order_data.get("card_message", ""),
+        receipt_address=order_data.get("receipt_address", ""),
+        total_amount=order_data.get("total_amount"),
+        shipment_method=order_data.get("shipment_method"),
+        shipment_status=order_data.get("shipment_status"),
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    db.add(order_draft)
+    await db.commit()
+    await db.refresh(order_draft)
+
+    order = Order(
+        user_id=user.id,
+        room_id=chat_room.id,
+        item_type=order_draft.item_type,
+        product_name=order_draft.product_name,
+        quantity=order_draft.quantity,
+        notes=order_draft.notes,
+        card_message=order_draft.card_message,
+        receipt_address=order_draft.receipt_address,
+        total_amount=order_draft.total_amount,
+        shipment_method=order_draft.shipment_method,
+        shipment_status="PENDING",
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow()
+    )
+    db.add(order)
+
+    # 清理 cache & 狀態
+    order_confirm_cache.pop(user_line_id, None)
+    chat_room.stage = ChatRoomStage.WAITING_OWNER
+    chat_room.bot_step = -1
+
+    await db.commit()
+    await db.refresh(order)
+
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text="✅ 資料已補齊，訂單建立完成！我們將盡快與您聯繫～")
+    )
+
+# ──────────────────────────────────────────────────────────────
+
 async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
     STEP_MAP = {
         0: ask_color,
