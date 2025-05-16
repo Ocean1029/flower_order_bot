@@ -12,6 +12,11 @@ async def get_user_by_line_uid(db: AsyncSession, line_uid: str) -> User:
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
 
+async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
+    stmt = select(User).where(User.id == user_id)
+    result = await db.execute(stmt)
+    return result.scalar_one_or_none()
+
 async def create_user(db: AsyncSession, line_uid: str, name: str) -> User:
     user = User(line_uid=line_uid, name=name)
     db.add(user)
