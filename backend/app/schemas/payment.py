@@ -3,10 +3,9 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from app.enums.payment import PaymentStatus
-
 class PaymentMethodBase(BaseModel):
     id: int
-    active: bool = True
+    active: bool
     code: str
     display_name: str
     display_image_url: Optional[str] = None
