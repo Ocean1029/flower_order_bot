@@ -42,5 +42,5 @@ async def post_message(
 
 @api_router.post("/{room_id}/switch_mode", response_model=dict)
 async def switch_mode(room_id: int, body: ChatRoomStage, db: AsyncSession = Depends(get_db)):
-    await switch_chat_room_mode(db, room_id, body.mode)
-    return {"status": "ok", "new_mode": body.mode}
+    await switch_chat_room_mode(db, room_id, body)
+    return {"message": "success"}
