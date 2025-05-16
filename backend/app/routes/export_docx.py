@@ -39,7 +39,7 @@ async def export_order_docx(order_id: int, db: AsyncSession = Depends(get_db)):
         "receipt_address": getattr(order, "receipt_address", ""),
         "item": order.item,
         "quantity": order.quantity,
-        "payway": getattr(order, "payway", ""),
+        "pay_way": getattr(order, "pay_way", ""),
         "note": order.note,
         "card_message": getattr(order, "card_message", ""),
         "weekday": weekday_str,

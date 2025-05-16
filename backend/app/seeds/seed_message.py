@@ -10,8 +10,8 @@ async def create_random_message(session, user):
     # 創建聊天室
     room = ChatRoom(
         user_id=user.id,
-        stage=ChatRoomStage.BOT_ACTIVE,
-        bot_step=random.randint(1, 5),
+        stage=ChatRoomStage.WELCOME,
+        bot_step=-1,
         unread_count=random.randint(0, 5),
         last_message_ts=datetime.utcnow(),
     )
