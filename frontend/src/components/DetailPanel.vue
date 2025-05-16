@@ -1,5 +1,8 @@
 <template>
   <div class="detail-panel">
+    <button class="close-btn" @click="$emit('close')">
+      <i class="fas fa-angle-double-right"></i>
+    </button>
     <h3 class="panel-title">詳細資料</h3>
     <div class="detail-row" v-if="room">
       <div class="detail-label">訂單編號</div>
@@ -64,6 +67,21 @@ const props = defineProps({
   display: flex;
   flex-direction: column;
   gap: 12px;
+  position: relative;
+}
+.close-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  color: #6168FC;
+  cursor: pointer;
+  z-index: 10;
+}
+.close-btn:hover {
+  color: #FF6F91;
 }
 .panel-title {
   font-size: 20px;

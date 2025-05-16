@@ -108,7 +108,7 @@ export const mockChatRooms = [
     lastMessage: '請問可以加卡片嗎？',
     lastMessageTime: new Date(Date.now() - 3600000),
     unreadCount: 0,
-    status: '今日訂單',
+    status: '人工溝通',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg'
   },
   {
@@ -126,7 +126,7 @@ export const mockChatRooms = [
     lastMessage: '自動回覆測試',
     lastMessageTime: new Date(Date.now() - 7200000),
     unreadCount: 3,
-    status: '自動回復',
+    status: '自動回覆',
     avatar: 'https://randomuser.me/api/portraits/men/12.jpg'
   },
   {
@@ -135,7 +135,7 @@ export const mockChatRooms = [
     lastMessage: '訂單已完成',
     lastMessageTime: new Date(Date.now() - 1800000),
     unreadCount: 0,
-    status: '所有訂單',
+    status: '訂單完成',
     avatar: 'https://randomuser.me/api/portraits/men/56.jpg'
   }
 ];

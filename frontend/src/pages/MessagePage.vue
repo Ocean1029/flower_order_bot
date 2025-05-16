@@ -53,7 +53,7 @@
 <style scoped>
 .chat-main-layout {
   display: flex;
-  height: calc(100vh - 160px); /* 80px Navbar + 80px OrderTitle */
+  height: calc(100vh - 80px); /* 80px Navbar*/
   margin-top: 160px;
 }
 .chat-list-panel {

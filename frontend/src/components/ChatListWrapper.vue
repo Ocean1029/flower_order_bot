@@ -1,83 +1,450 @@
 <template>
   <div class="chat-list">
-    <div class="chatlist-tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab"
-        :class="['tab', { active: currentTab === tab }]"
-        @click="currentTab = tab"
-      >
-        {{ tab }}
-      </button>
+    <!-- section：上方標題列 -->
+    <div class="section">
+      <div class="head">
+        <!-- Icon Container -->
+          <div class="message-circle">
+            <i class="far fa-comment" style="color: #6168FC;"></i>
+          </div>
+        <!-- Title -->
+        <span class="message-title">Message</span>
+        <!-- Unread Count -->
+        <div class="number-wrapper">
+          <div class="ellipse"></div>
+          <span class="number">{{ unreadCount }}</span>
+        </div>
+      </div>
     </div>
-    <div class="chat-rooms">
-      <ChatRoomItem
+
+    <!-- content：聊天室列表 -->
+    <div class="content"
+      ref="contentRef"
+      @scroll="handleScroll"
+    >
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <button
+          v-for="tab in tabs"
+          :key="tab"
+          :class="['filter-btn', { active: currentTab === tab }]"
+          @click="currentTab = tab"
+        >
+          <span class="filter-label">{{ tab }}</span>
+        </button>
+      </div>
+
+      <!-- 聊天室卡片列表 -->
+      <div
         v-for="room in filteredRooms"
         :key="room.id"
-        :room="room"
+        class="customer-card-wrapper"
+        :class="{ active: selectedRoomId === room.id }"
         @click="selectRoom(room)"
-      />
+      >
+        <div class="frame6">
+          <!-- 頭像 -->
+          <img class="pic" :src="room.avatar" alt="avatar" />
+
+          <div class="frame5">
+            <div class="frame4">
+              <div class="frame3">
+                <span class="name">{{ room.name }}</span>
+                <span class="time">{{ formatTime(room.lastMessageTime) }}</span>
+              </div>
+              <div class="frame7">
+                <span class="unread_text">{{ room.lastMessage }}</span>
+                <span
+                  v-if="room.unreadCount > 0 && selectedRoomId !== room.id"
+                  class="unread_point"
+                ></span>
+              </div>
+            </div>
+            <div
+              class="frame2"
+              :class="statusClass(room.status)"
+            >
+              <span
+                :class="['status-label', statusClass(room.status)]"
+              >
+                {{ room.status }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
-import ChatRoomItem from './ChatRoomItem.vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 const props = defineProps({
-  chatRooms: Array
+  chatRooms: Array,
+  selectedRoomId: String
 })
 const emit = defineEmits(['selectRoom'])
+
 function selectRoom(room) {
   emit('selectRoom', room)
 }
+
 const tabs = [
   '所有訂單',
   '人工溝通',
   '今日訂單',
   '等待備貨',
-  '自動回復'
+  '自動回覆'
 ]
 const currentTab = ref('所有訂單')
+
 const filteredRooms = computed(() => {
   if (currentTab.value === '所有訂單') return props.chatRooms
   return props.chatRooms.filter(r => r.status === currentTab.value)
+})
+
+const unreadCount = computed(() =>
+  props.chatRooms.reduce(
+    (sum, room) =>
+      sum +
+      (room.unreadCount && props.selectedRoomId !== room.id ? room.unreadCount : 0),
+    0
+  )
+)
+
+function statusClass(status) {
+  switch (status) {
+    case '人工溝通': return 'manual'
+    case '自動回覆': return 'auto'
+    case '等待備貨': return 'wait'
+    case '訂單完成': return 'done'
+    default: return ''
+  }
+}
+
+function formatTime(timestamp) {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  const now = new Date()
+  if (date.toDateString() === now.toDateString()) {
+    return date.toLocaleTimeString('zh-TW', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  }
+  return `${date.getMonth() + 1}/${date.getDate()}`
+}
+
+const contentRef = ref(null)
+
+function handleScroll() {
+  // No need to update scroll bar manually as the native scrollbar will handle it
+}
+
+onMounted(() => {
+  // No need to call nextTick as the native scrollbar will handle it
+})
+watch(filteredRooms, () => {
+  // No need to call nextTick as the native scrollbar will handle it
 })
 </script>
 
 <style scoped>
 .chat-list {
-  height: 100vh;
-  background-color: #f5f5f5;
+  position: absolute;
+  top: 56px;
+  width: 360px;
+  height: 944px;
+  background: #fff;
+  border-right: 1px solid #B3B3B3;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
 }
-.chatlist-tabs {
+
+/* section */
+.section {
+  position: relative;
+  width: 360px;
+  height: 56px;
+  margin-left: 0px;
+  top: 0px;
   display: flex;
-  gap: 8px;
-  padding: 18px 0 8px 0;
-  background: #fff;
-  border-bottom: 1.5px solid #e9e9e9;
-  justify-content: space-between;
+  align-items: center;
 }
-.tab {
-  background: none;
-  border: none;
-  font-size: 15px;
+.head {
+  position: absolute;
+  height: 36px;
+  top: 20px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.message-circle {
+  position: relative;
+  top: 2px;
+  left: 0px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;  
+}  
+
+.message-title {
+  height: 30px;
+  font-family: 'Noto Sans TC';
   font-weight: 700;
+  font-size: 24px;
+  line-height: 125%;
+  letter-spacing: 0.1em;
+  vertical-align: middle;
   color: #6168FC;
-  padding: 8px 18px;
-  border-radius: 16px 16px 0 0;
-  cursor: pointer;
-  transition: background 0.2s, color 0.2s;
 }
-.tab.active {
-  background: #eaf2ff;
-  color: #4F8CFF;
+
+.number-wrapper {
+  position: relative;
+  width: 32px;
+  height: 32px;
+}  
+.ellipse {
+  position: relative;
+  top: 2px;
+  left: 2px;
+  width: 32px;
+  height: 32px;
+  background: #D8EAFF;  
+  border-radius: 50%;
 }
-.chat-rooms {
-  flex: 1;
+.number {
+  position: absolute;
+  top: 6px;
+  left: 13px;
+  height: 24px;
+  color: #528DD2;
+  font-family: 'Noto Sans TC';
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 113%;
+  letter-spacing: 0%;
+  text-align: center;
+  vertical-align: middle;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* content */
+.content {
+  position: absolute;
+  top: 80px;
+  left: 0;
+  width: 360px;
+  height: calc(100vh - 80px - 80px);
   overflow-y: auto;
-  padding: 0.5rem 0.5rem 0 0.5rem;
+  overflow-x: hidden;
+  flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: #E4E4E4 #F7F7F7;
 }
-</style> 
+.content::-webkit-scrollbar {
+  width: 8px;
+  background: #F7F7F7;
+}
+.content::-webkit-scrollbar-thumb {
+  background: #E4E4E4;
+  border-radius: 12px;
+}
+.content::-webkit-scrollbar-track {
+  background: #F7F7F7;
+  border-radius: 12px;
+}
+
+/* filter bar */
+.filter-bar {
+  position: relative;
+  width: 360px;
+  height: 40px;
+  background: #F7F7F7;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 6px 0 6px 12px;
+  margin: 0 0 12px 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: thin;
+  scrollbar-color: #E4E4E4 #F7F7F7;
+  box-sizing: border-box;
+}
+.filter-btn {
+  width: 72px;
+  height: 28px;
+  border-radius: 36px;
+  background: #F7F7F7;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 11px 8px;
+  margin-right: 12px;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.filter-btn:last-child {
+  margin-right: 0;
+}
+.filter-btn.active,
+.filter-btn:hover {
+  background: #C5C7FF;
+}
+
+/* customer cards */
+.customer-card-wrapper {
+  width: 360px;
+  height: 100px;
+  border-radius: 12px;
+  background: transparent;
+  transition: background 0.2s;
+  display: flex;
+  align-items: center;
+}
+
+/* 被選取時（active） */
+.customer-card-wrapper.active {
+  background: #D8EAFF;
+}
+
+.frame6 {
+  display: flex;
+  align-items: center;
+  width: 327;
+  height: 74px;
+  margin-left: 17px;
+  gap: 16px;
+}
+.pic {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.frame5 {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 74px;
+  width: 255px;
+  gap: 8px;
+}
+.frame4 {
+  display: flex;
+  flex-direction: column;
+  height: 46px;
+  width: 255px;
+  gap: 4px;
+}
+.frame3 {
+  display: flex;
+  justify-content: space-between;
+  height: 22px;
+  width: 255px;
+  align-items: center;
+}
+.frame7 {
+  display: flex;
+  justify-content: space-between;
+  height: 22px;
+  width: 255px;
+  align-items: center;
+  padding-right: 8px;
+}
+.name {
+  font-family: 'Noto Sans TC';
+  font-weight: 700;
+  font-size: 16px;
+  height: 22px;
+  line-height: 140%;
+  color: #000;
+}
+.time {
+  font-family: 'Noto Sans TC';
+  font-weight: 700;
+  font-size: 16px;
+  height: 22px;
+  line-height: 140%;
+  color: #00000061;
+}
+.unread_text {
+  font-family: 'Noto Sans TC';
+  font-weight: 400;
+  font-size: 14px;
+  height: 20px;
+  line-height: 140%;
+  color: #00000099;
+}
+.unread_point {
+  width: 12px;
+  height: 12px;
+  background: #77B5FF;
+  border-radius: 50%;
+}
+.frame2.manual { background: #FFCEE7; }
+.frame2.auto { background: #D8EAFF; }
+.frame2.wait { background: #C5C7FF; }
+.frame2.done { background: #EBCDCC; }
+.frame2 {
+  display: flex;
+  align-items: center;
+  width: 72px;
+  height: 20px;
+  gap: 10px;
+  border-radius: 12px;
+  /* 其他你要的設定 */
+}
+
+.status-label.manual { color: #FF349A; background: transparent; }
+.status-label.auto { color: #528DD2; background: transparent; }
+.status-label.wait { color: #6168FC; background: transparent; }
+.status-label.done { color: #81386A; background: transparent; }
+
+.status-label {
+  font-family: 'Noto Sans TC';
+  font-weight: 700;
+  font-size: 12px;
+  line-height: 113%;
+  letter-spacing: 0%;
+  text-align: center;
+  vertical-align: middle;
+  padding: 0 12px
+}
+
+.filter-bar::-webkit-scrollbar {
+  height: 6px;
+}
+.filter-bar::-webkit-scrollbar-thumb {
+  background: #E4E4E4;
+  border-radius: 3px;
+}
+
+.filter-label {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 113%;
+  letter-spacing: 0%;
+  vertical-align: middle;
+  color: #00000099;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+</style>
