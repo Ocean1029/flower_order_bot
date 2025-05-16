@@ -1,6 +1,5 @@
 <template>
   <div class="navbar-wrapper">
-    <!-- 上方品牌 bar -->
     <div class="brand-bar">
       <button class="hamburger-btn" @click="showSidebar = true">
         <i class="fas fa-bars"></i>
@@ -23,6 +22,7 @@ const showSidebar = ref(false)
   top: 0;
   left: 0;
   width: 100%;
+  height: 56px;
   display: flex;
   margin: 0;
   padding: 0;
@@ -33,14 +33,14 @@ const showSidebar = ref(false)
 .brand-bar {
   position: relative;
   width: 1440px;
-  height: 80px;
+  height: 56px;
   border-radius: 24px;
   background: linear-gradient(90.11deg, #6168FC 5.18%, #77B5FF 98.9%);
 }
 
 .hamburger-btn {
   position: relative;
-  top: 26px;
+  top: 13px;
   left: 28px;
   width: 32px;
   height: 32px;
@@ -55,7 +55,7 @@ const showSidebar = ref(false)
 
 .brand-title {
   position: absolute;
-  top: 25px;
+  top: 13px;
   left: 73px;
   height: 30px;
   display: flex;
