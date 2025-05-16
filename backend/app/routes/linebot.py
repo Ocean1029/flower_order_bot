@@ -17,9 +17,7 @@ from app.enums.chat import ChatRoomStage
 from app.enums.order import OrderDraftStatus
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
-from app.utils.line import send_quick_reply_message
-from app.utils.line import send_confirm
-
+from app.utils.line_send_message import send_quick_reply_message, send_confirm
 import os
 import json
 from datetime import datetime, timedelta

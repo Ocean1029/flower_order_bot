@@ -7,7 +7,7 @@ from typing import List, Optional
 from app.models.chat import ChatRoom, ChatMessage
 from app.schemas.chat import ChatRoomOut, ChatMessageOut, ChatMessageBase
 from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
-from app.utils.line_push_message import LINE_push_message
+from app.utils.line_send_message import LINE_push_message
 from app.services.user_service import get_user_by_line_uid
 
 async def get_latest_message(db: AsyncSession, room_id: int) -> Optional[ChatMessageOut]:
