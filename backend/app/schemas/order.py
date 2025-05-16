@@ -54,7 +54,7 @@ class OrderOut(BaseModel):
     order_status: OrderStatus
 
     # 付款資訊
-
+    pay_way: str
     total_amount: float
  
     # 商品資訊

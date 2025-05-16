@@ -8,8 +8,10 @@ from app.models.user import User
 from app.models.order import Order, OrderDraft
 
 from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate
+from app.services.payment_service import get_pay_way_by_order_id
 from app.services.user_service import get_user_by_id
 from app.enums.order import OrderStatus, OrderDraftStatus
+
 
 async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     results = []
@@ -22,10 +24,12 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     for order in orders:
         user = await get_user_by_id(db, order.user_id)
         receiver_user = await get_user_by_id(db, order.receiver_user_id)
+        pay_way = await get_pay_way_by_order_id(db, order.id)
         
         if(not user):
             print(f"User not found for order {order.id}")
             continue
+        
 
         results.append(OrderOut(
             id=order.id,
@@ -37,6 +41,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
             order_date=order.created_at,
             order_status=order.status,
             
+            pay_way=pay_way,
             total_amount=order.total_amount,
             
             item=order.item_type,
@@ -66,7 +71,8 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
     
     user = await get_user_by_id(db, order_draft.user_id) if order_draft else None
     receiver_user = await get_user_by_id(db, order_draft.receiver_user_id) if order_draft else None
-    
+    pay_way = await get_pay_way_by_order_id(db, order_draft.id) if order_draft else None
+
     if order_draft:
         return OrderDraftOut(
             id=order_draft.id,
@@ -78,6 +84,7 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             order_date=order_draft.created_at,
             order_status=order_draft.status,
             
+            pay_way=pay_way,
             total_amount=order_draft.total_amount,
             
             item=order_draft.item_type,
