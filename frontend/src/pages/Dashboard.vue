@@ -3,7 +3,7 @@
   <OrderTitle />
   <div class="page-content">
     <div class="dashboard-section">
-      <StatisticsCards :statics="mockStats" />
+      <StatisticsCards :statics="statics" />
     </div>
     <div class="dashboard-section">
       <OrderTable :data="orders" :columnName="columnName" />
@@ -20,16 +20,21 @@ import { onMounted, ref } from 'vue'
 import { fetchOrders } from '@/api/orders'
 import { fetchStaticData } from '@/api/statics'
 import { getLatestMessages } from '@/api/messages'
-import { mockOrders, mockStats, mockMessages } from '@/mockData.js'
 
 const columnName = [
-  '訂單ID', '姓名', '電話', '花材', '數量', '預算',
-  '取貨方式', '取貨日期', '取貨時間', '付款狀態', '已付款金額', '備註'
+  '訂單ID', '客戶姓名', '客戶電話', '收件地址', '訂單日期', '總金額',
+  '商品', '數量', '備註', '付款方式', '卡片訊息', '星期',
+  '送貨日期時間', '收件人姓名', '收件人電話', '送貨地址', '訂單狀態', '送貨方式'
 ]
 
 const orders = ref([])
 const messages = ref([])
-const statics = ref([])
+const statics = ref({
+  today_orders: 0,
+  pending_orders: 0,
+  monthly_income: 0,
+  total_customers: 0
+})
 
 onMounted(async () => {
   try {

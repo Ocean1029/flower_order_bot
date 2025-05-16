@@ -17,10 +17,10 @@ const searchText = ref('')
 // 狀態顏色對應
 function statusColor(status) {
   switch (status) {
-    case '自動回覆': return 'badge-blue'
-    case '人工溝通': return 'badge-pink'
-    case '等待備貨': return 'badge-purple'
-    case '訂單完成': return 'badge-brown'
+    case 'pending': return 'badge-blue'
+    case 'confirmed': return 'badge-pink'
+    case 'cancelled': return 'badge-gray'
+    case 'completed': return 'badge-brown'
     default: return 'badge-gray'
   }
 }
@@ -44,14 +44,22 @@ function downloadCSV() {
   const rows = props.data.map(row => [
     row.id,
     row.customer_name,
-    row.phone,
-    row.flower,
-    row.qty,
-    row.budget,
-    row.pickup_method,
-    row.pickup_date,
-    row.pickup_time,
-    row.note
+    row.customer_phone,
+    row.receipt_address,
+    new Date(row.order_date).toLocaleString(),
+    row.total_amount,
+    row.item,
+    row.quantity,
+    row.note,
+    row.pay_way,
+    row.card_message,
+    row.weekday,
+    new Date(row.send_datetime).toLocaleString(),
+    row.receiver_name,
+    row.receiver_phone,
+    row.delivery_address,
+    row.order_status,
+    row.shipment_method === 'store_pickup' ? '店取' : '外送'
   ])
 
   const csvContent = [headers, ...rows]
@@ -100,45 +108,50 @@ function downloadCSV() {
       <table class="table table-hover align-middle">
         <thead>
           <tr>
-            <th>訂單編號</th>
-            <th>狀態</th>
-            <th>姓名</th>
-            <th>電話</th>
-            <th>品項</th>
+            <th>訂單ID</th>
+            <th>客戶姓名</th>
+            <th>客戶電話</th>
+            <th>收件地址</th>
+            <th>訂單日期</th>
+            <th>總金額</th>
+            <th>商品</th>
             <th>數量</th>
             <th>備註</th>
-            <th>取貨方式</th>
-            <th>取貨時間</th>
-            <th>金額</th>
             <th>付款方式</th>
+            <th>卡片訊息</th>
+            <th>星期</th>
+            <th>送貨日期時間</th>
+            <th>收件人姓名</th>
+            <th>收件人電話</th>
+            <th>送貨地址</th>
+            <th>訂單狀態</th>
+            <th>送貨方式</th>
           </tr>
         </thead>
         <tbody>
           <tr v-for="(row, index) in filteredData" :key="index">
-            <td>{{ row['訂單編號'] }}</td>
+            <td>{{ row.id }}</td>
+            <td>{{ row.customer_name }}</td>
+            <td>{{ row.customer_phone }}</td>
+            <td>{{ row.receipt_address }}</td>
+            <td>{{ new Date(row.order_date).toLocaleString() }}</td>
+            <td><span class="money">NT {{ row.total_amount }}</span></td>
+            <td>{{ row.item }}</td>
+            <td>{{ row.quantity }}</td>
+            <td>{{ row.note }}</td>
+            <td>{{ row.pay_way }}</td>
+            <td>{{ row.card_message }}</td>
+            <td>{{ row.weekday }}</td>
+            <td>{{ new Date(row.send_datetime).toLocaleString() }}</td>
+            <td>{{ row.receiver_name }}</td>
+            <td>{{ row.receiver_phone }}</td>
+            <td>{{ row.delivery_address }}</td>
             <td>
-              <span :class="['status-badge', statusColor(row['狀態'])]">
-                <i v-if="row['狀態'] === '自動回覆'" class="fas fa-robot me-1"></i>
-                <i v-else-if="row['狀態'] === '人工溝通'" class="fas fa-user-headset me-1"></i>
-                <i v-else-if="row['狀態'] === '等待備貨'" class="fas fa-clock me-1"></i>
-                <i v-else-if="row['狀態'] === '訂單完成'" class="fas fa-check-circle me-1"></i>
-                {{ row['狀態'] }}
+              <span :class="['status-badge', statusColor(row.order_status)]">
+                {{ row.order_status === 'confirmed' ? '已確認' : row.order_status }}
               </span>
             </td>
-            <td>{{ row['姓名'] }}</td>
-            <td>{{ row['電話'] }}</td>
-            <td>{{ row['品項'] }}</td>
-            <td>{{ row['數量'] }}</td>
-            <td>{{ row['備註'] }}</td>
-            <td>{{ row['取貨方式'] }}</td>
-            <td>
-              <span v-if="row['取貨時間'] === 'Nan'" class="text-danger">
-                <i class="fas fa-exclamation-circle me-1"></i>異常
-              </span>
-              <span v-else>{{ row['取貨時間'] }}</span>
-            </td>
-            <td><span class="money">NT {{ row['金額'] }}</span></td>
-            <td>{{ row['付款方式'] }}</td>
+            <td>{{ row.shipment_method === 'store_pickup' ? '店取' : '外送' }}</td>
           </tr>
         </tbody>
       </table>
@@ -295,4 +308,5 @@ tr:hover {
   color: #aaa;
 }
 </style>
+
 
