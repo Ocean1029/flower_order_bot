@@ -2,7 +2,7 @@
 
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from typing import List
+from typing import List, Optional
 
 from app.models.user import User
 from app.models.order import Order, OrderDraft
@@ -11,6 +11,8 @@ from app.models.payment import Payment, PaymentMethod
 from app.schemas.order import OrderOut, OrderDraftOut
 
 from app.services.user_service import get_user_by_id
+
+from app.enums.order import OrderStatus, OrderDraftStatus
 
 async def get_payment_method(db: AsyncSession, order_id: int) -> str:
     payment_stmt = (
@@ -24,7 +26,7 @@ async def get_payment_method(db: AsyncSession, order_id: int) -> str:
     pay_way = payment[1].display_name if payment else "未知"
     return pay_way
 
-async def get_all_orders(db: AsyncSession) -> List[OrderOut]:
+async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     results = []
 
     # 撈出所有訂單
@@ -68,15 +70,20 @@ async def get_all_orders(db: AsyncSession) -> List[OrderOut]:
 
     return results
 
-async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> OrderDraftOut:
-    stmt = select(OrderDraft).where(OrderDraft.room_id == room_id)
+async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional[OrderDraftOut]:
+    stmt = (
+        select(OrderDraft)
+        .where(OrderDraft.room_id == room_id)
+        .where(OrderDraft.status == OrderDraftStatus.COLLECTING)
+        .order_by(OrderDraft.created_at.desc())
+        .limit(1)
+    )
     result = await db.execute(stmt)
     order_draft = result.scalar_one_or_none()
     
     user = await get_user_by_id(db, order_draft.user_id) if order_draft else None
     receiver_user = await get_user_by_id(db, order_draft.receiver_user_id) if order_draft else None
     pay_way = await get_payment_method(db, order_draft.id) if order_draft else "未知"
-
 
     if order_draft:
         return OrderDraftOut(
