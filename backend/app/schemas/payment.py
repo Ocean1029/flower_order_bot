@@ -4,6 +4,15 @@ from pydantic import BaseModel
 
 from app.enums.payment import PaymentStatus
 
+class PaymentMethodBase(BaseModel):
+    id: int
+    active: bool = True
+    code: str
+    display_name: str
+    display_image_url: Optional[str] = None
+    instructions: str
+    requires_manual_confirm: bool = True
+    
 class PaymentBase(BaseModel):
     order_id: int
     status: PaymentStatus = PaymentStatus.PENDING
@@ -22,21 +31,3 @@ class PaymentRead(PaymentBase):
 
     class Config:
         from_attributes = True
-
-class PaymentMethodBase(BaseModel):
-    code: str
-    display_name: str
-    display_image_url: Optional[str] = None
-    instructions: str
-    requires_manual_confirm: bool = True
-    active: bool = True
-    sort_order: int = 0
-
-class PaymentMethodCreate(PaymentMethodBase):
-    pass
-
-class PaymentMethodRead(PaymentMethodBase):
-    id: int
-
-    class Config:
-        from_attributes = True 

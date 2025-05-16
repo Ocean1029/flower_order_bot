@@ -1,30 +1,15 @@
 # app/services/order_service.py
 
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, update
 from typing import List, Optional
 
 from app.models.user import User
 from app.models.order import Order, OrderDraft
-from app.models.payment import Payment, PaymentMethod
 
-from app.schemas.order import OrderOut, OrderDraftOut
-
+from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate
 from app.services.user_service import get_user_by_id
-
 from app.enums.order import OrderStatus, OrderDraftStatus
-
-async def get_payment_method(db: AsyncSession, order_id: int) -> str:
-    payment_stmt = (
-        select(Payment, PaymentMethod)
-        .join(PaymentMethod, Payment.method_id == PaymentMethod.id)
-        .where(Payment.order_id == order_id)
-        .limit(1)
-    )
-    payment_result = await db.execute(payment_stmt)
-    payment = payment_result.first()
-    pay_way = payment[1].display_name if payment else "未知"
-    return pay_way
 
 async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     results = []
@@ -37,8 +22,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     for order in orders:
         user = await get_user_by_id(db, order.user_id)
         receiver_user = await get_user_by_id(db, order.receiver_user_id)
-        pay_way = await get_payment_method(db, order.id)
-
+        
         if(not user):
             print(f"User not found for order {order.id}")
             continue
@@ -53,7 +37,6 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
             order_date=order.created_at,
             order_status=order.status,
             
-            pay_way=pay_way,
             total_amount=order.total_amount,
             
             item=order.item_type,
@@ -83,8 +66,7 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
     
     user = await get_user_by_id(db, order_draft.user_id) if order_draft else None
     receiver_user = await get_user_by_id(db, order_draft.receiver_user_id) if order_draft else None
-    pay_way = await get_payment_method(db, order_draft.id) if order_draft else "未知"
-
+    
     if order_draft:
         return OrderDraftOut(
             id=order_draft.id,
@@ -96,7 +78,6 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             order_date=order_draft.created_at,
             order_status=order_draft.status,
             
-            pay_way=pay_way,
             total_amount=order_draft.total_amount,
             
             item=order_draft.item_type,
@@ -149,3 +130,25 @@ async def delete_order(db: AsyncSession, order_id: int) -> bool:
         return True
     
     return False
+
+
+async def update_order_draft_by_id(
+    db: AsyncSession, room_id: int, update_schema: OrderDraftUpdate
+) -> Optional[OrderDraftOut]:
+
+    update_data = update_schema.model_dump()
+    print(f"update_data: {update_data}")
+    
+    # if not update_data:
+    #     raise ValueError("No update fields provided.")
+    # stmt = (
+    #     update(OrderDraft)
+    #     .where(OrderDraft.room_id == room_id)
+    #     .values(**update_data)
+    #     .execution_options(synchronize_session="fetch")
+    # )
+
+    # await db.execute(stmt)
+    # await db.commit()
+
+    return await get_order_draft_by_room_id(db, room_id)

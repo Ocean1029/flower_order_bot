@@ -5,6 +5,7 @@ from app.routes.health import router as health_router
 from app.routes.orders import api_router as orders_router
 from app.routes.statistics import api_router as stats_router
 from app.routes.messages import api_router as messages_router
+from app.routes.payment import api_router as payment_router
 from app.routes.linebot import api_router as linebot_router
 from app.routes.export_docx import api_router as export_docx_router
 
@@ -28,6 +29,7 @@ app.include_router(orders_router, tags=["Orders"])
 app.include_router(export_docx_router, tags=["Orders"])
 app.include_router(messages_router, tags=["Chat"])
 app.include_router(stats_router,   tags=["Statistics"])
+app.include_router(payment_router, tags=["Payment"])
 app.include_router(linebot_router, tags=["LINE Bot Reply Messages"])
 
 # === 本地啟動指令 =======================================================
