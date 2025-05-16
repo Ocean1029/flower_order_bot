@@ -14,20 +14,14 @@ class ChatRoomOut(BaseModel):
     status: ChatRoomStage
     last_message: Optional[LastMessage]
 
-class ChatMessageOut(BaseModel):
-    id: int
-    direction: ChatMessageDirection
-    text: Optional[str]
-    image_url: Optional[str]
-    status: ChatMessageStatus
-    line_msg_id: Optional[str]
-    processed: bool
-    created_at: datetime
-
-class ChatMessageCreate(BaseModel):
-    direction: ChatMessageDirection
+class ChatMessageBase(BaseModel):
     text: Optional[str] = None
     image_url: Optional[str] = None
 
-class ChatRoomModeSwitch(BaseModel):
-    mode: ChatRoomStage
+
+class ChatMessageOut(BaseModel):
+    id: int
+    direction: ChatMessageDirection
+    message: ChatMessageBase
+    status: ChatMessageStatus
+    created_at: datetime

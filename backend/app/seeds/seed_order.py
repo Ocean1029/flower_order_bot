@@ -1,51 +1,62 @@
 import random
 from datetime import datetime, timedelta
 from app.models.order import Order, OrderDraft
-from app.models.logistics import Shipment
 from app.models.payment import Payment, PaymentMethod
 from app.enums.payment import PaymentStatus
+from app.enums.order import OrderStatus, OrderDraftStatus
+from app.enums.shipment import ShipmentMethod, ShipmentStatus
 from faker import Faker
 
 fake = Faker("zh_TW")
 
-async def create_random_order(session, user, room):
+async def create_random_order(session, user):
     # 建立草稿訂單
+    total = round(random.uniform(1000, 3000), 2)
+    delivery_datetime = datetime.now() + timedelta(days=random.randint(1, 3))
+    shipment_method = random.choice([ShipmentMethod.STORE_PICKUP, ShipmentMethod.DELIVERY])
+    item_type = random.choice(["花束", "盆花"])
+    product_name = random.choice(["情人節限定", "母親節感恩", "開幕大吉"])
+    
     draft = OrderDraft(
-        room_id=room.id,
+        room_id=random.randint(1, 10),  # 假設有 10 個聊天室
         user_id=user.id,
-        status="completed",
+        receiver_user_id=user.id,  # 預設收件人就是訂購人
+        status=OrderDraftStatus.COMPLETED,
+        item_type=item_type,
+        product_name=product_name,
+        quantity=random.randint(1, 5),
+        total_amount=total,
+        notes=fake.sentence(),
+        card_message=fake.sentence(),
+        shipment_method=shipment_method,
+        shipment_status=ShipmentStatus.PENDING,
+        receipt_address=fake.address(),
+        delivery_address=fake.address() if shipment_method == ShipmentMethod.DELIVERY else None,
+        delivery_datetime=delivery_datetime if shipment_method == ShipmentMethod.DELIVERY else None,
     )
     session.add(draft)
     await session.flush()  # 確保 draft.id 可用
 
     # 建立正式訂單
-    total = round(random.uniform(1000, 3000), 2)
     order = Order(
         user_id=user.id,
+        receiver_user_id=user.id,  # 預設收件人就是訂購人
         draft_id=draft.id,
-        item_type=random.choice(["花束", "盆花"]),
-        product_name=random.choice(["情人節限定", "母親節感恩", "開幕大吉"]),
-        quantity=random.randint(1, 5),
-        notes=fake.sentence(),
-        card_message=fake.sentence(),
-        receipt_address=fake.address(),
+        item_type=item_type,
+        product_name=product_name,
+        quantity=draft.quantity,
+        notes=draft.notes,
+        card_message=draft.card_message,
+        receipt_address=draft.receipt_address,
         total_amount=total,
-        status="confirmed",
+        status=OrderStatus.CONFIRMED,
+        shipment_method=shipment_method,
+        shipment_status=ShipmentStatus.PENDING,
+        delivery_address=draft.delivery_address,
+        delivery_datetime=draft.delivery_datetime,
     )
     session.add(order)
     await session.flush()  # 確保 order.id 可用
-
-    # 建立物流資訊
-    shipment = Shipment(
-        order_id=order.id,
-        method=random.choice(["store_pickup", "delivery"]),
-        status="pending",
-        receiver_user_id=user.id,
-        address=fake.address(),
-        delivery_datetime=datetime.now() + timedelta(days=random.randint(1, 3)),
-    )
-    session.add(shipment)
-    await session.flush()  # 確保 shipment.id 可用
 
     # 取得一個啟用的付款方式
     payment_method = (

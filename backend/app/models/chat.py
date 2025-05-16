@@ -27,6 +27,7 @@ class ChatRoom(Base):
     messages = relationship("ChatMessage", back_populates="room")
     user = relationship("User", backref="chat_rooms")
     assigned_staff = relationship("StaffUser", backref="assigned_rooms")
+    order_drafts = relationship("OrderDraft", back_populates="room")
     
 
 class ChatMessage(Base):
