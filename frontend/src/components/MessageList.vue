@@ -34,11 +34,11 @@ const processedMessages = computed(() => {
     }
     // 判斷 isFirstInMinute
     let isFirstInMinute = false
-    if (!msg.isSelf) {
+    if (msg.direction === 'incoming') {
       if (idx === 0) isFirstInMinute = true
       else {
         const prev = arr[idx - 1]
-        isFirstInMinute = prev.isSelf ||
+        isFirstInMinute = prev.direction !== 'incoming' ||
           (new Date(msg.timestamp).getMinutes() !== new Date(prev.timestamp).getMinutes())
       }
     }

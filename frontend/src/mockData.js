@@ -147,28 +147,28 @@ export const mockChatMessages = {
       sender: "王小明",
       text: "我想訂兩束玫瑰花，預算2000元",
       timestamp: new Date(Date.now() - 3600000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 2,
       sender: "我",
       text: "好的，請問要什麼顏色？",
       timestamp: new Date(Date.now() - 3500000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     },
     {
       id: 3,
       sender: "王小明",
       text: "紅色和白色都可以，謝謝！",
       timestamp: new Date(Date.now() - 3400000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 4,
       sender: "我",
       text: "沒問題，預計明天可取貨。",
       timestamp: new Date(Date.now() - 3300000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     }
   ],
   "2": [
@@ -177,28 +177,28 @@ export const mockChatMessages = {
       sender: "李小華",
       text: "請問有百合花嗎？",
       timestamp: new Date(Date.now() - 7200000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 2,
       sender: "我",
       text: "有的，請問需要幾束？",
       timestamp: new Date(Date.now() - 7100000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     },
     {
       id: 3,
       sender: "李小華",
       text: "一束就好，可以加卡片嗎？",
       timestamp: new Date(Date.now() - 7000000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 4,
       sender: "我",
       text: "可以，請問卡片內容？",
       timestamp: new Date(Date.now() - 6900000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     }
   ],
   "3": [
@@ -207,28 +207,28 @@ export const mockChatMessages = {
       sender: "張小美",
       text: "我想要三束向日葵",
       timestamp: new Date(Date.now() - 86400000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 2,
       sender: "我",
       text: "好的，請問要加緞帶嗎？",
       timestamp: new Date(Date.now() - 86300000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     },
     {
       id: 3,
       sender: "張小美",
       text: "要，謝謝！",
       timestamp: new Date(Date.now() - 86200000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 4,
       sender: "我",
       text: "預計明天下午可取貨喔。",
       timestamp: new Date(Date.now() - 86100000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     }
   ],
   "4": [
@@ -237,21 +237,21 @@ export const mockChatMessages = {
       sender: "陳大明",
       text: "請問自動回覆是什麼？",
       timestamp: new Date(Date.now() - 7200000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 2,
       sender: "我",
       text: "您好，這是系統自動回覆，請稍等客服回覆您。",
       timestamp: new Date(Date.now() - 7190000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     },
     {
       id: 3,
       sender: "陳大明",
       text: "好的，謝謝！",
       timestamp: new Date(Date.now() - 7180000),
-      isSelf: false
+      direction: "incoming"
     }
   ],
   "5": [
@@ -260,21 +260,21 @@ export const mockChatMessages = {
       sender: "林小安",
       text: "請問我的訂單什麼時候可以取？",
       timestamp: new Date(Date.now() - 1800000),
-      isSelf: false
+      direction: "incoming"
     },
     {
       id: 2,
       sender: "我",
       text: "預計明天下午三點後可取貨喔。",
       timestamp: new Date(Date.now() - 1700000),
-      isSelf: true
+      direction: "outgoing_by_staff"
     },
     {
       id: 3,
       sender: "林小安",
       text: "收到，謝謝你！",
       timestamp: new Date(Date.now() - 1600000),
-      isSelf: false
+      direction: "incoming"
     }
   ]
 }; 

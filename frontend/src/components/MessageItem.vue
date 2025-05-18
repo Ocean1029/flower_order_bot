@@ -5,7 +5,7 @@
   </div>
 
   <!-- 對方訊息（message customer） -->
-  <div v-else-if="!message.isSelf" class="message-customer">
+  <div v-else-if="message.direction === 'incoming'" class="message-customer">
     <img
       v-if="message.isFirstInMinute"
       class="pic"
