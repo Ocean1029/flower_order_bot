@@ -1,5 +1,5 @@
 <template>
-  <div :class="['message', message.isSelf ? 'self' : 'other']">
+  <div :class="['message', isOutgoing ? 'self' : 'other']">
     <div class="message-content">
       <div class="message-sender">{{ message.sender }}</div>
       <div class="message-text">{{ message.text }}</div>
@@ -7,15 +7,25 @@
     </div>
   </div>
 </template>
+
 <script setup>
 import { format } from 'date-fns'
+import { computed } from 'vue'
+
 const props = defineProps({
   message: Object
 })
+
+const isOutgoing = computed(() => {
+  return props.message.direction === 'outgoing_by_staff' || 
+         props.message.direction === 'outgoing_by_bot'
+})
+
 function formatTime(timestamp) {
   return format(new Date(timestamp), 'HH:mm')
 }
 </script>
+
 <style scoped>
 .message {
   margin-bottom: 1rem;

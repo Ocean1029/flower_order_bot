@@ -2,27 +2,40 @@
   <div class="input-container">
     <input
       v-model="inputValue"
-      @keyup.enter="emitSend"
+      @keyup.enter="handleSend"
       placeholder="輸入訊息..."
       type="text"
     >
-    <button @click="emitSend">發送</button>
+    <button @click="handleSend">發送</button>
   </div>
 </template>
+
 <script setup>
 import { ref, watch } from 'vue'
+
 const props = defineProps({
   modelValue: String
 })
+
 const emit = defineEmits(['update:modelValue', 'send'])
 const inputValue = ref(props.modelValue || '')
-watch(() => props.modelValue, val => { inputValue.value = val })
-function emitSend() {
+
+// Watch for changes from parent
+watch(() => props.modelValue, (newVal) => {
+  inputValue.value = newVal
+})
+
+// Watch for changes to emit to parent
+watch(inputValue, (newVal) => {
+  emit('update:modelValue', newVal)
+})
+
+function handleSend() {
   if (!inputValue.value.trim()) return
   emit('send')
 }
-watch(inputValue, val => emit('update:modelValue', val))
 </script>
+
 <style scoped>
 .input-container {
   padding: 1rem;
