@@ -46,7 +46,7 @@ function focusInput() {
   left: 24px;
   right: 24px;
   bottom: 0;
-  margin-bottom: 33px;
+  margin-bottom: 24px;
   padding: 0;
 }
 

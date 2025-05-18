@@ -1,8 +1,17 @@
 <template>
   <div :class="['chat-room', { shrink: showDetail }]">
     <ChatHeader :roomName="roomName" :avatar="avatar" :status="status" @showDetail="$emit('showDetail')" />
-    <MessageList :messages="messages" ref="messagesContainer" />
-    <MessageInput v-model="newMessage" @send="sendMessage" />
+
+    <!-- 這裡包一層可捲動容器 -->
+    <div class="message-list-container">
+      <MessageList
+        :messages="messages"
+        ref="messagesContainer"
+      />
+    </div>
+    <div class="input-wrapper">
+      <MessageInput v-model="newMessage" @send="sendMessage" />
+    </div>    
   </div>
 </template>
 
@@ -58,16 +67,25 @@ function scrollToBottom() {
 .chat-room {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background-color: #ffffff;
   border-right: 1px solid #B3B3B3;
   left: 0;
   right: 0;
   top: 0;
-  bottom: 0;
+  bottom: 0;    
+  overflow: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #E4E4E4 #F7F7F7;
 }
 
-.chatroom-wrapper.shrink {
-  width: 60%;
+/* 這裡讓訊息列表填滿中間並可滾動 */
+.message-list-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.input-wrapper {
+  flex: none;
 }
 </style> 
