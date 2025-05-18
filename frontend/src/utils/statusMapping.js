@@ -1,6 +1,6 @@
 export const statusMapping = {
-  'welcome': '歡迎',
-  'idle': '等待備貨',
+  'welcome': '自動回覆',
+  'idle': '等待對方回覆',
   'waiting_owner': '人工溝通',
   'bot_active': '自動回覆'
 }
