@@ -132,8 +132,7 @@ function onImgError(event) {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: 4px;
-  padding: 0 6px;
+  margin-left: 0px;
 }
 
 /* 自己訊息 */

@@ -1,7 +1,6 @@
 <template>
   <div class="chat-header">
     <img class="avatar" :src="avatar" alt="avatar" />
-    <div class="header-info">
       <div class="header-title-row">
         <span class="room-name">{{ roomName }}</span>
         <span
@@ -14,7 +13,6 @@
           <i class="fas fa-angle-double-left"></i>
         </button>        
       </div>
-    </div>
     <button class="order-btn">
       <span class="icon">
         <span class="archive">
@@ -46,16 +44,18 @@ const statusClass = computed(() => getStatusClass(props.status))
 .chat-header {
   display: flex;
   align-items: center;
-  padding: 0 80px;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   height: 80px;
   border-bottom: 1.5px solid #e9e9e9;
 
 }
 .back-btn {
-  background: none;
+  width: 16;
+  height: 13.3;
+  top: 9.33px;
+  left: 8px;
   border: none;
+  background: none;
   color: #00000099;
   font-size: 22px;
   margin-right: 16px;
@@ -63,21 +63,18 @@ const statusClass = computed(() => getStatusClass(props.status))
   padding: 4px 8px;
 }
 .avatar {
-  height: 40px;
+  height: 56px;
+  width: 56px;
   border-radius: 50%;
   object-fit: cover;
-  margin-right: 14px;
+  margin-left: 51px;
   background: #e9e9e9;
-}
-.header-info {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
 }
 .header-title-row {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 16px;
+  margin-left: 16px;
 }
 .room-name {
   font-size: 1.15rem;
@@ -116,7 +113,7 @@ const statusClass = computed(() => getStatusClass(props.status))
   transition: background 0.2s;
   box-sizing: border-box;
   margin-left: auto;
-  margin-right: 0px;
+  margin-right: 24px;
 }
 .order-btn:hover {
   background: #C5C7FF;

@@ -49,14 +49,29 @@ const processedMessages = computed(() => {
 </script>
 <style scoped>
 .messages-container {
-  width: 664px;
-  height: 100%;
-  left: 440px;
   flex: 1;
+  height: 100%;
   overflow-y: auto;
-  padding: 24px 0;   /* 上下 24px，左右 0，讓訊息靠近左右邊 */
-  max-width: 619px;  /* 跟設計稿一致 */
-  margin: 0 auto;    /* 置中 */
-  width: 100%;
+  padding: 24px 24px;
+  box-sizing: border-box;
+  background: #FFFFFF;
+  border-right: 1px solid #B3B3B3;
+}
+
+.input-container {
+  position: fixed;
+  left: 50%;
+  bottom: 40px; 
+  transform: translateX(-50%);
+  width: 60%;
+  max-width: 600px;
+  min-width: 300px;
+  z-index: 100;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  border-radius: 24px;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
 }
 </style> 
