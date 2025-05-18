@@ -6,11 +6,19 @@
     </div>
   </div>
   <div class="page-content">
-    <div class="dashboard-section">
-      <StatisticsCards :statics="statics" />
+    <div v-if="error" class="error-message">
+      {{ error }}
     </div>
-    <div class="dashboard-section">
-      <OrderTable :data="orders" :columnName="columnName" />
+    <div v-else>
+      <div class="dashboard-section">
+        <StatisticsCards :statics="statics" />
+      </div>
+      <div class="dashboard-section">
+        <div v-if="isLoading" class="loading-message">
+          載入中...
+        </div>
+        <OrderTable v-else :data="orders" :columnName="columnName" />
+      </div>
     </div>
   </div>
 </template>
@@ -37,22 +45,28 @@ const statics = ref({
   monthly_income: 0,
   total_customers: 0
 })
+const isLoading = ref(true)
+const error = ref(null)
 
 onMounted(async () => {
+  isLoading.value = true
+  error.value = null
+  
   try {
-    orders.value = await fetchOrders()
+    const [ordersData, messagesData, statsData] = await Promise.all([
+      fetchOrders(),
+      getLatestMessages(),
+      fetchStaticData()
+    ])
+    
+    orders.value = ordersData
+    messages.value = messagesData
+    statics.value = statsData
   } catch (err) {
-    console.error('無法取得訂單資料', err)
-  }
-  try {
-    messages.value = await getLatestMessages()
-  } catch (err) {
-    console.error('無法取得訊息資料', err)
-  }
-  try {
-    statics.value = await fetchStaticData() 
-  } catch (err) {
-    console.error('無法取得統計資料', err)
+    console.error('Error fetching data:', err)
+    error.value = '無法載入資料，請稍後再試'
+  } finally {
+    isLoading.value = false
   }
 })
 </script>
@@ -98,5 +112,18 @@ onMounted(async () => {
 }
 .dashboard-section + .dashboard-section {
   margin-top: 32px;
+}
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 500;
+}
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #6168FC;
 }
 </style>

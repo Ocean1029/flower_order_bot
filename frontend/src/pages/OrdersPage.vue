@@ -10,14 +10,55 @@ const columnName = [
 ]
 
 const orders = ref([])
+const isLoading = ref(true)
+const error = ref(null)
 
 onMounted(async () => {
-  orders.value = await fetchOrders()
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    orders.value = await fetchOrders()
+  } catch (err) {
+    console.error('Error fetching orders:', err)
+    error.value = '無法載入訂單資料，請稍後再試'
+  } finally {
+    isLoading.value = false
+  }
 })
 </script>
 
 <template>
   <div class="page-content">
-    <OrderTable :data="orders" :columnName="columnName" />
+    <div v-if="error" class="error-message">
+      {{ error }}
+    </div>
+    <div v-else-if="isLoading" class="loading-message">
+      載入中...
+    </div>
+    <OrderTable v-else :data="orders" :columnName="columnName" />
   </div>
 </template>
+
+<style scoped>
+.page-content {
+  padding-top: 160px;
+  padding-left: 8px;
+  padding-right: 8px;
+  max-width: 1280px;
+  margin: 0 auto;
+}
+.error-message {
+  color: #dc3545;
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  font-weight: 500;
+}
+.loading-message {
+  text-align: center;
+  padding: 20px;
+  font-size: 18px;
+  color: #6168FC;
+}
+</style>

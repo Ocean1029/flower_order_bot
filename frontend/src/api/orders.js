@@ -11,5 +11,5 @@ export const fetchOrders = async () => {
   // }
   
   const res = await axios.get(`${API_BASE}/orders`)
-  return res.data.orders
+  return res.data
 }
