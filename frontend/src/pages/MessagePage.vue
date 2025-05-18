@@ -53,8 +53,8 @@
 <style scoped>
 .chat-main-layout {
   display: flex;
-  height: calc(100vh - 80px); /* 80px Navbar*/
-  margin-top: 160px;
+  margin-top: 56px;
+  height: calc(100vh - 56px);
 }
 .chat-list-panel {
   width: 320px;
@@ -68,6 +68,7 @@
   display: flex;
   flex-direction: column;
   transition: width 0.3s;
+  
 }
 .chat-room-panel.expanded {
   width: calc(100vw - 320px);

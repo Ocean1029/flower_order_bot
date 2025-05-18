@@ -243,7 +243,7 @@ watch(filteredRooms, () => {
   top: 80px;
   left: 0;
   width: 360px;
-  height: calc(100vh - 80px - 80px);
+  height: calc(100vh - 56px - 80px);
   overflow-y: auto;
   overflow-x: hidden;
   flex: 1;
