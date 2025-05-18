@@ -13,10 +13,7 @@ export const getRoomMessages = async (roomId) => {
     return res.data
 }
 
-export const sendMessage = async (roomId, content) => {
-    const res = await axios.post(`${API_BASE}/chat_rooms/${roomId}/messages`, {
-        text: content,
-        image_url: null
-    })
+export const sendMessage = async (roomId, message) => {
+    const res = await axios.post(`${API_BASE}/chat_rooms/${roomId}/messages`, message)
     return res.data
 }
