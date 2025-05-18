@@ -115,6 +115,9 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
     if chat_room.stage == ChatRoomStage.WELCOME:
         await run_welcome_flow(chat_room, user_message, event, db)
+        await db.refresh(chat_room)  # 如果變成BOT_Active 要直接進入bot流程
+        if chat_room.stage == ChatRoomStage.BOT_ACTIVE:
+            await run_bot_flow(chat_room, "", event, db)
         return
 
     if chat_room.stage == ChatRoomStage.ORDER_CONFIRM:
@@ -159,11 +162,11 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         gpt_reply = response.choices[0].message.content.strip()
         parsed_reply = json.loads(gpt_reply)
 
-        # reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n，請確認資訊。"
-        # line_bot_api.reply_message(
-        #     event.reply_token,
-        #     TextSendMessage(text=reply_text)
-        # )
+        reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n，請確認資訊。"
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply_text)
+        )
 
         user = await update_user_info(
             db,
@@ -282,11 +285,13 @@ async def run_welcome_flow(
     # 第二次收到使用者回覆
     if user_text == "啟動智慧訂購流程":
         chat_room.stage = ChatRoomStage.BOT_ACTIVE
-        chat_room.bot_step = 0  # reset for bot flow start
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage("了解！我們開始客製化流程～")
-        )
+        chat_room.bot_step = 1  # reset for bot flow start
+
+        # 不能回東西，reply_message 只能一次
+        # line_bot_api.reply_message(
+        #     event.reply_token,
+        #     TextSendMessage("了解！我們開始客製化流程～")
+        # )
     else:
         chat_room.stage = ChatRoomStage.WAITING_OWNER
         chat_room.bot_step = -1
@@ -296,6 +301,102 @@ async def run_welcome_flow(
         )
 
     await db.commit()
+
+
+# ──────────────────────────────────────────────────────────────
+
+async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
+    STEP_MAP = {
+        1: ask_budget,
+        2: ask_color,
+        3: ask_type,
+        4: last,
+    }
+
+    while True:
+        handler = STEP_MAP.get(chat_room.bot_step)
+
+        if handler is None:
+            print(f"Error: No handler for bot_step {chat_room.bot_step}, reset bot_step to 0")
+            chat_room.bot_step = 0
+            chat_room.stage = ChatRoomStage.MANUAL
+            await db.commit()
+            return
+
+        # ── 2. 執行該節點邏輯，並取得下一步
+        next_step, manual_override, next_question = await handler(text, event, db, chat_room)
+
+        if manual_override:
+            chat_room.stage = ChatRoomStage.WAITING_OWNER
+            chat_room.bot_step = -1
+        else:
+            chat_room.bot_step = next_step
+            if next_step == -1:  # flow finished
+                chat_room.stage = ChatRoomStage.WAITING_OWNER
+
+        await db.commit()
+        
+        if next_question:
+            continue  # 直接進入下一個問題的詢問
+        else:
+            break
+
+
+
+async def ask_budget(user_text, event, db, chat_room):
+    if chat_room.bot_step == 1:
+        if user_text.strip() == "":
+            send_quick_reply_message(
+                event.reply_token,
+                "好的～預算大概多少呢？",
+                ["500以下", "500-1000", "1000以上"]
+            )
+            return 1, False, False
+        else:
+            budget = user_text.strip()
+            # 根據預算決定下一步流程
+            if budget == "500以下":
+                return 2, False, True
+            else:
+                # 中高價位 → 問顏色
+                return 3, False, True
+    
+async def ask_color(user_text, event, db, chat_room):
+
+    if chat_room.bot_step == 2:
+        send_quick_reply_message(
+            event.reply_token,
+            "想要什麼顏色的客製化花束？",
+            ["紅", "白", "粉", "其他"]
+        )
+        return 4, False, False  # stay on the same step waiting for input
+    
+async def ask_type(user_text, event, db, chat_room):
+    if chat_room.bot_step == 3:
+        send_quick_reply_message(
+            event.reply_token,
+            "想要什麼類型的花材？",
+            ["大欸米", "中欸米", "小欸米", "其他"]
+        )
+        return 4, False, False  # stay on the same step waiting for input
+
+
+
+async def last(user_text, event, db, chat_room):
+    
+    budget = user_text.strip()
+    # TODO validate, save
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
+    )
+    return -1, False, False  # flow finished
+
+# ── 3. 特別需求詢問 之類的
+
+# Handler 到這裡結束
+
+
 
 
 # 控制 bot 檢查訂單缺少資料 流程  By Benjamin
@@ -395,74 +496,3 @@ async def run_order_confirm_flow(
         event.reply_token,
         TextSendMessage(text="✅ 資料已補齊，訂單建立完成！我們將盡快與您聯繫～")
     )
-
-# ──────────────────────────────────────────────────────────────
-
-async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: AsyncSession):
-    STEP_MAP = {
-        0: ask_color,
-        2: ask_budget,
-        # 2: ask_special,
-        # 3: final_confirm,
-    }
-
-    # ── 1. 根據 bot_step 叫對的 handler
-    handler = STEP_MAP.get(chat_room.bot_step)  # Handler 一定會回傳 (nextstep, manual_override)
-
-    if handler is None: # 如果找不到對應的 handler，表示 bot_step 錯誤
-        print(f"Error: No handler for bot_step {chat_room.bot_step}, reset bot_step to 0")
-        chat_room.bot_step = 0
-        chat_room.stage = ChatRoomStage.MANUAL
-        await db.commit()
-        return
-
-    # ── 2. 執行該節點邏輯，並取得下一步
-    next_step, manual_override = await handler(text, event, db)
-
-    if manual_override:
-        chat_room.stage = ChatRoomStage.WAITING_OWNER
-        chat_room.bot_step = -1
-    else:
-        chat_room.bot_step = next_step
-        if next_step == -1:  # flow finished
-            chat_room.stage = ChatRoomStage.WAITING_OWNER
-
-    await db.commit()
-
-async def ask_color(user_text, event, db):
-    """
-    Step 0: ask color by quick‑reply buttons.
-    This function is called twice:
-    1) When bot_step == 0 and bot still waits for user -> just ask the question.
-    2) After user clicks a quick‑reply button -> capture answer and move on.
-    """
-    if user_text == "":  # first entry triggered by FollowEvent
-        send_quick_reply_message(
-            event.reply_token,
-            "想要什麼顏色的客製化花束？",
-            ["紅", "白", "粉", "其他"]
-        )
-        return 0, False  # stay on the same step waiting for input
-    # second round: user answered → proceed
-    # TODO: persist `color` into draft table
-    send_quick_reply_message(
-        event.reply_token,
-        "好的～預算大概多少呢？",
-        ["500以下", "500-1000", "1000以上"]
-    )
-    return 2, False
-
-# ── 2. 預算詢問
-async def ask_budget(user_text, event, db):
-    budget = user_text.strip() 
-    # TODO validate, save
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
-    )
-    return -1, False  # -1 = flow finished
-
-# ── 3. 特別需求詢問 之類的
-
-# Handler 到這裡結束
-
