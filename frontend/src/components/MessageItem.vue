@@ -1,12 +1,37 @@
 <template>
-  <div :class="['message', message.isSelf ? 'self' : 'other']">
-    <div class="message-content">
-      <div class="message-sender">{{ message.sender }}</div>
-      <div class="message-text">{{ message.text }}</div>
-      <div class="message-time">{{ formatTime(message.timestamp) }}</div>
+  <!-- 日期區塊 -->
+  <div v-if="message.isDate" class="date-block">
+    <span class="date-text">{{ message.text }}</span>
+  </div>
+
+  <!-- 對方訊息（message customer） -->
+  <div v-else-if="!message.isSelf" class="message-customer">
+    <img
+      v-if="message.isFirstInMinute"
+      class="pic"
+      :src="message.avatar || ''"
+      :alt="message.sender"
+      @error="onImgError"
+    />
+    <div class="message-bubble">
+      <div class="sender">
+        <span class="message-text">{{ message.text }}</span>
+      </div>
+      <span class="time">{{ formatTime(message.timestamp) }}</span>
+    </div>
+  </div>
+
+  <!-- 自己訊息（message myself） -->
+  <div v-else class="message-myself">
+    <div class="message-bubble">
+      <div class="sender myself">
+        <span class="message-text">{{ message.text }}</span>
+      </div>
+      <span class="time myself">{{ formatTime(message.timestamp) }}</span>
     </div>
   </div>
 </template>
+
 <script setup>
 import { format } from 'date-fns'
 const props = defineProps({
@@ -15,40 +40,122 @@ const props = defineProps({
 function formatTime(timestamp) {
   return format(new Date(timestamp), 'HH:mm')
 }
+function onImgError(event) {
+  event.target.src = '' // 讓 src 變空，觸發預設灰色圈圈樣式
+}
 </script>
+
 <style scoped>
-.message {
-  margin-bottom: 1rem;
+/* 日期區塊 */
+.date-block {
+  width: 87px;
+  height: 24px;
+  margin: 0 auto 12px auto;
+  border-radius: 8px;
+  padding: 2px 4px 2px 12px;
+  background: #C5C7FF;
   display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.message.self {
+.date-text {
+  font-family: 'Noto Sans TC';
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 140%;
+  color: #fff;
+  text-align: center;
+}
+
+/* 對方訊息 */
+.message-customer {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 40px;
+  margin-left: 0;
+  margin-bottom: 12px;
+}
+.pic {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 4px;
+  background: #D9D9D9;
+  /* 沒有 src 時顯示灰色 */
+  display: inline-block;
+}
+.pic[src=""] {
+  background: #D9D9D9;
+}
+.message-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  min-height: 40px;
+}
+.sender {
+  min-height: 40px;
+  max-width: 360px;
+  border-radius: 24px;
+  padding: 9px 16px;
+  background: #F2F2F2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.message-text {
+  font-family: 'Noto Sans TC';
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 140%;
+  color: #000000DE;
+}
+.time {
+  width: 50px;
+  height: 17px;
+  font-family: 'Noto Sans TC';
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 140%;
+  color: #00000061;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 4px;
+  padding: 0 6px;
+}
+
+/* 自己訊息 */
+.message-myself {
+  display: flex;
   justify-content: flex-end;
+  min-height: 40px;
+  margin-right: 0;
+  margin-bottom: 12px;
 }
-.message-content {
-  max-width: 70%;
-  padding: 0.5rem 1rem;
-  border-radius: 1rem;
-  background-color: #fff;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+.message-myself .message-bubble {
+  flex-direction: row-reverse;
+  gap: 12px;
 }
-.message.self .message-content {
-  background-color: #007AFF;
-  color: white;
-}
-.message-sender {
-  font-size: 0.8rem;
-  color: #666;
-  margin-bottom: 0.25rem;
-}
-.message.self .message-sender {
+.sender.myself {
+  background: #77B5FF;
   color: #fff;
 }
-.message-time {
-  font-size: 0.7rem;
-  color: #999;
-  margin-top: 0.25rem;
+.message-myself .message-text {
+  color: #fff;
 }
-.message.self .message-time {
-  color: rgba(255,255,255,0.8);
+.time.myself {
+  width: 44px;
+  color: #00000061;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 4px;
+  margin-left: 0;
+  padding: 0 6px;
 }
 </style> 
