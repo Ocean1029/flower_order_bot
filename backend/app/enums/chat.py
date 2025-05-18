@@ -3,6 +3,7 @@ from enum import Enum
 class ChatRoomStage(str, Enum):
     WELCOME = "welcome"
     IDLE = "idle"
+    ORDER_CONFIRM = "ORDER_CONFIRM"
     WAITING_OWNER = "waiting_owner"
     BOT_ACTIVE = "bot_active"
 

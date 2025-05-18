@@ -48,14 +48,28 @@ const processedMessages = computed(() => {
 })
 </script>
 <style scoped>
+
+.message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  box-sizing: border-box;
+  background: #f5f6fa;
+}
 .messages-container {
   flex: 1;
-  height: 100%;
+  height: 90%;
   overflow-y: auto;
   padding: 24px 24px;
   box-sizing: border-box;
   background: #FFFFFF;
   border-right: 1px solid #B3B3B3;
+}
+.message-bubble,
+.sender {
+  max-width: 360px;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 .input-container {
@@ -74,4 +88,13 @@ const processedMessages = computed(() => {
   display: flex;
   align-items: center;
 }
+
+.chat-room-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);  /* 扣除上方 navbar */
+  overflow: hidden;             /* 禁止最外層捲動 */
+}
+
 </style> 

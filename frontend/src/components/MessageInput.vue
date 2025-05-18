@@ -21,7 +21,6 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, watch } from 'vue'
 
@@ -32,17 +31,19 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'send'])
 const inputValue = ref(props.modelValue || '')
 const inputRef = ref(null)
+
 watch(() => props.modelValue, val => { inputValue.value = val })
+watch(inputValue, val => emit('update:modelValue', val))
+
 function emitSend() {
   if (!inputValue.value.trim()) return
   emit('send')
 }
-watch(inputValue, val => emit('update:modelValue', val))
+
 function focusInput() {
   inputRef.value && inputRef.value.focus()
 }
 </script>
-
 
 <style scoped>
 .input-container {
@@ -50,7 +51,7 @@ function focusInput() {
   left: 24px;
   right: 24px;
   bottom: 0;
-  margin-bottom: 33px;
+  margin-bottom: 24px;
   padding: 0;
 }
 
@@ -68,6 +69,7 @@ function focusInput() {
   box-sizing: border-box;
   cursor: pointer;
 }
+
 .content {
   display: flex;
   align-items: center;
@@ -75,6 +77,7 @@ function focusInput() {
   height: 24px;
   gap: 12px;
 }
+
 .attach-icon {
   width: 11px;
   height: 20px;
@@ -82,6 +85,7 @@ function focusInput() {
   font-size: 20px;
   margin-right: 6px;
 }
+
 .message-input {
   width: 144px;
   height: 22px;
@@ -96,9 +100,11 @@ function focusInput() {
   letter-spacing: 0;
   padding: 0;
 }
+
 .message-input::placeholder {
   color: #00000061;
 }
+
 .send {
   width: 24px;
   height: 24px;
@@ -107,6 +113,7 @@ function focusInput() {
   justify-content: center;
   cursor: pointer;
 }
+
 .send-icon {
   width: 24px;
   height: 24px;
@@ -115,6 +122,7 @@ function focusInput() {
   margin-left: 3px;
   margin-top: 4px;
 }
+
 .messages-container {
   position: relative;
 }

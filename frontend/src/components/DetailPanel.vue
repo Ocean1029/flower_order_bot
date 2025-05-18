@@ -70,6 +70,8 @@ const dataList = [
   display: flex;
   flex-direction: column;
   padding-bottom: 72px;
+  scrollbar-width: thin;
+  scrollbar-color: #E4E4E4 #F7F7F7;
 }
 .section {
   width: 336px;
@@ -193,20 +195,5 @@ const dataList = [
   align-items: center;
   justify-content: center;
   height: 18px;
-}
-
-.slide-detail-enter-from,
-.slide-detail-leave-to {
-  transform: translateX(100%);
-  opacity: 0;
-}
-.slide-detail-enter-active,
-.slide-detail-leave-active {
-  transition: all 0.4s cubic-bezier(.4,0,.2,1);
-}
-.slide-detail-enter-to,
-.slide-detail-leave-from {
-  transform: translateX(0);
-  opacity: 1;
 }
 </style> 

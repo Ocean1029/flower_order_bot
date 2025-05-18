@@ -58,9 +58,9 @@ function onImgError(event) {
 .date-block {
   width: 87px;
   height: 24px;
-  margin: 0 auto 12px auto;
+  margin: 0 auto 12px;
   border-radius: 8px;
-  padding: 2px 4px 2px 12px;
+  padding: 2px 8px;
   background: #C5C7FF;
   display: flex;
   align-items: center;
@@ -73,6 +73,14 @@ function onImgError(event) {
   line-height: 140%;
   color: #fff;
   text-align: center;
+}
+
+.message-bubble {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 40px;
+  max-width: 360px;
 }
 
 /* 對方訊息 */
@@ -97,21 +105,17 @@ function onImgError(event) {
 .pic[src=""] {
   background: #D9D9D9;
 }
-.message-bubble {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  min-height: 40px;
-}
+
 .sender {
   min-height: 40px;
   max-width: 360px;
   border-radius: 24px;
   padding: 9px 16px;
   background: #F2F2F2;
-  display: flex;
+  word-break: break-word;
+  
+  display: inline-block;
   align-items: center;
-  gap: 10px;
 }
 .message-text {
   font-family: 'Noto Sans TC';
@@ -145,7 +149,7 @@ function onImgError(event) {
 }
 .message-myself .message-bubble {
   flex-direction: row-reverse;
-  gap: 12px;
+  gap: 2px;
 }
 .sender.myself {
   background: #77B5FF;
