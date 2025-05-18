@@ -1,51 +1,24 @@
 <template>
   <div class="chat-header">
+    <button class="back-btn" @click="$emit('showDetail')">
+      <i class="fas fa-angle-double-left"></i>
+    </button>
     <img class="avatar" :src="avatar" alt="avatar" />
     <div class="header-info">
       <div class="header-title-row">
         <span class="room-name">{{ roomName }}</span>
-        <span
-          class="status-badge"
-          :class="statusClass"
-        >
-          {{ status }}
-        </span>
-        <button class="back-btn" @click="$emit('showDetail')">
-          <i class="fas fa-angle-double-left"></i>
-        </button>        
+        <span class="status-badge">{{ status }}</span>
       </div>
     </div>
-    <button class="order-btn">
-      <span class="icon">
-        <span class="archive">
-          <span class="archive-icon">
-          <!-- 這裡可放 svg 或 fontawesome icon -->
-            <i class="fas fa-archive"></i>
-          </span>
-        </span>
-      </span>
-      <span class="order-btn-text">整理資料</span>
-    </button>   
+    <button class="order-btn">整理訂單</button>
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
-
 const props = defineProps({
   roomName: String,
   avatar: String,
   status: String
-})
-
-const statusClass = computed(() => {
-  switch (props.status) {
-    case '人工溝通': return 'manual'
-    case '自動回覆': return 'auto'
-    case '等待備貨': return 'wait'
-    case '訂單完成': return 'done'
-    default: return ''
-  }
 })
 </script>
 
@@ -53,17 +26,16 @@ const statusClass = computed(() => {
 .chat-header {
   display: flex;
   align-items: center;
-  padding: 0 80px;
+  padding: 0 18px;
   background-color: #fff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-  height: 80px;
+  height: 64px;
   border-bottom: 1.5px solid #e9e9e9;
-
 }
 .back-btn {
   background: none;
   border: none;
-  color: #00000099;
+  color: #6168FC;
   font-size: 22px;
   margin-right: 16px;
   cursor: pointer;
@@ -88,86 +60,33 @@ const statusClass = computed(() => {
 }
 .room-name {
   font-size: 1.15rem;
-  font-weight: 700;  
-  color: #6168FC;
+  font-weight: 700;
+  color: #222;
 }
 .status-badge {
-  height: 20px;
-  max-width:92px;
+  font-size: 0.95rem;
+  color: #fff;
+  background: #4F8CFF;
   border-radius: 12px;
-  padding: 0 15px;
-  font-family: Noto Sans TC;
-  font-weight: 700;
-  font-size: 12px;
-  line-height: 113%;
-  letter-spacing: 0%;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: 2px 12px;
+  font-weight: 600;
 }
 .order-btn {
-  width: 119px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-radius: 12px;
-  padding: 8px;
-  background: #C5C7FF;
-  color: #ffffff;
+  margin-left: auto;
+  background: #eaf2ff;
+  color: #4F8CFF;
   border: none;
+  border-radius: 8px;
   font-size: 1rem;
   font-weight: 700;
+  padding: 8px 18px;
   cursor: pointer;
   transition: background 0.2s;
-  box-sizing: border-box;
-  margin-left: auto;
-  margin-right: 0px;
 }
 .order-btn:hover {
-  background: #C5C7FF;
-  box-shadow: 2px 2px 2px 0px #00000040;
+  background: #d0e4ff;
+}
 
-}
-.icon {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.archive {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.archive-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 3px;
-  margin-top: 3px;
-  /* 這裡可放svg或icon字體 */
-}
-.order-btn-text {
-  height: 18px;
-  font-family: 'Noto Sans TC';
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 113%;
-  letter-spacing: 0;
-  vertical-align: middle;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  border-radius: 4px;
-}
 .message-section {
   width: 662px;
   height: 80px;
@@ -302,6 +221,32 @@ const statusClass = computed(() => {
   cursor: pointer;
 }
 
+.icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.archive {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.archive-icon {
+  width: 18px;
+  height: 18px;
+  background: #fff;
+  border-radius: 4px;
+  margin-left: 3px;
+  margin-top: 3px;
+  /* 這裡可放svg或icon字體 */
+}
+
 .bottom-text {
   height: 18px;
   font-family: 'Noto Sans TC';
@@ -317,9 +262,4 @@ const statusClass = computed(() => {
   padding: 0 4px;
   border-radius: 4px;
 }
-
-.status-badge.manual { color: #FF349A; background: #FFCEE7; }
-.status-badge.auto { color: #528DD2; background: #D8EAFF; }
-.status-badge.wait { color: #6168FC; background: #C5C7FF; }
-.status-badge.done { color: #81386A; background: #EBCDCC; }
 </style> 

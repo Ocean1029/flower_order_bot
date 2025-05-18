@@ -31,6 +31,14 @@ function formatTime(timestamp) {
 <style scoped>
 .chat-room-item {
   display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  background-color: #fff;
+  margin-bottom: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-height: 64px;
 }
 .chat-room-item:hover {
   background-color: #f0f0f0;

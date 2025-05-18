@@ -24,122 +24,41 @@ const isOutgoing = computed(() => {
 function formatTime(timestamp) {
   return format(new Date(timestamp), 'HH:mm')
 }
-function onImgError(event) {
-  event.target.src = '' // 讓 src 變空，觸發預設灰色圈圈樣式
-}
 </script>
 
 <style scoped>
-/* 日期區塊 */
-.date-block {
-  width: 87px;
-  height: 24px;
-  margin: 0 auto 12px auto;
-  border-radius: 8px;
-  padding: 2px 4px 2px 12px;
-  background: #C5C7FF;
+.message {
+  margin-bottom: 1rem;
   display: flex;
-  align-items: center;
-  justify-content: center;
 }
-.date-text {
-  font-family: 'Noto Sans TC';
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 140%;
-  color: #fff;
-  text-align: center;
-}
-
-/* 對方訊息 */
-.message-customer {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  min-height: 40px;
-  margin-left: 0;
-  margin-bottom: 12px;
-}
-.pic {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  margin-bottom: 4px;
-  background: #D9D9D9;
-  /* 沒有 src 時顯示灰色 */
-  display: inline-block;
-}
-.pic[src=""] {
-  background: #D9D9D9;
-}
-.message-bubble {
-  display: flex;
-  align-items: flex-end;
-  gap: 12px;
-  min-height: 40px;
-}
-.sender {
-  min-height: 40px;
-  max-width: 360px;
-  border-radius: 24px;
-  padding: 9px 16px;
-  background: #F2F2F2;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.message-text {
-  font-family: 'Noto Sans TC';
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 140%;
-  color: #000000DE;
-}
-.time {
-  width: 50px;
-  height: 17px;
-  font-family: 'Noto Sans TC';
-  font-weight: 400;
-  font-size: 12px;
-  line-height: 140%;
-  color: #00000061;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 4px;
-  padding: 0 6px;
-}
-
-/* 自己訊息 */
-.message-myself {
-  display: flex;
+.message.self {
   justify-content: flex-end;
-  min-height: 40px;
-  margin-right: 0;
-  margin-bottom: 12px;
 }
-.message-myself .message-bubble {
-  flex-direction: row-reverse;
-  gap: 12px;
+.message-content {
+  max-width: 70%;
+  padding: 0.5rem 1rem;
+  border-radius: 1rem;
+  background-color: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
-.sender.myself {
-  background: #77B5FF;
+.message.self .message-content {
+  background-color: #007AFF;
+  color: white;
+}
+.message-sender {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+.message.self .message-sender {
   color: #fff;
 }
-.message-myself .message-text {
-  color: #fff;
+.message-time {
+  font-size: 0.7rem;
+  color: #999;
+  margin-top: 0.25rem;
 }
-.time.myself {
-  width: 44px;
-  color: #00000061;
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-right: 4px;
-  margin-left: 0;
-  padding: 0 6px;
+.message.self .message-time {
+  color: rgba(255,255,255,0.8);
 }
 </style> 

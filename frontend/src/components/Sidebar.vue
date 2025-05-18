@@ -110,7 +110,7 @@ function select(item) {
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  height: 56px;
+  height: 80px;
   background: #f5f5f5;
   border-bottom: 1px solid #00000061; /* ← 分隔線 */
 }
