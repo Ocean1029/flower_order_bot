@@ -1,5 +1,5 @@
 <template>
-  <div class="chat-room">
+  <div :class="['chat-room', { shrink: showDetail }]">
     <ChatHeader :roomName="roomName" :avatar="avatar" :status="status" @showDetail="$emit('showDetail')" />
     <MessageList :messages="messages" ref="messagesContainer" />
     <MessageInput v-model="newMessage" @send="sendMessage" />
@@ -17,9 +17,10 @@ const props = defineProps({
   roomId: String,
   roomName: String,
   avatar: String,
-  status: String
+  status: String,
+  showDetail: Boolean
 })
-const emit = defineEmits(['showDetail'])
+const emit = defineEmits(['showDetail', 'open-detail'])
 const messages = ref([])
 const newMessage = ref('')
 const messagesContainer = ref(null)
@@ -58,10 +59,15 @@ function scrollToBottom() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  background-color: #f5f5f5;
+  background-color: #ffffff;
+  border-right: 1px solid #B3B3B3;
   left: 0;
   right: 0;
   top: 0;
   bottom: 0;
+}
+
+.chatroom-wrapper.shrink {
+  width: 60%;
 }
 </style> 

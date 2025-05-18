@@ -155,7 +155,7 @@ watch(filteredRooms, () => {
   position: absolute;
   top: 56px;
   width: 360px;
-  height: 944px;
+  height: calc(100vh - 56px);
   background: #fff;
   border-right: 1px solid #B3B3B3;
   box-sizing: border-box;
