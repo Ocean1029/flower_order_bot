@@ -67,7 +67,7 @@
               <span
                 :class="['status-label', statusClass(room.status)]"
               >
-                {{ room.status }}
+                {{ getStatusDisplay(room.status) }}
               </span>
             </div>
           </div>
@@ -79,6 +79,8 @@
 
 <script setup>
 import { ref, computed, onMounted, nextTick, watch } from 'vue'
+import { getStatusDisplay, getStatusClass } from '@/utils/statusMapping'
+
 const props = defineProps({
   chatRooms: Array,
   selectedRoomId: String
@@ -113,13 +115,7 @@ const unreadCount = computed(() =>
 )
 
 function statusClass(status) {
-  switch (status) {
-    case '人工溝通': return 'manual'
-    case '自動回覆': return 'auto'
-    case '等待備貨': return 'wait'
-    case '訂單完成': return 'done'
-    default: return ''
-  }
+  return getStatusClass(status)
 }
 
 function formatTime(timestamp) {

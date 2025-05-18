@@ -5,7 +5,15 @@ const isDevelopment = import.meta.env.DEV
 
 export const getLatestMessages = async () => {
     const res = await axios.get(`${API_BASE}/chat_rooms`)
-    return res.data
+    return res.data.map(room => ({
+        id: room.room_id,
+        name: room.user_name,
+        lastMessage: room.last_message.text,
+        lastMessageTime: new Date(room.last_message.timestamp),
+        unreadCount: room.unread_count,
+        status: room.status,
+        avatar: '' // You might want to add avatar to your API response
+    }))
 }
 
 export const getRoomMessages = async (roomId) => {

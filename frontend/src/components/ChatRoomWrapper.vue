@@ -49,10 +49,8 @@ async function handleSend() {
   if (!newMessage.value.trim()) return
   
   try {
-    // Send the message text to the backend
     await apiSendMessage(props.roomId, {
-      text: newMessage.value,
-      image_url: null
+      text: newMessage.value
     })
     newMessage.value = ''
     await loadMessages() // Reload messages to get the latest state

@@ -30,19 +30,28 @@
   
   <script setup>
   import { ref, onMounted } from 'vue'
+  import { getLatestMessages } from '@/api/messages'
   import ChatListWrapper from '@/components/ChatListWrapper.vue'
   import ChatRoomWrapper from '@/components/ChatRoomWrapper.vue'
   import DetailPanel from '@/components/DetailPanel.vue'
-  import { mockChatRooms } from '@/mockData'
-  
+
   const chatRooms = ref([])
   const selectedRoom = ref(null)
   const showDetailPanel = ref(false)
   
-  onMounted(() => {
-    chatRooms.value = mockChatRooms
-    selectedRoom.value = chatRooms.value[0] // 預設選第一個
-  })
+  async function loadChatRooms() {
+    try {
+      const response = await getLatestMessages()
+      chatRooms.value = response
+      if (chatRooms.value.length > 0 && !selectedRoom.value) {
+        selectedRoom.value = chatRooms.value[0]
+      }
+    } catch (error) {
+      console.error('Error loading chat rooms:', error)
+    }
+  }
+  
+  onMounted(loadChatRooms)
   
   function selectRoom(room) {
     selectedRoom.value = room

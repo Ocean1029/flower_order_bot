@@ -8,7 +8,7 @@
           class="status-badge"
           :class="statusClass"
         >
-          {{ status }}
+          {{ getStatusDisplay(status) }}
         </span>
         <button class="back-btn" @click="$emit('showDetail')">
           <i class="fas fa-angle-double-left"></i>
@@ -31,6 +31,7 @@
 
 <script setup>
 import { computed } from 'vue'
+import { getStatusDisplay, getStatusClass } from '@/utils/statusMapping'
 
 const props = defineProps({
   roomName: String,
@@ -38,15 +39,7 @@ const props = defineProps({
   status: String
 })
 
-const statusClass = computed(() => {
-  switch (props.status) {
-    case '人工溝通': return 'manual'
-    case '自動回覆': return 'auto'
-    case '等待備貨': return 'wait'
-    case '訂單完成': return 'done'
-    default: return ''
-  }
-})
+const statusClass = computed(() => getStatusClass(props.status))
 </script>
 
 <style scoped>
