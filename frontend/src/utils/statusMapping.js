@@ -2,7 +2,8 @@ export const statusMapping = {
   'welcome': '自動回覆',
   'idle': '等待對方回覆',
   'waiting_owner': '人工溝通',
-  'bot_active': '自動回覆'
+  'bot_active': '自動回覆',
+  'order_confirm':'已經下訂'
 }
 
 export function getStatusDisplay(status) {
