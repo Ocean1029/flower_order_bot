@@ -14,7 +14,7 @@ from app.models.user import User
 from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
 from app.enums.chat import ChatRoomStage
-from app.enums.order import OrderDraftStatus
+from app.enums.order import OrderDraftStatus, OrderStatus
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
 from app.utils.line_send_message import send_quick_reply_message, send_confirm
@@ -167,7 +167,6 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             event.reply_token,
             TextSendMessage(text=reply_text)
         )
-
         user = await update_user_info(
             db,
             user.id,
@@ -175,10 +174,12 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             phone=parsed_reply.get("phone"),
         )
 
-        order_draft = OrderDraft(
+        order_draft = Order(
             user_id=user.id,
-            room_id=chat_room.id,
-            status=OrderDraftStatus.COLLECTING,
+            # room_id=chat_room.id,
+            draft_id=42,
+            receiver_user_id=user.id,
+            status=OrderStatus.CONFIRMED,
             item_type=parsed_reply.get("item_type"),
             product_name=parsed_reply.get("product_name"),
             quantity=parsed_reply.get("quantity"),
@@ -196,6 +197,8 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         db.add(order_draft)
         await db.commit()
         await db.refresh(order_draft)
+
+        return
         # ---------- 檢查必填欄位 ----------
         required_fields = ["name", "phone", "item_type", "product_name", "quantity"]
         missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
