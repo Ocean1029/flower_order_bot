@@ -8,6 +8,7 @@ from app.routes.messages import api_router as messages_router
 from app.routes.payment import api_router as payment_router
 from app.routes.linebot import api_router as linebot_router
 from app.routes.export_docx import api_router as export_docx_router
+from app.routes.generate_fake_data import api_router as generate_fake_data_router
 
 app = FastAPI(
     title="花店自動化系統 API Dashboard",
@@ -31,6 +32,6 @@ app.include_router(messages_router, tags=["Chat"])
 app.include_router(stats_router,   tags=["Statistics"])
 app.include_router(payment_router, tags=["Payment"])
 app.include_router(linebot_router, tags=["LINE Bot Reply Messages"])
-
+app.include_router(generate_fake_data_router, tags=["Generate Fake Data"])
 # === 本地啟動指令 =======================================================
 # uvicorn app.main:app --reload --port 8000

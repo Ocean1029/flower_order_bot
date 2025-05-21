@@ -6,6 +6,8 @@ from app.enums.payment import PaymentStatus
 from app.enums.order import OrderStatus, OrderDraftStatus
 from app.enums.shipment import ShipmentMethod, ShipmentStatus
 from faker import Faker
+from sqlalchemy import select
+from app.models.chat import ChatRoom
 
 fake = Faker("zh_TW")
 
@@ -17,8 +19,17 @@ async def create_random_order(session, user):
     item_type = random.choice(["花束", "盆花"])
     product_name = random.choice(["情人節限定", "母親節感恩", "開幕大吉"])
     
+    # 隨機選擇一個聊天室
+    room = await session.execute(
+        select(ChatRoom).where(ChatRoom.user_id == user.id)
+    )
+    room = room.scalars().first()
+    
+    if room is None:
+        raise ValueError("找不到聊天室")
+
     draft = OrderDraft(
-        room_id=random.randint(1, 10),  # 假設有 10 個聊天室
+        room_id=room.id,
         user_id=user.id,
         receiver_user_id=user.id,  # 預設收件人就是訂購人
         status=OrderDraftStatus.COMPLETED,
