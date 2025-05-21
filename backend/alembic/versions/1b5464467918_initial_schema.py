@@ -1,8 +1,8 @@
-"""full_database
+"""initial schema
 
-Revision ID: 8f8738f7dfc1
-Revises: 9015d1da9e1b
-Create Date: 2025-05-11 22:48:29.897104
+Revision ID: 1b5464467918
+Revises: 5cbe7b4974c0
+Create Date: 2025-05-20 16:48:03.802741
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '8f8738f7dfc1'
-down_revision: Union[str, None] = '842303185768'
+revision: str = '1b5464467918'
+down_revision: Union[str, None] = '5cbe7b4974c0'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -26,7 +26,6 @@ def upgrade() -> None:
     sa.Column('receiver_id', sa.Integer(), nullable=False),
     sa.Column('channel', sa.Enum('LINE', 'EMAIL', 'SMS', name='notification_channel'), nullable=False),
     sa.Column('status', sa.Enum('QUEUED', 'SENT', 'FAILED', name='notification_status'), nullable=False),
-    sa.Column('payload', sa.Text(), nullable=False),
     sa.Column('send_at', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.PrimaryKeyConstraint('id')
@@ -36,7 +35,7 @@ def upgrade() -> None:
     sa.Column('code', sa.String(), nullable=False),
     sa.Column('display_name', sa.String(), nullable=False),
     sa.Column('display_image_url', sa.Text(), nullable=True),
-    sa.Column('instructions', sa.Text(), nullable=False),
+    sa.Column('instructions', sa.Text(), nullable=True),
     sa.Column('requires_manual_confirm', sa.Boolean(), nullable=False),
     sa.Column('active', sa.Boolean(), nullable=False),
     sa.Column('sort_order', sa.Integer(), nullable=False),
@@ -80,7 +79,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
     sa.Column('assigned_staff_id', sa.Integer(), nullable=True),
-    sa.Column('stage', sa.Enum('WELCOME', 'IDLE', 'WAITING_OWNER', 'BOT_ACTIVE', name='chat_room_stage'), nullable=False),
+    sa.Column('stage', sa.Enum('WELCOME', 'IDLE', 'ORDER_CONFIRM', 'WAITING_OWNER', 'BOT_ACTIVE', name='chat_room_stage'), nullable=False),
     sa.Column('bot_step', sa.SmallInteger(), nullable=False),
     sa.Column('last_message_ts', sa.DateTime(), nullable=True),
     sa.Column('unread_count', sa.Integer(), nullable=False),
@@ -93,7 +92,7 @@ def upgrade() -> None:
     op.create_table('chat_message',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('room_id', sa.Integer(), nullable=False),
-    sa.Column('status', sa.Enum('SENT', 'RECEIVED', 'FAIL', name='chat_message_status'), nullable=False),
+    sa.Column('status', sa.Enum('SENT', 'PENDING', 'FAILED', name='chat_message_status'), nullable=False),
     sa.Column('direction', sa.Enum('INCOMING', 'OUTGOING_BY_BOT', 'OUTGOING_BY_STAFF', name='chat_message_direction'), nullable=False),
     sa.Column('text', sa.Text(), nullable=False),
     sa.Column('image_url', sa.Text(), nullable=True),
@@ -108,10 +107,22 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('room_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('receiver_user_id', sa.Integer(), nullable=True),
     sa.Column('status', sa.Enum('COLLECTING', 'ABANDONED', 'COMPLETED', name='order_draft_status'), nullable=False),
-    sa.Column('payload_json', sa.Text(), nullable=False),
+    sa.Column('item_type', sa.String(), nullable=True),
+    sa.Column('product_name', sa.Text(), nullable=True),
+    sa.Column('quantity', sa.Integer(), nullable=True),
+    sa.Column('total_amount', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('notes', sa.Text(), nullable=True),
+    sa.Column('card_message', sa.Text(), nullable=True),
+    sa.Column('shipment_method', sa.Enum('STORE_PICKUP', 'DELIVERY', name='shipment_method'), nullable=True),
+    sa.Column('shipment_status', sa.Enum('PENDING', 'DISPATCHED', 'DELIVERED', 'RETURNED', name='shipment_status'), nullable=True),
+    sa.Column('receipt_address', sa.String(), nullable=True),
+    sa.Column('delivery_address', sa.Text(), nullable=True),
+    sa.Column('delivery_datetime', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.ForeignKeyConstraint(['receiver_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['room_id'], ['chat_room.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -119,18 +130,24 @@ def upgrade() -> None:
     op.create_table('order',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
+    sa.Column('receiver_user_id', sa.Integer(), nullable=False),
     sa.Column('draft_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Enum('PENDING', 'CONFIRMED', 'CANCELLED', 'COMPLETED', name='order_status'), nullable=False),
     sa.Column('item_type', sa.String(), nullable=False),
     sa.Column('product_name', sa.Text(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=False),
+    sa.Column('total_amount', sa.Numeric(precision=10, scale=2), nullable=False),
     sa.Column('notes', sa.Text(), nullable=True),
     sa.Column('card_message', sa.Text(), nullable=True),
+    sa.Column('shipment_method', sa.Enum('STORE_PICKUP', 'DELIVERY', name='shipment_method'), nullable=False),
+    sa.Column('shipment_status', sa.Enum('PENDING', 'DISPATCHED', 'DELIVERED', 'RETURNED', name='shipment_status'), nullable=False),
     sa.Column('receipt_address', sa.String(), nullable=True),
-    sa.Column('total_amount', sa.Numeric(precision=10, scale=2), nullable=False),
+    sa.Column('delivery_address', sa.Text(), nullable=True),
+    sa.Column('delivery_datetime', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['draft_id'], ['order_draft.id'], ),
+    sa.ForeignKeyConstraint(['receiver_user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -149,61 +166,11 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['order_id'], ['order.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_table('shipment',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('order_id', sa.Integer(), nullable=False),
-    sa.Column('method', sa.Enum('STORE_PICKUP', 'DELIVERY', name='shipment_method'), nullable=False),
-    sa.Column('status', sa.Enum('PENDING', 'DISPATCHED', 'DELIVERED', 'RETURNED', name='shipment_status'), nullable=False),
-    sa.Column('receiver_user_id', sa.Integer(), nullable=False),
-    sa.Column('address', sa.Text(), nullable=True),
-    sa.Column('delivery_datetime', sa.DateTime(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['order_id'], ['order.id'], ),
-    sa.ForeignKeyConstraint(['receiver_user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('order_id')
-    )
-    op.drop_table('messages')
-    op.drop_table('users')
-    op.drop_table('orders')
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     # ### commands auto generated by Alembic - please adjust! ###
-    op.create_table('orders',
-    sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('user_id', sa.INTEGER(), nullable=True),
-    sa.Column('flower_type', sa.VARCHAR(), nullable=True),
-    sa.Column('quantity', sa.INTEGER(), nullable=True),
-    sa.Column('budget', sa.INTEGER(), nullable=True),
-    sa.Column('pickup_method', sa.VARCHAR(), nullable=True),
-    sa.Column('pickup_date', sa.VARCHAR(), nullable=True),
-    sa.Column('pickup_time', sa.VARCHAR(), nullable=True),
-    sa.Column('extra_requirements', sa.VARCHAR(), nullable=True),
-    sa.Column('created_at', sa.DATETIME(), nullable=True),
-    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('users',
-    sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('line_id', sa.VARCHAR(), nullable=True),
-    sa.Column('customer_name', sa.VARCHAR(), nullable=True),
-    sa.Column('phone_number', sa.VARCHAR(), nullable=True),
-    sa.Column('created_at', sa.DATETIME(), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('line_id')
-    )
-    op.create_table('messages',
-    sa.Column('id', sa.INTEGER(), nullable=False),
-    sa.Column('user_id', sa.VARCHAR(), nullable=True),
-    sa.Column('text', sa.VARCHAR(), nullable=True),
-    sa.Column('timestamp', sa.DATETIME(), nullable=True),
-    sa.Column('used', sa.BOOLEAN(), nullable=True),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.drop_table('shipment')
     op.drop_table('payment')
     op.drop_table('order')
     op.drop_table('order_draft')
