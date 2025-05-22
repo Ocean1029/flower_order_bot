@@ -70,7 +70,7 @@ async def callback(request: Request, db: AsyncSession = Depends(get_db)):
 
 @handler.add(MessageEvent, message=TextMessage)
 async def handle_text_message(event: MessageEvent, db: AsyncSession):
-    user_line_id = event.source.user_id # LINE ID
+    user_line_id = event.source.user_id 
     user_message = event.message.text
 
     user = await get_user_by_line_uid(db, user_line_id)
@@ -109,7 +109,7 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         chat_room.stage = ChatRoomStage.WELCOME
         chat_room.bot_step = -1
         await db.commit()
-        db.refresh(chat_room)
+        await db.refresh(chat_room)
         print("回到 welcome")
         return
 
@@ -198,7 +198,6 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         await db.commit()
         await db.refresh(order_draft)
 
-        return
         # ---------- 檢查必填欄位 ----------
         required_fields = ["name", "phone", "item_type", "product_name", "quantity"]
         missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
@@ -289,7 +288,7 @@ async def run_welcome_flow(
     if user_text == "啟動智慧訂購流程":
         chat_room.stage = ChatRoomStage.BOT_ACTIVE
         chat_room.bot_step = 1  # reset for bot flow start
-
+        
         # 不能回東西，reply_message 只能一次
         # line_bot_api.reply_message(
         #     event.reply_token,
@@ -304,6 +303,7 @@ async def run_welcome_flow(
         )
 
     await db.commit()
+    db.refresh(chat_room)
 
 
 # ──────────────────────────────────────────────────────────────
@@ -322,7 +322,7 @@ async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: 
         if handler is None:
             print(f"Error: No handler for bot_step {chat_room.bot_step}, reset bot_step to 0")
             chat_room.bot_step = 0
-            chat_room.stage = ChatRoomStage.MANUAL
+            chat_room.stage = ChatRoomStage.WAITING_OWNER
             await db.commit()
             return
 
@@ -339,11 +339,8 @@ async def run_bot_flow(chat_room: ChatRoom, text: str, event: MessageEvent, db: 
 
         await db.commit()
         
-        if next_question:
-            continue  # 直接進入下一個問題的詢問
-        else:
+        if not next_question: 
             break
-
 
 
 async def ask_budget(user_text, event, db, chat_room):
