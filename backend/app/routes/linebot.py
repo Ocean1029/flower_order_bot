@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, HTTPException, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi.responses import PlainTextResponse
 from linebot import LineBotApi, WebhookHandler
-from linebot.exceptions import InvalidSignatureError
+from linebot.exceptions import InvalidSignatureError, LineBotApiError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage, FollowEvent
 from linebot.models import QuickReply, QuickReplyButton, MessageAction
 from openai import OpenAI
@@ -15,9 +15,11 @@ from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
 from app.enums.chat import ChatRoomStage
 from app.enums.order import OrderDraftStatus, OrderStatus
+from app.schemas.user import UserCreate
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
 from app.utils.line_send_message import send_quick_reply_message, send_confirm
+from app.utils.line_get_profile import fetch_user_profile
 import os
 import json
 from datetime import datetime, timedelta
@@ -75,7 +77,20 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
     user = await get_user_by_line_uid(db, user_line_id)
     if not user:
-        user = await create_user(db, user_line_id, "Profile Name")
+        # 取得使用者資料
+        profile = await fetch_user_profile(user_line_id)
+        if profile:
+            user_name = profile.display_name
+            user_status = profile.status_message
+            print(f"使用者名稱: {user_name}, 使用者狀態: {user_status}")
+        else:
+            user_name = "Unknown"
+            print("無法獲取使用者資料")
+        user = await create_user(db, UserCreate(
+            line_uid=user_line_id,
+            name=user_name,
+            phone="",
+        ))
         print(f"新使用者 {user_line_id} 已創建")
     else:
         print(f"使用者 {user_line_id} 已存在")
@@ -176,10 +191,10 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
         order_draft = Order(
             user_id=user.id,
-            # room_id=chat_room.id,
-            draft_id=42,
-            receiver_user_id=user.id,
-            status=OrderStatus.CONFIRMED,
+            
+            room_id=chat_room.id,
+            
+            status=OrderDraftStatus.COLLECTING,
             item_type=parsed_reply.get("item_type"),
             product_name=parsed_reply.get("product_name"),
             quantity=parsed_reply.get("quantity"),

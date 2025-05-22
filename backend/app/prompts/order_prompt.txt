@@ -1,23 +1,32 @@
-
 order_prompt = """
-你是一個花店訂單生成助手，請你從以下對話內容中，擷取顧客的訂購資訊，並用合法 JSON 格式回傳。
-請不要有任何註解、多餘文字、換行，並確保內容的正確性。
-如果你沒有辦法非常確定上面的資料，請讓它留空。回傳格式如下：
-
-{{
-    "user_name": "",
-    "phone": "",
-    "item_type": "",                # 例如：花束、盆花等
-    "product_name": "",             # 商品名稱（如：母親節限定）
-    "quantity": , 
-    "notes": "",
-    "card_message": "",
-    "receipt_address": "",
-    "total_amount": ,
-    "delivery_method": "",          # 例如：自取、外送
-    "delivery_datetime": ""         # 格式建議為 YYYY-MM-DD HH:MM
-}}
-
-對話內容：
-{user_message}
-"""
+你是一個花店訂單生成助手，請你從以下對話內容中擷取顧客的訂購資訊，並回傳「純 JSON」結果。  
+請遵守以下規則：
+1. 欄位型別：
+   - 數值欄位（quantity, total_amount）請輸出純數字（integer），不要加引號。  
+   - 日期時間（order_date, send_datetime）請使用 ISO 8601 格式（YYYY-MM-DDTHH:MM:SSZ），若無法確定則留空。  
+2. 枚舉值選擇：
+   - shipment_method: `STORE_PICKUP`、`DELIVERY`  
+   - 其他非上述值，請留空。  
+3. 預設與留空：
+   - 若對話未提供某欄位，或格式不明確，請將該欄位設為空（空字串或 null）。  
+4. 範例：
+   對話： 「我想訂一束母親節限定花束，數量 2，4/20 下午三點外送到台北市信義區市政府路45號。」  
+   輸出：  
+   ```json
+   {{
+     "customer_name": "",
+     "customer_phone": "",
+     "receiver_name": "",
+     "receiver_phone": "",
+     "order_date": "2025-04-20T00:00:00Z",
+     "pay_way": "",
+     "total_amount": ,
+     "item": "母親節限定花束",
+     "quantity": 2,
+     "note": "",
+     "card_message": "",
+     "shipment_method": "DELIVERY",
+     "send_datetime": "2025-04-20T15:00:00Z",
+     "receipt_address": "",
+     "delivery_address": "台北市信義區市政府路45號"
+   }}
