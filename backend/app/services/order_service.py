@@ -15,7 +15,6 @@ from app.services.payment_service import get_pay_way_by_order_id
 from app.services.user_service import get_user_by_id, create_user
 from app.services.message_service import get_chat_room_by_room_id
 from app.enums.order import OrderStatus, OrderDraftStatus
-from app.models.chat import ChatRoom
 
 
 async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
@@ -105,13 +104,6 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
         )
     
     return None
-
-async def create_order(db: AsyncSession, order_data: dict) -> Order:
-    order = Order(**order_data)
-    db.add(order)
-    await db.commit()
-    await db.refresh(order)
-    return order
 
 async def get_order(db: AsyncSession, order_id: int) -> Order:
     stmt = select(Order).where(Order.id == order_id)
