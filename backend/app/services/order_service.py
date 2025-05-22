@@ -3,14 +3,19 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List, Optional
+from datetime import datetime
+from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.models.order import Order, OrderDraft
 
-from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate
+from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate
+from app.schemas.user import UserCreate
 from app.services.payment_service import get_pay_way_by_order_id
-from app.services.user_service import get_user_by_id
+from app.services.user_service import get_user_by_id, create_user
+from app.services.message_service import get_chat_room_by_room_id
 from app.enums.order import OrderStatus, OrderDraftStatus
+from app.models.chat import ChatRoom
 
 
 async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
@@ -138,10 +143,93 @@ async def delete_order(db: AsyncSession, order_id: int) -> bool:
     
     return False
 
+async def create_order_draft(db: AsyncSession, order_draft_data: dict) -> OrderDraft:
+    order_draft = OrderDraft(**order_draft_data)
+    db.add(order_draft)
+    await db.commit()
+    await db.refresh(order_draft)
+    return order_draft
 
-async def update_order_draft_by_id(
+
+async def create_order_draft_by_room_id(
+    db: AsyncSession,
+    room_id: int,
+    draft_in: OrderDraftCreate
+) -> OrderDraft:
+    """
+    依據 room_id 新建 / 更新一筆 collecting 狀態的 order_draft
+    -----------------------------------------------------------------
+    - 若 room_id 查無聊天室 → 404
+    - 若已有 status=collecting 的草稿 → 更新
+      否則為該 room 建立新草稿
+    - 回傳 *OrderDraft ORM*，呼叫端可再轉成 Pydantic
+    """
+    # 1. 取得聊天室
+    room = await get_chat_room_by_room_id(db, room_id)
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chat room with id {room_id} not found."
+        )
+
+    # 2. 取得現有 collecting 草稿（若有）
+    result = await db.execute(
+        select(OrderDraft).where(
+            OrderDraft.room_id == room_id,
+            OrderDraft.status == OrderDraftStatus.COLLECTING
+        )
+    )
+    order_draft: Optional[OrderDraft] = result.scalar_one_or_none()
+
+    # 3. 若無則新建
+    if order_draft is None:
+        order_draft = OrderDraft(
+            user_id=room.user_id,
+            room_id=room.id,
+            status=OrderDraftStatus.COLLECTING,
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow(),
+        )
+        db.add(order_draft)
+
+    # 4. 更新 / 填入欄位（只覆蓋非 None 值）
+    field_map = {
+        "item": "product_name",          # schema.item -> DB.product_name
+        "quantity": "quantity",
+        "total_amount": "total_amount",
+        "note": "notes",
+        "card_message": "card_message",
+        "shipment_method": "shipment_method",
+        "send_datetime": "delivery_datetime",
+        "receipt_address": "receipt_address",
+        "delivery_address": "delivery_address",
+    }
+
+    for schema_attr, model_attr in field_map.items():
+        value = getattr(draft_in, schema_attr)
+        if value is not None:
+            setattr(order_draft, model_attr, value)
+
+    # 5. 新增收件人資訊
+    if draft_in.receiver_name or draft_in.receiver_phone:
+        # just create the receiver user directly, TODO: Add a "order relation" table to store the relation between the customer and receiver
+        pass
+    
+    # 6. 若有付款方式（pay_way）等欄位可在此擴充
+
+    # 7. 更新時間戳
+    order_draft.updated_at = datetime.utcnow()
+
+    # 8. 提交並 refresh
+    await db.commit()
+    await db.refresh(order_draft)
+    return order_draft
+
+
+
+async def update_order_draft_by_room_id(
     db: AsyncSession, room_id: int, update_schema: OrderDraftUpdate
-) -> Optional[OrderDraftOut]:
+) -> OrderDraftOut:
 
     update_data = update_schema.model_dump()
     print(f"update_data: {update_data}")
