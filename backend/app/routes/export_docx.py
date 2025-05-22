@@ -46,7 +46,8 @@ async def export_order_docx(order_id: int, db: AsyncSession = Depends(get_db)):
         "send_datetime": send_datetime_str,
         "receiver_name": getattr(order, "receiver_name", ""),
         "receiver_phone": getattr(order, "receiver_phone", ""),
-        "delivery_address": getattr(order, "delivery_address", "")
+        "delivery_address": getattr(order, "delivery_address", ""),
+        "total_amount": getattr(order, "total_amount", 0),
     }
 
     tpl = DocxTemplate(TEMPLATE_PATH)
