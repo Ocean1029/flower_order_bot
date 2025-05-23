@@ -17,7 +17,6 @@ async def create_random_order(session, user):
     delivery_datetime = datetime.now() + timedelta(days=random.randint(1, 3))
     shipment_method = random.choice([ShipmentMethod.STORE_PICKUP, ShipmentMethod.DELIVERY])
     item_type = random.choice(["花束", "盆花"])
-    product_name = random.choice(["情人節限定", "母親節感恩", "開幕大吉"])
     
     # 隨機選擇一個聊天室
     room = await session.execute(
@@ -34,7 +33,6 @@ async def create_random_order(session, user):
         receiver_user_id=user.id,  # 預設收件人就是訂購人
         status=OrderDraftStatus.COMPLETED,
         item_type=item_type,
-        product_name=product_name,
         quantity=random.randint(1, 5),
         total_amount=total,
         notes=fake.sentence(),
@@ -54,7 +52,6 @@ async def create_random_order(session, user):
         receiver_user_id=user.id,  # 預設收件人就是訂購人
         draft_id=draft.id,
         item_type=item_type,
-        product_name=product_name,
         quantity=draft.quantity,
         notes=draft.notes,
         card_message=draft.card_message,

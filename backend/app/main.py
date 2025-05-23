@@ -15,11 +15,11 @@ app = FastAPI(
     docs_url="/",  # Swagger UI 路徑
 )
 
-# CORS（可依實際域名收斂設定）
+# CORS（
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

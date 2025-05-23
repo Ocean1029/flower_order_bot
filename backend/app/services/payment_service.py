@@ -28,7 +28,7 @@ async def get_all_payment_methods(db: AsyncSession) -> Optional[list[PaymentMeth
     ]
 
 
-async def get_pay_way_by_order_id(db: AsyncSession, order_id: int) -> str:
+async def get_pay_way_by_order_id(db: AsyncSession, order_id: int) -> PaymentMethod:
     payment_stmt = (
         select(Payment, PaymentMethod)
         .join(PaymentMethod, Payment.method_id == PaymentMethod.id)
@@ -38,9 +38,9 @@ async def get_pay_way_by_order_id(db: AsyncSession, order_id: int) -> str:
     payment_result = await db.execute(payment_stmt)
     payment = payment_result.first()
     if payment is None:
-        return "Unknown"
+        return None
     payment_method = payment[1]
-    return payment_method.display_name
+    return payment_method
 
 async def get_payment_method_by_id(db: AsyncSession, payment_method_id: int) -> Optional[PaymentMethod]:
     stmt = select(PaymentMethod).where(PaymentMethod.id == payment_method_id)

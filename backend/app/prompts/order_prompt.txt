@@ -1,5 +1,5 @@
 order_prompt = """
-你是一個花店訂單生成助手，請你從以下對話內容中擷取顧客的訂購資訊，並回傳「純 JSON」結果。  
+你是一個花店訂單生成助手，請你從以下對話內容中擷取顧客的訂購資訊，並回傳「純 JSON」結果，請直接以大括號開頭，大括號結尾。  
 請遵守以下規則：
 1. 欄位型別：
    - 數值欄位（quantity, total_amount）請輸出純數字（integer），不要加引號。  
@@ -8,7 +8,7 @@ order_prompt = """
    - shipment_method: `STORE_PICKUP`、`DELIVERY`  
    - 其他非上述值，請留空。  
 3. 預設與留空：
-   - 若對話未提供某欄位，或格式不明確，請將該欄位設為空（空字串或 null）。  
+   - 若對話未提供某欄位，或格式不明確，請將該欄位設為空（空字串、null 或 -1）。  
 4. 範例：
    對話： 「我想訂一束母親節限定花束，數量 2，4/20 下午三點外送到台北市信義區市政府路45號。」  
    輸出：  
@@ -20,9 +20,9 @@ order_prompt = """
      "receiver_phone": "",
      "order_date": "2025-04-20T00:00:00Z",
      "pay_way": "",
-     "total_amount": ,
+     "total_amount": -1,
      "item": "母親節限定花束",
-     "quantity": 2,
+     "quantity": -1,
      "note": "",
      "card_message": "",
      "shipment_method": "DELIVERY",
@@ -30,3 +30,6 @@ order_prompt = """
      "receipt_address": "",
      "delivery_address": "台北市信義區市政府路45號"
    }}
+
+對話內容如下：
+{user_message}

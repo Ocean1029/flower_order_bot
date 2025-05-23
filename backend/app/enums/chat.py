@@ -1,18 +1,18 @@
 from enum import Enum
 
 class ChatRoomStage(str, Enum):
-    WELCOME = "welcome"
-    IDLE = "idle"
-    ORDER_CONFIRM = "order_confirm"
-    WAITING_OWNER = "waiting_owner"
-    BOT_ACTIVE = "bot_active"
+    WELCOME = "WELCOME"
+    IDLE = "IDLE"
+    ORDER_CONFIRM = "ORDER_CONFIRM"
+    WAITING_OWNER = "WAITING_OWNER"
+    BOT_ACTIVE = "BOT_ACTIVE"
 
 class ChatMessageStatus(str, Enum):
-    SENT = "sent"
-    PENDING = "pending"
-    FAILED = "failed"
+    SENT = "SENT"
+    PENDING = "PENDING"
+    FAILED = "FAILED"
 
 class ChatMessageDirection(str, Enum):
-    INCOMING = "incoming"
-    OUTGOING_BY_BOT = "outgoing_by_bot"
-    OUTGOING_BY_STAFF = "outgoing_by_staff" 
+    INCOMING = "INCOMING"
+    OUTGOING_BY_BOT = "OUTGOING_BY_BOT"
+    OUTGOING_BY_STAFF = "OUTGOING_BY_STAFF" 

@@ -15,9 +15,12 @@ from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
 from app.enums.chat import ChatRoomStage
 from app.enums.order import OrderDraftStatus, OrderStatus
+from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
 from app.schemas.user import UserCreate
+from app.schemas.order import OrderDraftCreate
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
+from app.services.order_service import create_order_draft_by_room_id
 from app.utils.line_send_message import send_quick_reply_message, send_confirm
 from app.utils.line_get_profile import fetch_user_profile
 import os
@@ -33,7 +36,6 @@ FIELD_PROMPT_MAP = {
     "name": "收件人姓名",
     "phone": "聯絡電話",
     "item_type": "商品類型",
-    "product_name": "商品名稱",
     "quantity": "數量",
 }
 
@@ -91,9 +93,6 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             name=user_name,
             phone="",
         ))
-        print(f"新使用者 {user_line_id} 已創建")
-    else:
-        print(f"使用者 {user_line_id} 已存在")
     
     # 取得或創建聊天室
     chat_room = await get_chat_room_by_user_id(db, user.id)
@@ -104,10 +103,10 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
     # 儲存訊息
     message = ChatMessage(
         room_id=chat_room.id,
-        direction="incoming",
+        direction=ChatMessageDirection.INCOMING,
         text=user_message,
         image_url="",
-        status="sent",
+        status=ChatMessageStatus.PENDING,
         processed=False,
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
@@ -168,78 +167,85 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
         combined_text = "\n".join(reversed([m.text for m in messages]))
         gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text)
-
         response = openai_client.chat.completions.create(
             model="gpt-4.1",
             messages=[{"role": "system", "content": gpt_prompt}],
             temperature=0
         )
         gpt_reply = response.choices[0].message.content.strip()
+
+        if not gpt_reply or gpt_reply.strip() == "":
+            print("❗ GPT 回覆為空，無法解析")
+            return  # 或 raise HTTPException(status_code=400, detail="GPT 回覆為空")
+
         parsed_reply = json.loads(gpt_reply)
 
-        reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n，請確認資訊。"
+        for key, value in parsed_reply.items():
+            if isinstance(value, str) and value.strip() == "":
+                parsed_reply[key] = None
+
+        reply_text = f"以下是整理好的訂單資訊：\n{gpt_reply}\n\n"
+        
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=reply_text)
         )
-        user = await update_user_info(
-            db,
-            user.id,
-            name=parsed_reply.get("name"),
-            phone=parsed_reply.get("phone"),
-        )
+        
+        # 將 parsed_reply 變成 OrderDraftCreate
+        order_draft = OrderDraftCreate(
+            customer_name=parsed_reply.get("name"),
+            customer_phone=parsed_reply.get("phone"),
+            receiver_name=parsed_reply.get("receiver_name"),
+            receiver_phone=parsed_reply.get("receiver_phone"),
 
-        order_draft = Order(
-            user_id=user.id,
-            
-            room_id=chat_room.id,
-            
-            status=OrderDraftStatus.COLLECTING,
-            item_type=parsed_reply.get("item_type"),
-            product_name=parsed_reply.get("product_name"),
-            quantity=parsed_reply.get("quantity"),
-            notes=parsed_reply.get("notes", ""),
-            card_message=parsed_reply.get("card_message", ""),
-            receipt_address=parsed_reply.get("receipt_address", ""),
+            pay_way_id=parsed_reply.get("pay_way_id"),
             total_amount=parsed_reply.get("total_amount"),
+
+            item=parsed_reply.get("item"),
+            quantity=parsed_reply.get("quantity"),
+            note=parsed_reply.get("note"),
+            card_message=parsed_reply.get("card_message"),
+
             shipment_method=parsed_reply.get("shipment_method"),
-            shipment_status=parsed_reply.get("shipment_status"),
-            # delivery_datetime=parsed_reply.get("delivery_datetime"),
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            send_datetime=parsed_reply.get("send_datetime"),
+            receipt_address=parsed_reply.get("receipt_address"),
+            delivery_address=parsed_reply.get("delivery_address"),
         )
+        # 使用 create_order_draft_by_room_id 建立 OrderDraft
+        order_draft = await create_order_draft_by_room_id(db=db, room_id=chat_room.id, draft_in=order_draft)
+        print(f"訂單草稿已建立，ID：{order_draft.id}")
 
-        db.add(order_draft)
-        await db.commit()
-        await db.refresh(order_draft)
-
-        # ---------- 檢查必填欄位 ----------
-        required_fields = ["name", "phone", "item_type", "product_name", "quantity"]
-        missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
-        if missing_fields:
-            # 進入 ORDER_CONFIRM 流程，逐欄位詢問
-            order_confirm_cache[user_line_id] = {
-                "missing": missing_fields,
-                "current_idx": 0,
-                "order_data": parsed_reply
-            }
-            chat_room.stage = ChatRoomStage.ORDER_CONFIRM
-            chat_room.bot_step = 0
-            await db.commit()
-
-            first_field = missing_fields[0]
-            display = FIELD_PROMPT_MAP.get(first_field, first_field)
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text=f"請補充「{display}」：")
-            )
-            return  # 先跳出，不建草稿
-
+        # 將對話訊息設為已處理
         stmt = update(ChatMessage)\
             .where(ChatMessage.id.in_([message.id for message in messages]))\
             .values(processed=True)
         await db.execute(stmt)
         await db.commit()
+
+        return 
+
+        # # ---------- 檢查必填欄位 ----------
+        # required_fields = ["name", "phone", "item_type", "quantity"]
+        # missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
+        # if missing_fields:
+        #     # 進入 ORDER_CONFIRM 流程，逐欄位詢問
+        #     order_confirm_cache[user_line_id] = {
+        #         "missing": missing_fields,
+        #         "current_idx": 0,
+        #         "order_data": parsed_reply
+        #     }
+        #     chat_room.stage = ChatRoomStage.ORDER_CONFIRM
+        #     chat_room.bot_step = 0
+        #     await db.commit()
+
+        #     first_field = missing_fields[0]
+        #     display = FIELD_PROMPT_MAP.get(first_field, first_field)
+        #     line_bot_api.reply_message(
+        #         event.reply_token,
+        #         TextSendMessage(text=f"請補充「{display}」：")
+        #     )
+        #     return  # 先跳出，不建草稿
+
 
 @handler.add(FollowEvent)
 async def handle_follow(event: FollowEvent, db: AsyncSession):
@@ -295,7 +301,7 @@ async def run_welcome_flow(
         )
         chat_room.bot_step = 0  # 記錄 bot_step 為 0，表示已詢問過
         await db.commit()
-        db.refresh(chat_room)
+        await db.refresh(chat_room)
         print("已詢問使用者是否要客製化花束")
         return
     
@@ -467,7 +473,6 @@ async def run_order_confirm_flow(
         room_id=chat_room.id,
         status=OrderDraftStatus.COLLECTING,
         item_type=order_data.get("item_type"),
-        product_name=order_data.get("product_name"),
         quantity=order_data.get("quantity"),
         notes=order_data.get("notes", ""),
         card_message=order_data.get("card_message", ""),
@@ -486,14 +491,13 @@ async def run_order_confirm_flow(
         user_id=user.id,
         room_id=chat_room.id,
         item_type=order_draft.item_type,
-        product_name=order_draft.product_name,
         quantity=order_draft.quantity,
         notes=order_draft.notes,
         card_message=order_draft.card_message,
         receipt_address=order_draft.receipt_address,
         total_amount=order_draft.total_amount,
         shipment_method=order_draft.shipment_method,
-        shipment_status="PENDING",
+        shipment_status="PENDING", # TODO 改成 enum
         created_at=datetime.utcnow(),
         updated_at=datetime.utcnow()
     )

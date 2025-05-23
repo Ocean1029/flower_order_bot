@@ -6,23 +6,8 @@ from sqlalchemy import (
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
 
-from enum import Enum
 from sqlalchemy import Enum as SAEnum
-
-class NotificationReceiverType(str, Enum):
-    USER = "user"
-    STAFF = "staff"
-
-class NotificationChannel(str, Enum):
-    LINE = "line"
-    EMAIL = "email"
-    SMS = "sms"
-
-class NotificationStatus(str, Enum):
-    QUEUED = "queued"
-    SENT = "sent"
-    FAILED = "failed"
-
+from app.enums.notification import NotificationReceiverType, NotificationChannel, NotificationStatus
 class Notification(Base):
     __tablename__ = "notification"
 

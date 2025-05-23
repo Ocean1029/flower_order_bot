@@ -22,7 +22,6 @@ class OrderDraft(Base):
         default=OrderDraftStatus.COLLECTING
     )
     item_type: Mapped[str] = mapped_column(String, nullable=True)
-    product_name: Mapped[str] = mapped_column(Text, nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, nullable=True)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
     notes: Mapped[str] = mapped_column(Text, nullable=True)
@@ -59,7 +58,6 @@ class Order(Base):
         default=OrderStatus.PENDING
     )
     item_type: Mapped[str] = mapped_column(String)
-    product_name: Mapped[str] = mapped_column(Text)
     quantity: Mapped[int] = mapped_column(Integer)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2))
     notes: Mapped[str] = mapped_column(Text, nullable=True)

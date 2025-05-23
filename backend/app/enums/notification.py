@@ -1,10 +1,15 @@
 from enum import Enum
 
 class NotificationReceiverType(str, Enum):
-    USER = "user"
-    STAFF = "staff"
+    USER = "USER"
+    STAFF = "STAFF"
 
 class NotificationStatus(str, Enum):
-    QUEUED = "queued"
-    SENT = "sent"
-    FAILED = "failed" 
+    QUEUED = "QUEUED"
+    SENT = "SENT"
+    FAILED = "FAILED" 
+
+class NotificationChannel(str, Enum):
+    LINE = "LINE"
+    EMAIL = "EMAIL"
+    SMS = "SMS"
