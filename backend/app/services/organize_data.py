@@ -3,7 +3,7 @@ from sqlalchemy import select, update
 import json
 from app.models.chat import ChatMessage, ChatRoom
 from app.schemas.order import OrderDraftCreate, OrderDraftOut
-from app.services.order_service import create_order_draft_by_room_id, get_order_draft_by_room_id
+from app.services.order_service import create_order_draft_by_room_id, get_order_draft
 from fastapi import HTTPException, status
 from app.managers.prompt_manager import PromptManager
 from openai import OpenAI
@@ -48,14 +48,25 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             detail="過去 7 天內沒有尚未處理的對話資料喔～"
         )
 
-    combined_text = "\n".join(reversed([m.text for m in messages]))
-    draft = await get_order_draft_by_room_id(db, chat_room.id)
-    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(draft or {}))
+    combined_text = "\n".join(
+        reversed([f"[{m.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {m.text}" for m in messages])
+    )
+
+    draft = await get_order_draft(db, chat_room.id)
+    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(draft.model_json() or {}))
+
+    print("🔍 GPT 處理中...")
+    print(f"📜 GPT Prompt:\n{gpt_prompt}")
+
     response = openai_client.chat.completions.create(
         model="gpt-4.1",
         messages=[{"role": "system", "content": gpt_prompt}],
         temperature=0
     )
+
+    print("🔍 GPT 處理完成")
+    print(f"💬 GPT 回覆:\n{response.choices[0].message.content.strip()}")
+
     gpt_reply = response.choices[0].message.content.strip()
 
     if not gpt_reply or gpt_reply.strip() == "":
