@@ -33,3 +33,4 @@ order_prompt = """
 
 對話內容如下：
 {user_message}
+"""
