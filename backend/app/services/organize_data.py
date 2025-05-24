@@ -52,8 +52,21 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         reversed([f"[{m.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {m.text}" for m in messages])
     )
 
+    # from sqlalchemy.orm import class_mapper
+
+    # def orm_to_dict(obj):
+    #     result = {}
+    #     for c in class_mapper(obj.__class__).columns:
+    #         val = getattr(obj, c.key)
+    #         if isinstance(val, datetime):
+    #             result[c.key] = val.isoformat()
+    #         else:
+    #             result[c.key] = val
+    #     return result
+    
     draft = await get_order_draft(db, chat_room.id)
-    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(draft.model_json() or {}))
+    
+    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(orm_to_dict(draft)) or {})
 
     print("🔍 GPT 處理中...")
     print(f"📜 GPT Prompt:\n{gpt_prompt}")
