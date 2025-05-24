@@ -40,7 +40,7 @@ async function loadMessages() {
     const response = await getRoomMessages(props.roomId)
     messages.value = response.map(msg => ({
       id: msg.id,
-      sender: msg.direction === 'outgoing_by_staff' || msg.direction === 'outgoing_by_bot' ? '我' : props.roomName,
+      sender: msg.direction === 'OUTGOING_BY_STAFF' || msg.direction === 'OUTGOING_BY_BOT' ? '我' : props.roomName,
       text: msg.message.text,
       timestamp: new Date(msg.created_at),
       direction: msg.direction

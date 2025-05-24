@@ -5,7 +5,7 @@
   </div>
 
   <!-- 對方訊息（message customer） -->
-  <div v-else-if="message.direction === 'incoming'" class="message-customer">
+  <div v-else-if="message.direction === 'INCOMING'" class="message-customer">
     <img
       v-if="message.isFirstInMinute"
       class="pic"
@@ -41,8 +41,8 @@ const props = defineProps({
 })
 
 const isOutgoing = computed(() => {
-  return props.message.direction === 'outgoing_by_staff' || 
-         props.message.direction === 'outgoing_by_bot'
+  return props.message.direction === 'OUTGOING_BY_STAFF' || 
+         props.message.direction === 'OUTGOING_BY_BOT'
 })
 
 function formatTime(timestamp) {
