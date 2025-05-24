@@ -28,17 +28,6 @@ import json
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
-# ──── 缺資料互動暫存（user_line_id -> dict） ────
-order_confirm_cache: dict[str, dict] = {}
-
-# 欄位 prompt 對應
-FIELD_PROMPT_MAP = {
-    "name": "收件人姓名",
-    "phone": "聯絡電話",
-    "item_type": "商品類型",
-    "quantity": "數量",
-}
-
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
@@ -300,8 +289,6 @@ async def ask_type(user_text, event, db, chat_room):
         )
         return 4, False, False  # stay on the same step waiting for input
 
-
-
 async def last(user_text, event, db, chat_room):
     
     budget = user_text.strip()
@@ -316,101 +303,3 @@ async def last(user_text, event, db, chat_room):
 
 # Handler 到這裡結束
 
-
-
-
-# 控制 bot 檢查訂單缺少資料 流程  By Benjamin
-#
-# ──────────────────────────────────────────────────────────────
-async def run_order_confirm_flow(
-    chat_room: ChatRoom,
-    user_text: str,
-    user_line_id: str,
-    event: MessageEvent,
-    db: AsyncSession
-):
-    """
-    逐欄位收集缺少的資料，全部補齊後轉成正式 Order。
-    """
-    cache = order_confirm_cache.get(user_line_id)
-    if not cache:
-        # safety fallback
-        chat_room.stage = ChatRoomStage.WAITING_OWNER
-        await db.commit()
-        return
-
-    missing = cache["missing"]
-    idx = cache["current_idx"]
-    order_data = cache["order_data"]
-
-    # 使用者剛回覆 -> 存進 order_data
-    if idx < len(missing):
-        field = missing[idx]
-        order_data[field] = user_text.strip()
-        idx += 1
-        cache["current_idx"] = idx
-
-    # 還有下一個欄位要問
-    if idx < len(missing):
-        next_field = missing[idx]
-        disp = FIELD_PROMPT_MAP.get(next_field, next_field)
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=f"謝謝！請再提供給我「{disp}」：")
-        )
-        return
-
-    # ---- 全部資料已補齊 ----
-    user = await update_user_info(
-        db, chat_room.user_id,
-        name=order_data.get("name"),
-        phone=order_data.get("phone"),
-    )
-
-    order_draft = OrderDraft(
-        user_id=user.id,
-        room_id=chat_room.id,
-        status=OrderDraftStatus.COLLECTING,
-        item_type=order_data.get("item_type"),
-        quantity=order_data.get("quantity"),
-        notes=order_data.get("notes", ""),
-        card_message=order_data.get("card_message", ""),
-        receipt_address=order_data.get("receipt_address", ""),
-        total_amount=order_data.get("total_amount"),
-        shipment_method=order_data.get("shipment_method"),
-        shipment_status=order_data.get("shipment_status"),
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
-    )
-    db.add(order_draft)
-    await db.commit()
-    await db.refresh(order_draft)
-
-    order = Order(
-        user_id=user.id,
-        room_id=chat_room.id,
-        item_type=order_draft.item_type,
-        quantity=order_draft.quantity,
-        notes=order_draft.notes,
-        card_message=order_draft.card_message,
-        receipt_address=order_draft.receipt_address,
-        total_amount=order_draft.total_amount,
-        shipment_method=order_draft.shipment_method,
-        shipment_status="PENDING", # TODO 改成 enum
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
-    )
-    db.add(order)
-
-    # 清理 cache & 狀態
-    order_confirm_cache.pop(user_line_id, None)
-    chat_room.stage = ChatRoomStage.WAITING_OWNER
-    chat_room.bot_step = -1
-
-    await db.commit()
-    await db.refresh(order)
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text="✅ 資料已補齊，訂單建立完成！我們將盡快與您聯繫～")
-    )
