@@ -134,11 +134,11 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             await run_bot_flow(chat_room, "", event, db)
         return
 
-    if chat_room.stage == ChatRoomStage.ORDER_CONFIRM:
-        await run_order_confirm_flow(
-            chat_room, user_message, user_line_id, event, db
-        )
-        return
+    # if chat_room.stage == ChatRoomStage.ORDER_CONFIRM:
+    #     await run_order_confirm_flow(
+    #         chat_room, user_message, user_line_id, event, db
+    #     )
+    #     return
 
     # Bot 自動回覆流程
     if chat_room.stage == ChatRoomStage.BOT_ACTIVE:
