@@ -1,8 +1,8 @@
 export const statusMapping = {
-  'welcome': '歡迎',
-  'idle': '等待備貨',
-  'waiting_owner': '人工溝通',
-  'bot_active': '自動回覆'
+  'WELCOME': '歡迎',
+  'IDLE': '等待備貨',
+  'WAITING_OWNER': '人工溝通',
+  'BOT_ACTIVE': '自動回覆'
 }
 
 export function getStatusDisplay(status) {
@@ -11,11 +11,11 @@ export function getStatusDisplay(status) {
 
 export function getStatusClass(status) {
   switch (status) {
-    case 'idle':
+    case 'IDLE':
       return 'wait'
-    case 'waiting_owner':
+    case 'WAITING_OWNER':
       return 'manual'
-    case 'bot_active':
+    case 'BOT_ACTIVE':
       return 'auto'
     default:
       return ''
