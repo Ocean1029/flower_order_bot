@@ -63,7 +63,6 @@ const processedMessages = computed(() => {
   padding: 24px 24px;
   box-sizing: border-box;
   background: #FFFFFF;
-  border-right: 1px solid #B3B3B3;
 }
 .message-bubble,
 .sender {
