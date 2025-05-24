@@ -3,6 +3,8 @@ import os
 import json
 from app.managers.prompt_manager import PromptManager
 from dotenv import load_dotenv
+import datetime
+now_iso = datetime.datetime().replace(microsecond=0).isoformat() + "Z"
 
 load_dotenv()
 openai_client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
