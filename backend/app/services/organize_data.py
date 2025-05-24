@@ -3,7 +3,7 @@ from sqlalchemy import select, update
 import json
 from app.models.chat import ChatMessage, ChatRoom
 from app.schemas.order import OrderDraftCreate, OrderDraftOut
-from app.services.order_service import create_order_draft_by_room_id
+from app.services.order_service import create_order_draft_by_room_id, get_order_draft_by_room_id
 from fastapi import HTTPException, status
 from app.managers.prompt_manager import PromptManager
 from openai import OpenAI
@@ -49,7 +49,8 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         )
 
     combined_text = "\n".join(reversed([m.text for m in messages]))
-    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text)
+    draft = await get_order_draft_by_room_id(db, chat_room.id)
+    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(draft or {}))
     response = openai_client.chat.completions.create(
         model="gpt-4.1",
         messages=[{"role": "system", "content": gpt_prompt}],
