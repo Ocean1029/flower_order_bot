@@ -98,6 +98,18 @@ async def delete_order(db: AsyncSession, order_id: int) -> bool:
     
     return False
 
+async def get_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft]:
+    stmt = (
+        select(OrderDraft)
+        .where(OrderDraft.room_id == room_id)
+        .where(OrderDraft.status == OrderDraftStatus.COLLECTING)
+        .order_by(OrderDraft.created_at.desc())
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    order_draft = result.scalar_one_or_none()
+    
+    return order_draft
 
 async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional[OrderDraftOut]:
     stmt = (
@@ -126,7 +138,7 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             order_date=order_draft.created_at,
             order_status=order_draft.status,
             
-            pay_way=pay_way,
+            pay_way_id=pay_way,
             total_amount=order_draft.total_amount,
             
             item=order_draft.item_type,
@@ -142,6 +154,7 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
         )
     
     return None
+
 
 
 async def get_collecting_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft]:
