@@ -101,9 +101,8 @@ onMounted(async () => {
   line-height: 40px;
   letter-spacing: 0;
   color: #6168FC;
-  background: transparent;
+  background: transpare
 }
-<style scoped>
 .order-title-wrapper {
   position: absolute;
   top: 80px;
@@ -157,5 +156,13 @@ onMounted(async () => {
   padding: 20px;
   font-size: 18px;
   color: #6168FC;
+}
+
+.dashboard-section {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1.5px solid #e9e9e9;
 }
 </style>

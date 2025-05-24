@@ -165,10 +165,11 @@ function downloadCSV() {
 
 <style scoped>
 .section {
-  padding: 32px 32px 24px 32px;
   background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 4px 24px rgba(79,140,255,0.10);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 32px;
+  border-bottom: 1.5px solid #e9e9e9;
 }
 .header {
   margin-bottom: 0;

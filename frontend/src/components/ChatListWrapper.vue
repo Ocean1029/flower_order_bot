@@ -163,11 +163,13 @@ watch(filteredRooms, () => {
 .section {
   position: relative;
   width: 360px;
-  height: 56px;
+  height: 80px;
   margin-left: 0px;
   top: 0px;
   display: flex;
   align-items: center;
+  border-bottom: 1.5px solid #e9e9e9;
+  border-right: 1px solid #e9e9e9;
 }
 .head {
   position: absolute;
@@ -267,15 +269,14 @@ watch(filteredRooms, () => {
   background: #F7F7F7;
   display: flex;
   align-items: center;
-  gap: 0;
-  padding: 6px 0 6px 12px;
-  margin: 0 0 12px 0;
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
   scrollbar-width: thin;
   scrollbar-color: #E4E4E4 #F7F7F7;
   box-sizing: border-box;
+  gap: 4px;
+  padding: 6px 12px 6px 12px;
 }
 .filter-btn {
   width: 72px;

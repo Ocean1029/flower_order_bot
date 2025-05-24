@@ -111,7 +111,7 @@ function onImgError(event) {
   max-width: 360px;
   border-radius: 24px;
   padding: 9px 16px;
-  background: #F2F2F2;
+  background: #D9D9D9;
   word-break: break-word;
   
   display: inline-block;

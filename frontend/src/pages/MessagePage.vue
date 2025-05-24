@@ -65,10 +65,11 @@
   display: flex;
   margin-top: 56px;
   height: calc(100vh - 56px);
+  border-bottom: 1.5px solid #e9e9e9;
 }
 .chat-list-panel {
   width: 360px;
-  border-right: 1px solid #e9e9e9;
+  border-right: 1.5px solid #e9e9e9;
   background: #f5f5f5;
   overflow-y: auto;
 }
@@ -78,6 +79,7 @@
   display: flex;
   flex-direction: column;
   transition: width 0.3s;
+  border-right: 1.5px solid #e9e9e9;
   
 }
 .chat-room-panel.expanded {
@@ -86,7 +88,7 @@
 .chat-detail-panel {
   width: 340px;
   background: #fff;
-  border-left: 1px solid #e9e9e9;
+  border-right: 1.5px solid #e9e9e9;
   padding: 24px;
   overflow-y: auto;
   position: relative;
