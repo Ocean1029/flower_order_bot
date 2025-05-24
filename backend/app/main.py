@@ -9,6 +9,7 @@ from app.routes.payment import api_router as payment_router
 from app.routes.linebot import api_router as linebot_router
 from app.routes.export_docx import api_router as export_docx_router
 from app.routes.generate_fake_data import api_router as generate_fake_data_router
+from app.routes.organize_data import api_router as organize_data_router
 
 app = FastAPI(
     title="花店自動化系統 API Dashboard",
@@ -28,6 +29,7 @@ app.add_middleware(
 app.include_router(health_router, tags=["Health"])
 app.include_router(orders_router, tags=["Orders"])
 app.include_router(export_docx_router, tags=["Orders"])
+app.include_router(organize_data_router, tags=["Organize Data"])
 app.include_router(messages_router, tags=["Chat"])
 app.include_router(stats_router,   tags=["Statistics"])
 app.include_router(payment_router, tags=["Payment"])

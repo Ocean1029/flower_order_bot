@@ -187,7 +187,10 @@ async def create_order_draft_by_room_id(
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow()
         )
-
+        db.add(order_draft)
+        await db.commit()
+        await db.refresh(order_draft)
+    
     return await update_order_draft_by_room_id(db, room_id, draft_in)
 
 async def update_order_draft_by_room_id(
@@ -202,7 +205,6 @@ async def update_order_draft_by_room_id(
             detail=f"Chat room with id {room_id} not found."
         )
 
-    # 2. 檢查該聊天室是否有訂單，若沒有則新建一個
     order_draft = await get_collecting_order_draft(db, room_id)
     if not order_draft:
         raise HTTPException(
@@ -261,5 +263,6 @@ async def update_order_draft_by_room_id(
     db.add(order_draft)
     await db.commit()
     await db.refresh(order_draft)
+    
     # 8. 回傳 OrderDraftOut
     return await get_order_draft_by_room_id(db, room_id)
