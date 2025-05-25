@@ -3,7 +3,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status
 
 from app.models.user import User
@@ -197,8 +197,8 @@ async def create_order_draft_by_room_id(
             room_id=room.id,
             user_id=room.user_id,
             status=OrderDraftStatus.COLLECTING,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
         )
         db.add(order_draft)
         await db.commit()
@@ -244,7 +244,7 @@ async def update_order_draft_by_room_id(
         order_draft.receipt_address = draft_in.receipt_address
     if draft_in.delivery_address is not None:
         order_draft.delivery_address = draft_in.delivery_address
-    order_draft.updated_at = datetime.utcnow()
+    order_draft.updated_at = datetime.now(timezone(timedelta(hours=8)))
 
     # 5. 新增收件人資訊
     if draft_in.receiver_name or draft_in.receiver_phone:
@@ -252,8 +252,8 @@ async def update_order_draft_by_room_id(
         receiver_user = User(
             name=draft_in.receiver_name,
             phone=draft_in.receiver_phone,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8))),
         )
         db.add(receiver_user)
         await db.commit()

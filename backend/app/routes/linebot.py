@@ -25,7 +25,7 @@ from app.utils.line_send_message import send_quick_reply_message, send_confirm
 from app.utils.line_get_profile import fetch_user_profile
 import os
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -97,8 +97,8 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone(timedelta(hours=8))),
+        updated_at=datetime.now(timezone(timedelta(hours=8)))
     )
     
     db.add(message)

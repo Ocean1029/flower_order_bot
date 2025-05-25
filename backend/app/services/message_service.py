@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from sqlalchemy.orm import joinedload
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import List, Optional
 
 from app.models.chat import ChatRoom, ChatMessage
@@ -73,7 +73,7 @@ async def create_chat_room(db: AsyncSession, user_id: int) -> ChatRoom:
         stage=ChatRoomStage.WELCOME,
         bot_step=-1,
         unread_count=0,
-        created_at=datetime.utcnow()
+        created_at=datetime.now(timezone(timedelta(hours=8)))
         )
     db.add(room)
     await db.commit()
@@ -106,7 +106,7 @@ async def switch_chat_room_mode(db: AsyncSession, room_id: int, mode: str) -> No
     stmt = (
         update(ChatRoom)
         .where(ChatRoom.id == room_id)
-        .values(stage=mode, updated_at=datetime.utcnow())
+        .values(stage=mode, updated_at=datetime.now(timezone(timedelta(hours=8))))
     )
     await db.execute(stmt)
     await db.commit()
@@ -124,8 +124,8 @@ async def create_chat_message_entry(
         image_url=data.image_url,
         status=ChatMessageStatus.SENT,
         processed=False,
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
+        created_at=datetime.now(timezone(timedelta(hours=8))),
+        updated_at=datetime.now(timezone(timedelta(hours=8)))
     )
     db.add(message)
     await db.commit()
@@ -158,7 +158,7 @@ async def create_staff_message(db: AsyncSession, room_id: int, data: ChatMessage
     
     # 更新聊天室狀態
     room.stage = ChatRoomStage.IDLE
-    room.updated_at = datetime.utcnow()
+    room.updated_at = datetime.now(timezone(timedelta(hours=8)))
     db.add(room)
     await db.commit()
     await db.refresh(room)

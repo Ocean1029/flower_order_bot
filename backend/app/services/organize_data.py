@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select, update
 import json
 from app.models.chat import ChatMessage, ChatRoom
@@ -46,7 +46,7 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             detail="找不到聊天室"
         )
     
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    seven_days_ago = datetime.now(timezone(timedelta(hours=8))) - timedelta(days=7)
     stmt = select(ChatMessage).where(
         ChatMessage.room_id == chat_room_id,
         ChatMessage.created_at >= seven_days_ago,

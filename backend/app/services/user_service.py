@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
@@ -44,7 +44,7 @@ async def update_user_info(
         user.name = name
     if phone:
         user.phone = phone
-    user.updated_at = datetime.utcnow()
+    user.updated_at = datetime.now(timezone(timedelta(hours=8)))
     await db.commit()
     await db.refresh(user)
     return user
