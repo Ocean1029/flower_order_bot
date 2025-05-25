@@ -93,11 +93,11 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     parsed_reply = _clean_parsed_reply(json.loads(gpt_reply))
 
     order_draft_create = OrderDraftCreate(
-        customer_name=parsed_reply.get("name"),
-        customer_phone=parsed_reply.get("phone"),
+        customer_name=parsed_reply.get("customer_name"),
+        customer_phone=parsed_reply.get("customer_phone"),
         receiver_name=parsed_reply.get("receiver_name"),
         receiver_phone=parsed_reply.get("receiver_phone"),
-        pay_way_id=parsed_reply.get("pay_way_id"),
+        pay_way=parsed_reply.get("pay_way"),
         total_amount=parsed_reply.get("total_amount"),
         item=parsed_reply.get("item"),
         quantity=parsed_reply.get("quantity"),
@@ -108,6 +108,7 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         receipt_address=parsed_reply.get("receipt_address"),
         delivery_address=parsed_reply.get("delivery_address"),
     )
+    print(order_draft_create)
 
     # 傳送草稿中 缺漏的欄位傳給顧客
     missing_fields = []

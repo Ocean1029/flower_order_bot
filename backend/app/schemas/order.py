@@ -50,10 +50,12 @@ class OrderDraftBase(BaseModel):
 
 class OrderDraftUpdate(OrderDraftBase):
     pay_way_id: Optional[int] = None
+    pay_way: Optional[str] = None
     pass
 
 class OrderDraftCreate(OrderDraftBase):
     pay_way_id: Optional[int] = None
+    pay_way: Optional[str] = None
     pass
 
 class OrderDraftOut(OrderDraftBase):
