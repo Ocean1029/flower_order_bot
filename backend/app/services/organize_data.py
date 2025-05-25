@@ -63,7 +63,7 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         )
 
     combined_text = "\n".join(
-        reversed([f"[{m.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {m.text}" for m in messages])
+        reversed([f"[{message.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {message.text} {message.direction}" for message in messages])
     )
     
     draft = await get_order_draft(db, chat_room.id)
