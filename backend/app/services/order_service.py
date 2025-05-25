@@ -48,7 +48,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
             order_date=order.created_at,
             order_status=order.status,
             
-            pay_way_id=pay_way.id if pay_way else None,
+            pay_way=pay_way.display_name if pay_way else None,
             total_amount=order.total_amount,
             
             item=order.item_type,
