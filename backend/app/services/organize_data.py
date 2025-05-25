@@ -9,11 +9,25 @@ from app.managers.prompt_manager import PromptManager
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from decimal import Decimal
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 prompt_manager = PromptManager()
+
+def orm_to_dict(obj):
+    if obj is None:
+        return {}
+    result = {}
+    for c in obj.__table__.columns:
+        value = getattr(obj, c.name)
+        if isinstance(value, Decimal):
+            value = float(value)
+        elif isinstance(value, datetime):
+            value = value.isoformat()
+        result[c.name] = value
+    return result
 
 def _clean_parsed_reply(parsed_reply):
     for key, value in parsed_reply.items():
@@ -51,23 +65,10 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     combined_text = "\n".join(
         reversed([f"[{m.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {m.text}" for m in messages])
     )
-
-    # from sqlalchemy.orm import class_mapper
-
-    # def orm_to_dict(obj):
-    #     result = {}
-    #     for c in class_mapper(obj.__class__).columns:
-    #         val = getattr(obj, c.key)
-    #         if isinstance(val, datetime):
-    #             result[c.key] = val.isoformat()
-    #         else:
-    #             result[c.key] = val
-    #     return result
     
     draft = await get_order_draft(db, chat_room.id)
     
     gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(orm_to_dict(draft)) or {})
-
     print("🔍 GPT 處理中...")
     print(f"📜 GPT Prompt:\n{gpt_prompt}")
 
@@ -112,11 +113,11 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     #     if key not in ["id", "created_at", "updated_at"]:
     #         print(f"{key}: {value}")
 
-    # 將對話訊息設為已處理
-    stmt = update(ChatMessage)\
-        .where(ChatMessage.id.in_([message.id for message in messages]))\
-        .values(processed=True)
-    await db.execute(stmt)
-    await db.commit()
+    # # 將對話訊息設為已處理
+    # stmt = update(ChatMessage)\
+    #     .where(ChatMessage.id.in_([message.id for message in messages]))\
+    #     .values(processed=True)
+    # await db.execute(stmt)
+    # await db.commit()
 
     return order_draft_out
