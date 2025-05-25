@@ -187,7 +187,22 @@ async def run_welcome_flow(
             yes_reply="啟動智慧訂購流程",
             no_reply="直接轉接老闆"
         )
+
+        # 儲存詢問的動作
+        message = ChatMessage(
+        room_id=chat_room.id,
+        direction=ChatMessageDirection.OUTGOING_BY_BOT,
+        text="詢問是否要訂購客製化花束。",
+        image_url="",
+        status=ChatMessageStatus.PENDING,
+        processed=False,
+        created_at=datetime.now(timezone(timedelta(hours=8))),
+        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        )
+        
+        db.add(message)
         chat_room.bot_step = 0  # 記錄 bot_step 為 0，表示已詢問過
+
         await db.commit()
         await db.refresh(chat_room)
         print("已詢問使用者是否要客製化花束")
@@ -260,6 +275,21 @@ async def ask_budget(user_text, event, db, chat_room):
                 "好的～預算大概多少呢？",
                 ["500以下", "500-1000", "1000以上"]
             )
+            
+            # 儲存詢問的動作
+            message = ChatMessage(
+            room_id=chat_room.id,
+            direction=ChatMessageDirection.OUTGOING_BY_BOT,
+            text="詢問預算金額。",
+            image_url="",
+            status=ChatMessageStatus.PENDING,
+            processed=False,
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            )
+            db.add(message)
+            await db.commit()
+
             return 1, False, False
         else:
             budget = user_text.strip()
@@ -278,6 +308,20 @@ async def ask_color(user_text, event, db, chat_room):
             "想要什麼顏色的客製化花束？",
             ["紅", "白", "粉", "其他"]
         )
+        # 儲存詢問的動作
+        message = ChatMessage(
+            room_id=chat_room.id,
+            direction=ChatMessageDirection.OUTGOING_BY_BOT,
+            text="詢問顏色。",
+            image_url="",
+            status=ChatMessageStatus.PENDING,
+            processed=False,
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            )
+        db.add(message)
+        await db.commit()
+
         return 4, False, False  # stay on the same step waiting for input
     
 async def ask_type(user_text, event, db, chat_room):
@@ -287,6 +331,20 @@ async def ask_type(user_text, event, db, chat_room):
             "想要什麼類型的花材？",
             ["大欸米", "中欸米", "小欸米", "其他"]
         )
+        # 儲存詢問的動作
+        message = ChatMessage(
+            room_id=chat_room.id,
+            direction=ChatMessageDirection.OUTGOING_BY_BOT,
+            text="詢問花材。",
+            image_url="",
+            status=ChatMessageStatus.PENDING,
+            processed=False,
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            )
+        db.add(message)
+        await db.commit()
+
         return 4, False, False  # stay on the same step waiting for input
 
 async def last(user_text, event, db, chat_room):
@@ -297,6 +355,19 @@ async def last(user_text, event, db, chat_room):
         event.reply_token,
         TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
     )
+    # 儲存詢問的動作
+    message = ChatMessage(
+        room_id=chat_room.id,
+        direction=ChatMessageDirection.OUTGOING_BY_BOT,
+        text="通知，轉接給客服人員人工處理。",
+        image_url="",
+        status=ChatMessageStatus.PENDING,
+        processed=False,
+        created_at=datetime.now(timezone(timedelta(hours=8))),
+        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        )
+    db.add(message)
+    await db.commit()
     return -1, False, False  # flow finished
 
 # ── 3. 特別需求詢問 之類的
