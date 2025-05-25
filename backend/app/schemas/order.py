@@ -31,7 +31,6 @@ class OrderDraftBase(BaseModel):
     receiver_phone: Optional[str] = None
 
     # 付款資訊
-    pay_way_id: Optional[int] = None # 付款方式 id
     total_amount: Optional[float] = None
 
     # 商品資訊
@@ -50,17 +49,25 @@ class OrderDraftBase(BaseModel):
         from_attributes = True
 
 class OrderDraftUpdate(OrderDraftBase):
+    pay_way_id: Optional[int] = None
     pass
 
 class OrderDraftCreate(OrderDraftBase):
+    pay_way_id: Optional[int] = None
     pass
 
 class OrderDraftOut(OrderDraftBase):
     id: int
     order_date: datetime
     order_status: OrderDraftStatus
+    pay_way: Optional[str]
     weekday: Optional[str]
 
+class OrderDraftStatusOut(BaseModel):
+    id: int
+    status: OrderDraftStatus
+    order_date: datetime
+    weekday: Optional[str] = None
 
 """
 Order:

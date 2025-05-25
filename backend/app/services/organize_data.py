@@ -120,25 +120,3 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     await db.commit()
 
     return order_draft_out
-
-        # # ---------- 檢查必填欄位 ----------
-        # required_fields = ["name", "phone", "item_type", "quantity"]
-        # missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
-        # if missing_fields:
-        #     # 進入 ORDER_CONFIRM 流程，逐欄位詢問
-        #     order_confirm_cache[user_line_id] = {
-        #         "missing": missing_fields,
-        #         "current_idx": 0,
-        #         "order_data": parsed_reply
-        #     }
-        #     chat_room.stage = ChatRoomStage.ORDER_CONFIRM
-        #     chat_room.bot_step = 0
-        #     await db.commit()
-
-        #     first_field = missing_fields[0]
-        #     display = FIELD_PROMPT_MAP.get(first_field, first_field)
-        #     line_bot_api.reply_message(
-        #         event.reply_token,
-        #         TextSendMessage(text=f"請補充「{display}」：")
-        #     )
-        #     return  # 先跳出，不建草稿
