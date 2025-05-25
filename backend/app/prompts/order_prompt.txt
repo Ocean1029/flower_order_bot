@@ -17,6 +17,7 @@ order_prompt = """
    - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 留空。
    - `pay_way`：請填入對話中明確出現的付款方式，例如：「現場付款（含訂金）」、「轉帳」、「信用卡」等。
    - `card_message`：將所有卡片內容完整列出（換行可用 \n 表示）。
+   - `order_date`：請用最新的對話日期。
 
 5. 範例：
    對話： 「我想訂一束母親節限定花束，數量 2，4/20 下午三點外送到台北市信義區市政府路45號。」  
