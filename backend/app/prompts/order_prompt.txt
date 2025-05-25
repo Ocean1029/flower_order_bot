@@ -19,7 +19,7 @@ ChatMessageDirection 分成三種：
    - `note`：將花的顏色、花材、風格等需求整理於此欄，不要寫在 `item`。
    - `item`：只寫「花束」、「客製化花束」等名稱，不要附註說明。
    - `shipment_method`：只能是 `STORE_PICKUP` 或 `DELIVERY`，其他留空。
-   - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 留空。
+   - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 填寫「店取」。
    - `pay_way`：請填入對話中明確出現的付款方式，例如：「現場付款（含訂金）」、「轉帳」、「信用卡」等。
    - `card_message`：將所有卡片內容完整列出（換行可用 \n 表示）。
    - `order_date`：請用最新的對話日期與時間。
