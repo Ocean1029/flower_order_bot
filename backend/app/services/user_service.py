@@ -7,6 +7,30 @@ from typing import Optional
 
 from app.schemas.user import UserCreate
 
+async def get_line_uid_by_chatroom_id(
+        db: AsyncSession,
+        chat_room_id: int
+    ) -> Optional[str]:
+    """
+    Given a chat_room_id, return the associated user's LINE UID.
+
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        chat_room_id (int): Primary key of the ChatRoom record.
+
+    Returns:
+        Optional[str]: LINE UID if the chat room exists and has one, else None.
+    """
+    stmt = select(ChatRoom).where(ChatRoom.id == chat_room_id)
+    result = await db.execute(stmt)
+    chat_room = result.scalar_one_or_none()
+
+    if chat_room is None:
+        return None
+
+    # Assuming ChatRoom has an attribute `line_user_id`
+    return getattr(chat_room, "line_user_id", None)
+
 
 async def get_user_by_line_uid(db: AsyncSession, line_uid: str) -> User:
     stmt = select(User).where(User.line_uid == line_uid)

@@ -4,8 +4,11 @@ import json
 from app.models.chat import ChatMessage, ChatRoom
 from app.schemas.order import OrderDraftCreate, OrderDraftOut
 from app.services.order_service import create_order_draft_by_room_id, get_order_draft
+from app.utils.line_send_message import LINE_push_message
+from app.services.user_service import get_line_uid_by_chatroom_id
 from fastapi import HTTPException, status
 from app.managers.prompt_manager import PromptManager
+from app.schemas.chat import ChatMessageBase
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
@@ -105,6 +108,45 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         receipt_address=parsed_reply.get("receipt_address"),
         delivery_address=parsed_reply.get("delivery_address"),
     )
+
+    # 傳送草稿中 缺漏的欄位傳給顧客
+    missing_fields = []
+    required_fields = {
+        "customer_name": "顧客姓名",
+        "customer_phone": "顧客電話",
+        "receiver_name": "收件人姓名",
+        "receiver_phone": "收件人電話",
+        "pay_way": "付款方式",
+        "total_amount": "總金額",
+        "item": "商品項目",
+        "quantity": "數量",
+        "shipment_method": "配送方式",
+        "send_datetime": "送達時間",
+        "delivery_address": "收件地址"
+    }
+    for field, label in required_fields.items():
+        if getattr(order_draft_create, field, None) in [None, "", 0]:
+            missing_fields.append(label)
+
+    if missing_fields:
+        # 透過 chat_room_id 反查目前聊天室對應的 LINE UID
+        line_uid = await get_line_uid_by_chatroom_id(db, chat_room.id)
+        print(line_uid)
+
+        warning_msg = (
+                "智慧客服已根據對話內容整理好訂單草稿囉！"
+                "我們發現了一些缺少的資料，請幫我們直接在下方補上～\n"
+                + "\n".join(f"- {f}" for f in missing_fields)
+            )
+        print(warning_msg)
+
+        if line_uid:
+            # 將字串包成 ChatMessageBase，再交給 LINE_push_message
+            await LINE_push_message(line_uid, ChatMessageBase(text=warning_msg))
+        else:
+            print("❗ 無法取得該聊天室對應的 LINE UID，無法推播缺漏提醒。")
+
+
     order_draft_out = await create_order_draft_by_room_id(db=db, room_id=chat_room.id, draft_in=order_draft_create)
     print(f"訂單草稿已建立，ID：{order_draft_out.id}")
     
@@ -120,4 +162,4 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     # await db.execute(stmt)
     # await db.commit()
 
-    return order_draft_out
+    # return order_draft_out
