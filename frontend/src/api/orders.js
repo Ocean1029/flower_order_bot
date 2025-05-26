@@ -19,3 +19,12 @@ export const fetchOrderDraft = async (room_id) => {
   return res.data
 }
 
+export const keepOrderDraft = async (room_id, order_draft) => {
+  const res = await axios.patch(`${API_BASE}/orderdraft/${room_id}`, order_draft)
+  return res.data
+}
+
+export const readOrderDraft = async (room_id) => {
+  const res = await axios.get(`${API_BASE}/orderdraft/${room_id}`)
+  return res.data
+}
