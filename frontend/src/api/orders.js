@@ -15,7 +15,7 @@ export const fetchOrders = async () => {
 }
 
 export const fetchOrderDraft = async (room_id) => {
-  const res = await axios.post(`${API_BASE}/organize_data/organize_data/${room_id}`)
+  const res = await axios.patch(`${API_BASE}/organize_data/${room_id}`)
   return res.data
 }
 
