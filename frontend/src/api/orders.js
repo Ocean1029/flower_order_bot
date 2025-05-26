@@ -25,6 +25,13 @@ export const keepOrderDraft = async (room_id, order_draft) => {
 }
 
 export const readOrderDraft = async (room_id) => {
-  const res = await axios.get(`${API_BASE}/orderdraft/${room_id}`)
-  return res.data
+  console.log('Reading order draft for room:', room_id)
+  try {
+    const res = await axios.get(`${API_BASE}/orderdraft/${room_id}`)
+    console.log('Order draft read response:', res.data)
+    return res.data
+  } catch (error) {
+    console.error('Error in readOrderDraft:', error)
+    throw error
+  }
 }

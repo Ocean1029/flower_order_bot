@@ -9,7 +9,7 @@
         >
           {{ getStatusDisplay(status) }}
         </span>
-        <button class="back-btn" @click="$emit('showDetail')">
+        <button class="back-btn" @click="handleBackClick">
           <i class="fas fa-angle-double-left"></i>
         </button>        
       </div>
@@ -30,7 +30,7 @@
 <script setup>
 import { computed } from 'vue'
 import { getStatusDisplay, getStatusClass } from '@/utils/statusMapping'
-import { fetchOrderDraft } from '@/api/orders'
+import { fetchOrderDraft, readOrderDraft } from '@/api/orders'
 
 const props = defineProps({
   roomName: String,
@@ -43,13 +43,34 @@ const emit = defineEmits(['showDetail', 'orderDraftFetched'])
 
 const statusClass = computed(() => getStatusClass(props.status))
 
+const handleBackClick = async () => {
+  try {
+    console.log('Reading order draft for room:', props.roomId)
+    const data = await readOrderDraft(props.roomId)
+    console.log('Order draft data:', data)
+    if (data && Object.keys(data).length > 0) {
+      emit('orderDraftFetched', data)
+    }
+    emit('showDetail')
+  } catch (error) {
+    console.error('Error reading order draft:', error)
+    emit('showDetail')
+  }
+}
+
 const handleOrderClick = async () => {
   try {
+    console.log('Fetching order draft for room:', props.roomId)
     const data = await fetchOrderDraft(props.roomId)
     console.log('Order draft data:', data)
-    emit('orderDraftFetched', data)
+    if (data && Object.keys(data).length > 0) {
+      emit('orderDraftFetched', data)
+    } else {
+      alert('此聊天室尚未有訂單資料，請先建立訂單')
+    }
   } catch (error) {
     console.error('Error fetching order draft:', error)
+    alert('Error fetching order draft: ' + error.message)
   }
 }
 </script>
