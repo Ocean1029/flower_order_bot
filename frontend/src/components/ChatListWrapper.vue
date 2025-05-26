@@ -85,9 +85,21 @@ const props = defineProps({
   chatRooms: Array,
   selectedRoomId: String
 })
-const emit = defineEmits(['selectRoom'])
+const emit = defineEmits(['selectRoom', 'read'])
+
+// 新增一個本地的 rooms 狀態，讓 unreadCount 可即時變動
+const localRooms = ref(props.chatRooms.map(room => ({ ...room })))
+
+watch(() => props.chatRooms, (newRooms) => {
+  localRooms.value = newRooms.map(room => ({ ...room }))
+})
 
 function selectRoom(room) {
+  // 點擊時將該聊天室的 unreadCount 設為 0
+  const idx = localRooms.value.findIndex(r => r.id === room.id)
+  if (idx !== -1) {
+    localRooms.value[idx].unreadCount = 0
+  }
   emit('selectRoom', room)
 }
 
@@ -101,15 +113,14 @@ const tabs = [
 const currentTab = ref('所有訂單')
 
 const filteredRooms = computed(() => {
-  if (currentTab.value === '所有訂單') return props.chatRooms
-  return props.chatRooms.filter(r => r.status === currentTab.value)
+  if (currentTab.value === '所有訂單') return localRooms.value
+  return localRooms.value.filter(r => r.status === currentTab.value)
 })
 
 const unreadCount = computed(() =>
-  props.chatRooms.reduce(
+  localRooms.value.reduce(
     (sum, room) =>
-      sum +
-      (room.unreadCount && props.selectedRoomId !== room.id ? room.unreadCount : 0),
+      sum + (room.unreadCount && props.selectedRoomId !== room.id ? room.unreadCount : 0),
     0
   )
 )
@@ -203,24 +214,23 @@ watch(filteredRooms, () => {
 }
 
 .number-wrapper {
+  top: 2px;
   position: relative;
   width: 32px;
   height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }  
 .ellipse {
-  position: relative;
-  top: 2px;
-  left: 2px;
+  position: absolute;
   width: 32px;
   height: 32px;
   background: #D8EAFF;  
   border-radius: 50%;
 }
 .number {
-  position: absolute;
-  top: 6px;
-  left: 13px;
-  height: 24px;
+  position: relative;
   color: #528DD2;
   font-family: 'Noto Sans TC';
   font-weight: 700;
@@ -228,11 +238,7 @@ watch(filteredRooms, () => {
   line-height: 113%;
   letter-spacing: 0%;
   text-align: center;
-  vertical-align: middle;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  z-index: 1;
 }
 
 /* content */
@@ -381,16 +387,21 @@ watch(filteredRooms, () => {
 .unread_text {
   font-family: 'Noto Sans TC';
   font-weight: 400;
+  width: 90%;
   font-size: 14px;
   height: 20px;
   line-height: 140%;
   color: #00000099;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 1;
 }
 .unread_point {
   width: 12px;
   height: 12px;
   background: #77B5FF;
-  border-radius: 50%;
+  border-radius: 50%;  
 }
 .frame2.manual { background: #FFCEE7; }
 .frame2.auto { background: #D8EAFF; }

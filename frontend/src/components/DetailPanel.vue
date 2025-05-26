@@ -35,13 +35,18 @@
             />
             <span v-else class="data">{{ dataList[idx] }}</span>
           </div>
-        </div>
-        
+        </div>        
       </div>
-      <!-- bottom: 兩個新按鈕 -->
-      <div class="bottom-btns">
-          <button class="order-btn update">更新工單</button>
-          <button class="order-btn create">建立新工單</button>
+      <!-- bottom: frame-2 兩個新按鈕 -->
+      <div class="frame-2">
+          <div class="order-btn update" :class="{ editing: isEditing }">
+            <i class="fas fa-upload btn-icon"></i>
+            <span class="btn-text">更新工單</span>
+          </div>
+          <div class="order-btn create" :class="{ editing: isEditing }">
+            <i class="fas fa-plus btn-icon"></i>
+            <span class="btn-text">建立新工單</span>
+          </div>
         </div>
     </div>
   </transition>
@@ -233,6 +238,7 @@ function confirmEditing() {
   gap: 16px;
   flex: 1;
   overflow-y: auto;
+  padding-bottom: 120px;
 }
 
 .table-row {
@@ -275,33 +281,50 @@ function confirmEditing() {
   font-family: 'Noto Sans TC', sans-serif;
 }
 
-.bottom-btns {
+.frame-2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 16px;
   display: flex;
-  gap: 12px;
+  gap: 8px;
   justify-content: center;
-  margin-top: 32px;
+  z-index: 20;
 }
-
 .order-btn {
-  min-width: 100px;
+  width: 136px;
   height: 40px;
   border-radius: 12px;
+  padding: 12px 12px;
+  box-shadow: 2px 2px 2px 0px #00000040;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  background: #6168FC;
+  transition: background 0.2s;
+}
+.order-btn.editing {
+  background: #C5C7FF;
+}
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-text {
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 700;
   font-size: 16px;
-  border: none;
-  cursor: pointer;
-  box-shadow: 2px 2px 2px 0px #00000020;
-  transition: background 0.2s;
-}
-
-.order-btn.update {
-  background: #C5C7FF;
-  color: #6168FC;
-}
-
-.order-btn.create {
-  background: #6168FC;
+  line-height: 113%;
+  letter-spacing: 0%;
+  vertical-align: middle;
   color: #fff;
+  display: flex;
+  align-items: center;
 }
 </style> 
