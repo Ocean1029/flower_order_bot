@@ -31,6 +31,7 @@ const columnMapping = {
 
 const searchText = ref('')
 const currentDate = ref(new Date())
+const activeTab = ref('all')
 
 const formatDate = (date) => {
   const weekdays = ['日', '一', '二', '三', '四', '五', '六']
@@ -72,7 +73,7 @@ function statusColor(status) {
 }
 
 // 狀態文字對應
-function statusText(status) {
+function statusText(status) { //改
   switch (status) {
     case 'MANUAL': return '人工溝通'
     case 'CONFIRMED': return '等待備貨'
@@ -150,10 +151,26 @@ const columnWidths = {
     </div>
     <div class="filter-row">
       <div class="order-tabs">
-        <button class="tab active">所有訂單</button>
-        <button class="tab">人工溝通</button>
-        <button class="tab">今日訂單</button>
-        <button class="tab">等待備貨</button>
+        <button 
+          class="tab" 
+          :class="{ active: activeTab === 'all' }"
+          @click="activeTab = 'all'"
+        >所有訂單</button>
+        <button 
+          class="tab" 
+          :class="{ active: activeTab === 'manual' }"
+          @click="activeTab = 'manual'"
+        >人工溝通</button>
+        <button 
+          class="tab" 
+          :class="{ active: activeTab === 'today' }"
+          @click="activeTab = 'today'"
+        >今日訂單</button>
+        <button 
+          class="tab" 
+          :class="{ active: activeTab === 'prepare' }"
+          @click="activeTab = 'prepare'"
+        >等待備貨</button>
       </div>
       <div class="date-filter">
         <button class="date-nav-btn" @click="goToPreviousDay">
