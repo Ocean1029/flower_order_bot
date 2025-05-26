@@ -45,6 +45,9 @@ async def get_chat_room_list(db: AsyncSession) -> Optional[List[ChatRoomOut]]:
             } if last_msg else None,
         ))
 
+    # 以 last_message 的 time stamp 排序
+    response.sort(key=lambda x: x.last_message.timestamp if x.last_message else datetime.min, reverse=True)
+
     return response
 
 async def get_chat_room_by_room_id(db: AsyncSession, room_id: int) -> Optional[ChatRoom]:
