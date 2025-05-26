@@ -20,59 +20,32 @@
         </div>
       </div>
       <div class="order-detail-content">
-        <template v-for="(col, idx) in columns" :key="col">
-          <template v-if="col === '取貨時間'">
-            <!-- 第一行：標題+日期 -->
-            <div class="table-row">
-              <div class="table-column">{{ col }}</div>
-              <div class="data-container">
-                <template v-if="isEditing">
-                  <input
-                    type="date"
-                    v-model="pickupDate"
-                    class="edit-input"
-                    style="width: 100%;"
-                  />
-                </template>
-                <template v-else>
-                  <span class="data">{{ pickupDateTextWithWeekday }}</span>
-                </template>
-              </div>
-            </div>
-            <!-- 第二行：空白+時間 -->
-            <div class="table-row">
-              <div class="table-column"></div>
-              <div class="data-container">
-                <template v-if="isEditing">
-                  <input
-                    type="time"
-                    v-model="pickupTime"
-                    class="edit-input"
-                    style="width: 100%;"
-                  />
-                </template>
-                <template v-else>
-                  <span class="data">{{ pickupTimeText }}</span>
-                </template>
-              </div>
-            </div>
-          </template>
-          <template v-else>
-            <div class="table-row">
-              <div class="table-column">{{ col }}</div>
-              <div class="data-container">
-                <template v-if="isEditing && editableFields.includes(col)">
-                  <input
-                    v-model="editedData[col]"
-                    class="edit-input"
-                    type="text"
-                  />
-                </template>
-                <span v-else class="data">{{ dataList[idx] }}</span>
-              </div>
-            </div>
-          </template>
-        </template>
+        <div
+          class="table-row"
+          v-for="(col, idx) in columns"
+          :key="col"
+        >
+          <div class="table-column">{{ col }}</div>
+          <div class="data-container">
+            <template v-if="isEditing && editableFields.includes(col)">
+              <select 
+                v-if="col === '取貨方式'"
+                v-model="editedData[col]"
+                class="edit-select"
+              >
+                <option value="店取">店取</option>
+                <option value="外送">外送</option>
+              </select>
+              <input 
+                v-else
+                v-model="editedData[col]"
+                class="edit-input"
+                type="text"
+              />
+            </template>
+            <span v-else class="data">{{ dataList[idx] }}</span>
+          </div>
+        </div>        
       </div>
       <!-- bottom: frame-2 兩個新按鈕 -->
       <div class="frame-2">
@@ -112,7 +85,6 @@ const columns = [
   '品項', '數量', '備註', '卡片訊息', '取貨方式', '送貨日期', '收件地址', 
   '送貨地址', '訂單日期', '訂單狀態', '付款方式', '星期'
 ]
-
 const dataList = computed(() => [
   props.orderData?.id || ' ',
   props.orderData?.customer_name || ' ',
@@ -151,17 +123,14 @@ function formatDateTime(dateStr) {
 
 function startEditing() {
   isEditing.value = true
+  // 初始化編輯數據
   columns.forEach((col, idx) => {
     if (editableFields.includes(col)) {
       editedData.value[col] = dataList.value[idx]
     }
   })
 }
-
-function cancelEditing() {
-  isEditing.value = false
   editedData.value = {}
-}
 
 async function confirmEditing() {
   try {
@@ -261,6 +230,11 @@ async function confirmEditing() {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.edit-btn:active {
+  transform: scale(0.95);
 }
 
 .press {
@@ -299,6 +273,11 @@ async function confirmEditing() {
   border: none;
   color: #528DD2;
   rotate: -180deg;
+  transition: transform 0.1s ease;
+}
+
+.icon-block:active {
+  transform: scale(0.95);
 }
 
 .ellipse {
@@ -365,6 +344,27 @@ async function confirmEditing() {
   border-radius: 4px;
   font-size: 14px;
   font-family: 'Noto Sans TC', sans-serif;
+  transition: all 0.1s ease;
+}
+
+.edit-input:active {
+  transform: scale(0.98);
+}
+
+.edit-select {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px solid #e9e9e9;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: 'Noto Sans TC', sans-serif;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.edit-select:active {
+  transform: scale(0.98);
 }
 
 .frame-2 {
@@ -388,7 +388,11 @@ async function confirmEditing() {
   justify-content: center;
   cursor: pointer;
   background: #6168FC;
-  transition: background 0.2s;
+  transition: all 0.1s ease;
+}
+.order-btn:active {
+  transform: scale(0.95);
+  box-shadow: 1px 1px 1px 0px #00000040;
 }
 .order-btn.editing {
   background: #C5C7FF;
@@ -413,4 +417,4 @@ async function confirmEditing() {
   display: flex;
   align-items: center;
 }
-</style> 
+</style>

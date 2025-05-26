@@ -39,7 +39,6 @@ const statList = computed(() => [
   gap: 36px;
   width: 948px;
   height: 144px;
-  margin-left: 64px;
   background: transparent;
 }
 

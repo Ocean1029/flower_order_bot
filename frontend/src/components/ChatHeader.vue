@@ -13,22 +13,18 @@
           <i class="fas fa-angle-double-left"></i>
         </button>        
       </div>
-    <button class="order-btn" @click="handleOrderClick">
-      <span class="icon">
-        <span class="archive">
-          <span class="archive-icon">
-          <!-- 這裡可放 svg 或 fontawesome icon -->
-            <i class="fas fa-archive"></i>
-          </span>
-        </span>
-      </span>
-      <span class="order-btn-text">整理資料</span>
-    </button>   
+    <div class="order-btn" @click="handleOrderClick">
+      <div class="loading-spinner" v-if="isProcessing"></div>
+      <template v-else>
+        <i class="fas fa-archive"></i>
+        <span class="btn-text">整理資料</span>
+      </template>
+    </div>   
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { getStatusDisplay, getStatusClass } from '@/utils/statusMapping'
 import { fetchOrderDraft, readOrderDraft } from '@/api/orders'
 
@@ -42,6 +38,8 @@ const props = defineProps({
 const emit = defineEmits(['showDetail', 'orderDraftFetched'])
 
 const statusClass = computed(() => getStatusClass(props.status))
+
+const isProcessing = ref(false)
 
 const handleBackClick = async () => {
   try {
@@ -58,7 +56,8 @@ const handleBackClick = async () => {
   }
 }
 
-const handleOrderClick = async () => {
+async function handleOrderClick() {
+  isProcessing.value = true
   try {
     console.log('Fetching order draft for room:', props.roomId)
     const data = await fetchOrderDraft(props.roomId)
@@ -71,6 +70,8 @@ const handleOrderClick = async () => {
   } catch (error) {
     console.error('Error fetching order draft:', error)
     alert('Error fetching order draft: ' + error.message)
+  } finally {
+    isProcessing.value = false
   }
 }
 </script>
@@ -132,20 +133,22 @@ const handleOrderClick = async () => {
   justify-content: center;
 }
 .order-btn {
-  width: 119px;
+  width: 120px;
   height: 40px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
   border-radius: 12px;
-  padding: 8px;
+  padding: 8px 12px 8px 12px;
   background: #C5C7FF;
   color: #ffffff;
   border: none;
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
   box-sizing: border-box;
   margin-left: auto;
   margin-right: 24px;
@@ -155,43 +158,49 @@ const handleOrderClick = async () => {
   box-shadow: 2px 2px 2px 0px #00000040;
 
 }
-.icon {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.order-btn:active {
+  transform: scale(0.92);
 }
-.archive {
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
-.archive-icon {
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: 3px;
-  margin-top: 3px;
-  /* 這裡可放svg或icon字體 */
+@keyframes spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
 }
-.order-btn-text {
-  height: 18px;
-  font-family: 'Noto Sans TC';
-  font-weight: 700;
-  font-size: 16px;
-  line-height: 113%;
-  letter-spacing: 0;
-  vertical-align: middle;
-  color: #ffffff;
-  display: flex;
-  align-items: center;
-  border-radius: 4px;
+.order-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+.order-btn:active::after {
+  animation: ripple 0.6s ease-out;
+}
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(20, 20);
+    opacity: 0;
+  }
 }
 .message-section {
   width: 662px;
