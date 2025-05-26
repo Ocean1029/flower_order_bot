@@ -8,6 +8,7 @@ class UserBase(BaseModel):
     line_uid: Optional[str] = None
     name: Optional[str] = None
     phone: Optional[str] = None
+    avatar_url: Optional[str] = None
 
 class UserCreate(UserBase):
     pass

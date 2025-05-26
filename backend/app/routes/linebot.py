@@ -68,21 +68,20 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
     user = await get_user_by_line_uid(db, user_line_id)
     if not user:
-        # 取得使用者資料
-        profile = await fetch_user_profile(user_line_id)
+        user = await create_user(db, UserCreate(line_uid=user_line_id, name="Unknown User"))
+        
+    if user.name == "Unknown User" or user.avatar_url is None :
+        try :
+            profile = await fetch_user_profile(user_line_id)
+        except LineBotApiError as e:
+            print(f"Error fetching user profile: {e.status_code} {e.error.message}")
+        
         if profile:
-            user_name = profile.display_name
-            user_status = profile.status_message
-            print(f"使用者名稱: {user_name}, 使用者狀態: {user_status}")
-        else:
-            user_name = "Unknown"
-            print("無法獲取使用者資料")
-        user = await create_user(db, UserCreate(
-            line_uid=user_line_id,
-            name=user_name,
-            phone="",
-        ))
-    
+            user.name = profile.display_name
+            user.avatar_url = profile.picture_url if profile.picture_url else ""
+            await db.commit()
+            
+
     # 取得或創建聊天室
     chat_room = await get_chat_room_by_user_id(db, user.id)
     if not chat_room:
