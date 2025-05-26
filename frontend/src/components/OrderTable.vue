@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { exportDocx } from '@/api/orders'
 
 const props = defineProps({
   data: {
@@ -14,7 +15,7 @@ const props = defineProps({
 
 // Add mapping between column names and data properties
 const columnMapping = {
-  '匯出工單': 'order_status', // 改
+  '匯出工單': 'order_status',
   '訂單編號': 'id',
   '狀態': 'order_status',
   '取貨時間': 'send_datetime',
@@ -128,6 +129,25 @@ function downloadCSV() {
   document.body.removeChild(link)
 }
 
+const handleExportDocx = async (orderId) => {
+  try {
+    const blob = await exportDocx(orderId)
+    // Create a download link
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `order_${orderId}.docx`)
+    document.body.appendChild(link)
+    link.click()
+    // Clean up
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting docx:', error)
+    alert('匯出工單失敗: ' + error.message)
+  }
+}
+
 const columnWidths = {
   '訂單編號': '136px',
   '狀態': '120px',
@@ -146,10 +166,23 @@ const columnWidths = {
 
 <template>
   <div class="section" id="orders">
-    <div class="header">
+    <div class="order-title-row">
       <span class="order-title">訂單總覽</span>
+      <div class="search-group">
+        <input
+          type="text"
+          v-model="searchText"
+          class="search-input"
+          placeholder="搜尋訂單（姓名、編號等）"
+        />
+        <span class="search-icon"><i class="fas fa-search"></i></span>
+      </div>
+      <button @click="downloadCSV" class="download-btn">
+        <i class="fas fa-download"></i>
+        <span>下載 CSV</span>
+      </button>
     </div>
-    <div class="filter-row">
+    <div class="order-filter-row">
       <div class="order-tabs">
         <button 
           class="tab" 
@@ -181,21 +214,6 @@ const columnWidths = {
           <span class="arrow">&#62;</span>
         </button>
       </div>
-      <div class="order-search-row">
-        <div class="search-group">
-          <input
-            type="text"
-            v-model="searchText"
-            class="search-input"
-            placeholder="搜尋訂單（姓名、編號等）"
-          />
-          <span class="search-icon"><i class="fas fa-search"></i></span>
-        </div>
-        <button @click="downloadCSV" class="download-btn">
-          <i class="fas fa-download"></i>
-          <span>下載 CSV</span>
-        </button>
-      </div>
     </div>
     <div class="table-container">
       <div class="table-wrapper">
@@ -211,7 +229,7 @@ const columnWidths = {
             <tr v-for="(row, index) in filteredData" :key="index">
               <td v-for="column in columnName" :key="column" :style="{ width: columnWidths[column] }">
                 <template v-if="column === '匯出工單'">
-                  <button class="work-order-btn">工單</button>
+                  <button class="work-order-btn" @click="handleExportDocx(row.id)">工單</button>
                 </template>
                 <template v-else-if="column === '取貨時間'">
                   {{ formatDateTime(row[columnMapping[column]]) }}
@@ -241,6 +259,12 @@ const columnWidths = {
 </template>
 
 <style scoped>
+body, html {
+  overflow-x: hidden;
+}
+.page-content, .section {
+  overflow-x: hidden;
+}
 .section {
   background: #fff;
   border-radius: 8px;
@@ -252,10 +276,14 @@ const columnWidths = {
   margin-bottom: 32px;
   border-bottom: 1.5px solid #e9e9e9;
 }
-.header {
+.order-title-row {
+  width: 90%;
   height: 54px;
   display: flex;
   align-items: center;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  gap: 24px;
 }
 .order-title {
   color: #4F51FF;
@@ -314,6 +342,7 @@ const columnWidths = {
   position: relative;
   width: 360px;
   min-width: 360px;
+  margin-left: 220px;
   height: 46px;
   background: #D8EAFF;
   border-radius: 36px;
@@ -382,6 +411,65 @@ const columnWidths = {
   height: 18px;
   display: flex;
   align-items: center;
+}
+.order-filter-row {
+  width: 90%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  gap: 24px;
+}
+.order-tabs {
+  width: 452px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border-radius: 36px;
+  background: #F7F7F7;
+  padding-top: 6px;
+  padding-right: 12px;
+  padding-bottom: 6px;
+  padding-left: 12px;
+
+}
+.tab {
+  width: 104px;
+  height: 28px;
+  padding: 11px 24px;
+  margin-right: 0px;
+  border-radius: 36px;
+  background: transparent;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 113%;
+  letter-spacing: 0%;
+  color: #00000099;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.tab.active {
+  background: #C5C7FF;
+}
+.tab:last-child {
+  margin-right: 0;
+}
+.date-filter {
+  width: 203px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  padding: 11px 24px;
+  gap: 8px;
+  border-radius: 36px;
+  background: #F7F7F7;
 }
 .table-container {
   margin-top: 0;

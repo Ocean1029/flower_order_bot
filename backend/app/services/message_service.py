@@ -11,6 +11,9 @@ from app.utils.line_send_message import LINE_push_message
 from app.services.user_service import get_user_by_line_uid, get_user_by_id
 
 from fastapi import HTTPException, status
+from app.services.user_service import get_user_by_line_uid, get_user_by_id
+
+from fastapi import HTTPException, status
 
 async def get_latest_message(db: AsyncSession, room_id: int) -> Optional[ChatMessageOut]:
     stmt = (
@@ -108,6 +111,13 @@ async def get_chat_messages(db: AsyncSession, room_id: int, after: Optional[date
             detail="Chat room not found"
         )
     
+    chatroom = await get_chat_room_by_room_id(db, room_id)
+    if not chatroom:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat room not found"
+        )
+    
     stmt = select(ChatMessage).where(ChatMessage.room_id == room_id)
     if after:
         stmt = stmt.where(ChatMessage.created_at > after)
@@ -121,6 +131,7 @@ async def get_chat_messages(db: AsyncSession, room_id: int, after: Optional[date
         user_avatar_url = user.avatar_url
     else:
         user_avatar_url = None
+
     return [
         ChatMessageOut(
             id=message.id,
@@ -199,7 +210,7 @@ async def create_staff_message(db: AsyncSession, room_id: int, data: ChatMessage
     message_out = ChatMessageOut(
         id=message.id,
         direction=message.direction,
-        user_avatar_url=None, 
+        user_avatar_url=None,  
         message=ChatMessageBase(
             text=message.text,
             image_url=message.image_url
