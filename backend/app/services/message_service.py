@@ -40,9 +40,9 @@ async def get_chat_room_list(db: AsyncSession) -> Optional[List[ChatRoomOut]]:
             unread_count=room.unread_count,
             status=room.stage,
             last_message={
-                "text": last_msg.text if last_msg else None,
-                "timestamp": last_msg.created_at if last_msg else None
-            } if last_msg else None
+                "text": last_msg.text,
+                "timestamp": last_msg.created_at,
+            } if last_msg else None,
         ))
 
     return response

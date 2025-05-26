@@ -8,8 +8,8 @@ export const getLatestMessages = async () => {
     return res.data.map(room => ({
         id: room.room_id,
         name: room.user_name,
-        lastMessage: room.last_message.text,
-        lastMessageTime: new Date(room.last_message.timestamp),
+        lastMessage: room.last_message ? room.last_message.text : '',
+        lastMessageTime: room.last_message ? new Date(room.last_message.timestamp) : null,
         unreadCount: room.unread_count,
         status: room.status,
         avatar: '' // You might want to add avatar to your API response
