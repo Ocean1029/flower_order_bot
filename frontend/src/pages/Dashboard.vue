@@ -141,7 +141,9 @@ onMounted(async () => {
   margin: 0 auto;
 }
 .dashboard-section + .dashboard-section {
+  margin-left: 64px;
   margin-top: 32px;
+  
 }
 .error-message {
   color: #dc3545;
