@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
+import { exportDocx } from '@/api/orders'
 
 const props = defineProps({
   data: {
@@ -128,6 +129,25 @@ function downloadCSV() {
   document.body.removeChild(link)
 }
 
+const handleExportDocx = async (orderId) => {
+  try {
+    const blob = await exportDocx(orderId)
+    // Create a download link
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `order_${orderId}.docx`)
+    document.body.appendChild(link)
+    link.click()
+    // Clean up
+    link.remove()
+    window.URL.revokeObjectURL(url)
+  } catch (error) {
+    console.error('Error exporting docx:', error)
+    alert('匯出工單失敗: ' + error.message)
+  }
+}
+
 const columnWidths = {
   '訂單編號': '136px',
   '狀態': '120px',
@@ -209,7 +229,7 @@ const columnWidths = {
             <tr v-for="(row, index) in filteredData" :key="index">
               <td v-for="column in columnName" :key="column" :style="{ width: columnWidths[column] }">
                 <template v-if="column === '匯出工單'">
-                  <button class="work-order-btn">工單</button>
+                  <button class="work-order-btn" @click="handleExportDocx(row.id)">工單</button>
                 </template>
                 <template v-else-if="column === '取貨時間'">
                   {{ formatDateTime(row[columnMapping[column]]) }}

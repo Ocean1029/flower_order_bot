@@ -35,3 +35,15 @@ export const readOrderDraft = async (room_id) => {
     throw error
   }
 }
+
+export const exportDocx = async (order_id) => {
+  try {
+    const res = await axios.get(`${API_BASE}/orders/${order_id}.docx`, {
+      responseType: 'blob' // Important for downloading files
+    })
+    return res.data
+  } catch (error) {
+    console.error('Error exporting docx:', error)
+    throw error
+  }
+}
