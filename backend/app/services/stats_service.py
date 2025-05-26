@@ -1,11 +1,11 @@
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.models.order import Order
 from app.models.user import User
 
 async def get_stats(session: AsyncSession):
-    now = datetime.utcnow()
+    now = datetime.now(timezone(timedelta(hours=8)))
     today_start = datetime(now.year, now.month, now.day)
     month_start = datetime(now.year, now.month, 1)
 

@@ -1,5 +1,5 @@
 from app.models.chat import ChatRoom, ChatMessage
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import random
 from faker import Faker
 from app.enums.chat import ChatRoomStage, ChatMessageStatus, ChatMessageDirection
@@ -13,14 +13,14 @@ async def create_random_message(session, user):
         stage=ChatRoomStage.WELCOME,
         bot_step=-1,
         unread_count=random.randint(0, 5),
-        last_message_ts=datetime.utcnow(),
+        last_message_ts=datetime.now(timezone(timedelta(hours=8))),
     )
     session.add(room)
     await session.flush()
 
     # 創建多條訊息來模擬對話
     messages = []
-    base_time = datetime.utcnow() - timedelta(hours=random.randint(1, 24))
+    base_time = datetime.now(timezone(timedelta(hours=8))) - timedelta(hours=random.randint(1, 24))
     
     # 第一條訊息一定是機器人的歡迎訊息
     welcome_message = ChatMessage(

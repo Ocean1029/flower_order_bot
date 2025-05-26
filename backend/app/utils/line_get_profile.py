@@ -10,7 +10,7 @@ line_bot_api = LineBotApi(CHANNEL_ACCESS_TOKEN)
 
 async def fetch_user_profile(user_id: str):
     try:
-        profile = await line_bot_api.get_profile(user_id)
+        profile = line_bot_api.get_profile(user_id)
         # profile.display_name, profile.user_id, profile.picture_url, profile.status_message
         return profile
     except LineBotApiError as e:

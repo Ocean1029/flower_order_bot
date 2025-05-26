@@ -3,14 +3,14 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List, Optional
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.models.order import Order, OrderDraft
 from app.models.payment import Payment
 
-from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate, OrderCreate
+from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate, OrderCreate, OrderDraftStatusOut
 from app.services.payment_service import get_pay_way_by_order_id, get_payment_method_by_id
 from app.services.user_service import get_user_by_id, create_user
 from app.services.message_service import get_chat_room_by_room_id
@@ -48,7 +48,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
             order_date=order.created_at,
             order_status=order.status,
             
-            pay_way_id=pay_way.id if pay_way else None,
+            pay_way=pay_way.display_name if pay_way else None,
             total_amount=order.total_amount,
             
             item=order.item_type,
@@ -138,7 +138,7 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             order_date=order_draft.created_at,
             order_status=order_draft.status,
             
-            pay_way_id=pay_way,
+            pay_way=pay_way.display_name if pay_way else None, 
             total_amount=order_draft.total_amount,
             
             item=order_draft.item_type,
@@ -197,8 +197,8 @@ async def create_order_draft_by_room_id(
             room_id=room.id,
             user_id=room.user_id,
             status=OrderDraftStatus.COLLECTING,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow()
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
         )
         db.add(order_draft)
         await db.commit()
@@ -244,7 +244,7 @@ async def update_order_draft_by_room_id(
         order_draft.receipt_address = draft_in.receipt_address
     if draft_in.delivery_address is not None:
         order_draft.delivery_address = draft_in.delivery_address
-    order_draft.updated_at = datetime.utcnow()
+    order_draft.updated_at = datetime.now(timezone(timedelta(hours=8)))
 
     # 5. 新增收件人資訊
     if draft_in.receiver_name or draft_in.receiver_phone:
@@ -252,8 +252,8 @@ async def update_order_draft_by_room_id(
         receiver_user = User(
             name=draft_in.receiver_name,
             phone=draft_in.receiver_phone,
-            created_at=datetime.utcnow(),
-            updated_at=datetime.utcnow(),
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8))),
         )
         db.add(receiver_user)
         await db.commit()
@@ -279,3 +279,29 @@ async def update_order_draft_by_room_id(
     
     # 8. 回傳 OrderDraftOut
     return await get_order_draft_by_room_id(db, room_id)
+
+async def get_all_order_draft_by_status(db: AsyncSession, status: OrderDraftStatus) -> List[OrderDraftStatusOut]:
+    """
+    取得所有訂單草稿的狀態
+        class OrderDraftStatusOut(BaseModel):
+        id: int
+        status: OrderDraftStatus
+        order_date: datetime
+        weekday: Optional[str] = None
+    """
+    
+    stmt = select(OrderDraft).distinct().where(
+        OrderDraft.status == status
+    ).order_by(OrderDraft.created_at.desc())
+    result = await db.execute(stmt)
+    order_drafts = result.scalars().all()
+    status_list = []
+    for order_draft in order_drafts:
+        status_list.append(OrderDraftStatusOut(
+            id=order_draft.id,
+            status=order_draft.status,
+            order_date=order_draft.created_at,
+            weekday=order_draft.created_at.strftime("%A") if order_draft.created_at else None
+        ))
+    
+    return status_list

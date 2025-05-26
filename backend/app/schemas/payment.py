@@ -11,6 +11,7 @@ class PaymentMethodBase(BaseModel):
     display_image_url: Optional[str] = None
     instructions: str
     requires_manual_confirm: bool = True
+
     
 class PaymentBase(BaseModel):
     order_id: int

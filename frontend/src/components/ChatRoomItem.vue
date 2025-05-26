@@ -70,13 +70,14 @@ function formatTime(timestamp) {
   color: #A3C8FF;
   margin-left: 8px;
   min-width: 56px;
-  text-align: right;
+  text-align: right;  
 }
 .room-bottom-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-top: 2px;
+  min-width: 0;
 }
 .last-message {
   margin: 0;
@@ -86,6 +87,7 @@ function formatTime(timestamp) {
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 140px;
+  flex-shrink: 1;
 }
 .unread-dot {
   width: 10px;

@@ -4,7 +4,15 @@
       <!-- section: 最上方 bar -->
       <div class="section">
         <div class="head">
-          <span class="section-title">詳細資料</span>
+          <div class="text-group">
+            <span class="section-title">訂單草稿</span>
+            <div class="edit-btn" @click="isEditing ? confirmEditing() : startEditing()">
+              <div class="press">
+                <i v-if="!isEditing" class="fas fa-pen icon"></i>
+                <i v-else class="fas fa-check icon"></i>
+              </div>
+            </div>
+          </div>
           <div class="icon-block" @click="$emit('close-detail')">
             <div class="ellipse"></div>
             <i class="fas fa-angle-double-left chevrons-left"></i>
@@ -27,33 +35,19 @@
             />
             <span v-else class="data">{{ dataList[idx] }}</span>
           </div>
-        </div>
-        <!-- bottom: 編輯資料按鈕 -->
-        <div class="bottom">
-          <div class="action-buttons">
-            <div 
-              class="edit" 
-              :class="{ 'disabled': isEditing }"
-              @click="startEditing"
-            >
-              <div class="icon-wrapper">
-                <i class="fas fa-pen"></i>
-              </div>
-              <span class="button-text">編輯</span>
-            </div>
-            <div 
-              class="save" 
-              :class="{ 'active': isEditing }"
-              @click="confirmEditing"
-            >
-              <div class="icon-wrapper">
-                <i class="fas fa-check"></i>
-              </div>
-              <span class="button-text">確認</span>
-            </div>
+        </div>        
+      </div>
+      <!-- bottom: frame-2 兩個新按鈕 -->
+      <div class="frame-2">
+          <div class="order-btn update" :class="{ editing: isEditing }">
+            <i class="fas fa-upload btn-icon"></i>
+            <span class="btn-text">更新工單</span>
+          </div>
+          <div class="order-btn create" :class="{ editing: isEditing }">
+            <i class="fas fa-plus btn-icon"></i>
+            <span class="btn-text">建立新工單</span>
           </div>
         </div>
-      </div>
     </div>
   </transition>
 </template>
@@ -155,13 +149,56 @@ function confirmEditing() {
   align-items: center;
 }
 
+.text-group {
+  display: flex;
+  align-items: center;
+  width: 124px;
+  height: 36px;
+  gap: 16px;
+}
+
 .section-title {
   height: 25px;
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 700;
   font-size: 18px;
   line-height: 140%;
-  color: #000;
+  letter-spacing: 0%;
+  vertical-align: middle;
+  color: #000000;
+}
+
+.edit-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.press {
+  width: 32px;
+  height: 32px;
+  background: #D9D9D9;
+  border-radius: 50%;
+  position: relative;
+  top: 2px;
+  left: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  color: #6168FC;
+  position: relative;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .icon-block {
@@ -201,6 +238,7 @@ function confirmEditing() {
   gap: 16px;
   flex: 1;
   overflow-y: auto;
+  padding-bottom: 120px;
 }
 
 .table-row {
@@ -243,79 +281,50 @@ function confirmEditing() {
   font-family: 'Noto Sans TC', sans-serif;
 }
 
-.bottom {
+.frame-2 {
   position: absolute;
-  left: 72px;
-  bottom: 24px;
-  width: 184px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  z-index: 10;
-}
-
-.action-buttons {
+  left: 0;
+  right: 0;
+  bottom: 16px;
   display: flex;
   gap: 8px;
-  width: 100%;
+  justify-content: center;
+  z-index: 20;
 }
-
-.edit, .save {
-  width: 88px;
+.order-btn {
+  width: 136px;
   height: 40px;
   border-radius: 12px;
-  background: #6168FC;
+  padding: 12px 12px;
   box-shadow: 2px 2px 2px 0px #00000040;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.edit.disabled {
-  background: #C5C7FF;
-  cursor: not-allowed;
-}
-
-.save {
-  background: #C5C7FF;
-  cursor: not-allowed;
-}
-
-.save.active {
   background: #6168FC;
-  opacity: 1;
-  cursor: pointer;
+  transition: background 0.2s;
 }
-
-.icon-wrapper {
-  width: 18px;
-  height: 18px;
+.order-btn.editing {
+  background: #C5C7FF;
+}
+.btn-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 8px;
+  color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #FFFFFF;
 }
-
-.button-text {
-  width: 32px;
-  height: 18px;
+.btn-text {
   font-family: 'Noto Sans TC', sans-serif;
   font-weight: 700;
   font-size: 16px;
   line-height: 113%;
   letter-spacing: 0%;
   vertical-align: middle;
-  color: #FFFFFF;
+  color: #fff;
   display: flex;
   align-items: center;
-  justify-content: center;
-}
-
-.edit i, .save i {
-  color: #ffffff;
-  font-size: 14px;
 }
 </style> 

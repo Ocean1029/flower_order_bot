@@ -13,3 +13,9 @@ export const fetchOrders = async () => {
   const res = await axios.get(`${API_BASE}/orders`)
   return res.data
 }
+
+export const fetchOrderDraft = async (room_id) => {
+  const res = await axios.get(`${API_BASE}/orderdraft/${room_id}`)
+  return res.data
+}
+

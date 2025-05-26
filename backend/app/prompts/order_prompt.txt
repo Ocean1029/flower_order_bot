@@ -3,6 +3,11 @@ order_prompt = """
 
 若系統已提供上一輪整理的訂單草稿（JSON 物件），請參考其內容，僅在取得新資訊時更新對應欄位；其他欄位若未獲新資訊，請保留原值。
 
+ChatMessageDirection 分成三種：
+- `INCOMING`：顧客的訊息。
+- `OUTGOING_BY_STAFF`：花店的回覆。
+- `OUTGOING_BY_BOT`：花店的系統自動回覆。
+
 請嚴格遵守以下規則：
 
 1. 每個欄位皆需出現在 JSON 中，不可省略；若無法取得資料，請使用預設值（空字串、null、或 -1）。
@@ -14,9 +19,11 @@ order_prompt = """
    - `note`：將花的顏色、花材、風格等需求整理於此欄，不要寫在 `item`。
    - `item`：只寫「花束」、「客製化花束」等名稱，不要附註說明。
    - `shipment_method`：只能是 `STORE_PICKUP` 或 `DELIVERY`，其他留空。
-   - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 留空。
+   - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 填寫「店取」。
    - `pay_way`：請填入對話中明確出現的付款方式，例如：「現場付款（含訂金）」、「轉帳」、「信用卡」等。
    - `card_message`：將所有卡片內容完整列出（換行可用 \n 表示）。
+   - `order_date`：請用最新的對話日期與時間。
+   - `quantity`：若未明確提及數量，請使用 1。
 
 5. 範例：
    對話： 「我想訂一束母親節限定花束，數量 2，4/20 下午三點外送到台北市信義區市政府路45號。」  
