@@ -122,6 +122,8 @@ function select(item) {
   margin: 0;
   font-size: 18px;
   color: #6168FC;
+  
+
 }
 .close-btn {
   background: none;
@@ -154,6 +156,7 @@ function select(item) {
   color: #555;
   cursor: pointer;
   transition: background 0.2s, color 0.2s;
+  border-radius: 24px;
 }
 .sidebar-menu li:hover,
 .sidebar-menu li.active {

@@ -20,22 +20,59 @@
         </div>
       </div>
       <div class="order-detail-content">
-        <div
-          class="table-row"
-          v-for="(col, idx) in columns"
-          :key="col"
-        >
-          <div class="table-column">{{ col }}</div>
-          <div class="data-container">
-            <input 
-              v-if="isEditing && editableFields.includes(col)"
-              v-model="editedData[col]"
-              class="edit-input"
-              type="text"
-            />
-            <span v-else class="data">{{ dataList[idx] }}</span>
-          </div>
-        </div>        
+        <template v-for="(col, idx) in columns" :key="col">
+          <template v-if="col === '取貨時間'">
+            <!-- 第一行：標題+日期 -->
+            <div class="table-row">
+              <div class="table-column">{{ col }}</div>
+              <div class="data-container">
+                <template v-if="isEditing">
+                  <input
+                    type="date"
+                    v-model="pickupDate"
+                    class="edit-input"
+                    style="width: 100%;"
+                  />
+                </template>
+                <template v-else>
+                  <span class="data">{{ pickupDateTextWithWeekday }}</span>
+                </template>
+              </div>
+            </div>
+            <!-- 第二行：空白+時間 -->
+            <div class="table-row">
+              <div class="table-column"></div>
+              <div class="data-container">
+                <template v-if="isEditing">
+                  <input
+                    type="time"
+                    v-model="pickupTime"
+                    class="edit-input"
+                    style="width: 100%;"
+                  />
+                </template>
+                <template v-else>
+                  <span class="data">{{ pickupTimeText }}</span>
+                </template>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="table-row">
+              <div class="table-column">{{ col }}</div>
+              <div class="data-container">
+                <template v-if="isEditing && editableFields.includes(col)">
+                  <input
+                    v-model="editedData[col]"
+                    class="edit-input"
+                    type="text"
+                  />
+                </template>
+                <span v-else class="data">{{ dataList[idx] }}</span>
+              </div>
+            </div>
+          </template>
+        </template>
       </div>
       <!-- bottom: frame-2 兩個新按鈕 -->
       <div class="frame-2">
@@ -53,7 +90,7 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref, defineEmits, watch, computed } from 'vue'
 
 const props = defineProps({
   room: Object
@@ -87,9 +124,45 @@ const dataList = [
 const isEditing = ref(false)
 const editedData = ref({})
 
+// 新增：取貨時間的日期與時間欄位
+const pickupDate = ref('')
+const pickupTime = ref('')
+
+const pickupDateText = computed(() => {
+  // 取貨時間格式：'YYYY-MM-DDTHH:mm:ss'
+  const val = dataList[columns.indexOf('取貨時間')]
+  if (!val || !val.includes('T')) return ''
+  return val.split('T')[0]
+})
+const pickupDateTextWithWeekday = computed(() => {
+  const dateStr = pickupDateText.value
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  return `${dateStr}（${weekdays[date.getDay()]}）`
+})
+const pickupTimeText = computed(() => {
+  const val = dataList[columns.indexOf('取貨時間')]
+  if (!val || !val.includes('T')) return ''
+  return val.split('T')[1]?.slice(0,5) || ''
+})
+
+watch(isEditing, (val) => {
+  if (val) {
+    // 進入編輯時，將取貨時間拆成日期與時間
+    const pickup = editedData.value['取貨時間'] || ''
+    if (pickup && pickup.includes('T')) {
+      pickupDate.value = pickup.split('T')[0]
+      pickupTime.value = pickup.split('T')[1]?.slice(0,5) || ''
+    } else {
+      pickupDate.value = ''
+      pickupTime.value = ''
+    }
+  }
+})
+
 function startEditing() {
   isEditing.value = true
-  // 初始化編輯數據
   columns.forEach((col, idx) => {
     if (editableFields.includes(col)) {
       editedData.value[col] = dataList[idx]
@@ -103,9 +176,11 @@ function cancelEditing() {
 }
 
 function confirmEditing() {
-  // 這裡可以添加保存邏輯
+  // 如果有取貨時間，組合成標準格式
+  if (pickupDate.value && pickupTime.value) {
+    editedData.value['取貨時間'] = `${pickupDate.value}T${pickupTime.value}:00`
+  }
   isEditing.value = false
-  // 更新數據
   columns.forEach((col, idx) => {
     if (editableFields.includes(col)) {
       dataList[idx] = editedData.value[col]

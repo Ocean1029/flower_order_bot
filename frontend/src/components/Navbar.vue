@@ -21,7 +21,7 @@ const showSidebar = ref(false)
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
   height: 56px;
   display: flex;
   margin: 0;
@@ -32,7 +32,7 @@ const showSidebar = ref(false)
 
 .brand-bar {
   position: relative;
-  width: 1440px;
+  width: 100%;
   height: 56px;
   border-radius: 24px;
   background: linear-gradient(90.11deg, #6168FC 5.18%, #77B5FF 98.9%);

@@ -300,6 +300,7 @@ const columnWidths = {
 }
 .tab.active {
   background: #C5C7FF;
+  border-radius: 36px;
 }
 .order-search-row {
   display: flex;
