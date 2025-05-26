@@ -32,9 +32,8 @@ import { fetchStaticData } from '@/api/statics'
 import { getLatestMessages } from '@/api/messages'
 
 const columnName = [
-  '訂單ID', '客戶姓名', '客戶電話', '收件地址', '訂單日期', '總金額',
-  '商品', '數量', '備註', '付款方式', '卡片訊息', '星期',
-  '送貨日期時間', '收件人姓名', '收件人電話', '送貨地址', '訂單狀態', '送貨方式'
+  '匯出工單', '訂單編號', '狀態', '取貨時間', '姓名', '電話', '商品', '數量',
+  '備註', '取貨方式', '金額', '付款方式', '付款狀態'
 ]
 
 const orders = ref([])
@@ -74,7 +73,7 @@ onMounted(async () => {
 <style scoped>
 .order-title-wrapper {
   position: absolute;
-  top: 80px;
+  top: 56px;
   left: 0;
   width: 100vw;
   margin: 0;
@@ -94,18 +93,18 @@ onMounted(async () => {
   position: relative;
   top: 20px;
   left: 72px;
-  height: 80px;
+  height: 40px;
   font-family: 'Noto Sans TC', '思源黑體', 'Microsoft JhengHei', Arial, sans-serif;
   font-weight: 700;
   font-size: 32px;
   line-height: 40px;
   letter-spacing: 0;
   color: #6168FC;
-  background: transpare
+  background: transparent;
 }
 .order-title-wrapper {
   position: absolute;
-  top: 80px;
+  top: 56px;
   left: 0;
   width: 100vw;
   margin: 0;
@@ -156,13 +155,5 @@ onMounted(async () => {
   padding: 20px;
   font-size: 18px;
   color: #6168FC;
-}
-
-.dashboard-section {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
-  margin-bottom: 32px;
-  border-bottom: 1.5px solid #e9e9e9;
 }
 </style>

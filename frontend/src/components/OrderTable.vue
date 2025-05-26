@@ -12,16 +12,72 @@ const props = defineProps({
   }
 })
 
+// Add mapping between column names and data properties
+const columnMapping = {
+  '匯出工單': 'order_status', // 改
+  '訂單編號': 'id',
+  '狀態': 'order_status',
+  '取貨時間': 'send_datetime',
+  '姓名': 'customer_name',
+  '電話': 'customer_phone',
+  '商品': 'item',
+  '數量': 'quantity',
+  '備註': 'note',
+  '取貨方式': 'shipment_method',
+  '金額': 'total_amount',
+  '付款方式': 'pay_way',
+  '付款狀態': 'pay_status'
+}
+
 const searchText = ref('')
+const currentDate = ref(new Date())
+
+const formatDate = (date) => {
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  return `${date.getMonth() + 1} 月 ${date.getDate()} 日 (${weekdays[date.getDay()]})`
+}
+
+const goToPreviousDay = () => {
+  const newDate = new Date(currentDate.value)
+  newDate.setDate(newDate.getDate() - 1)
+  currentDate.value = newDate
+}
+
+const goToNextDay = () => {
+  const newDate = new Date(currentDate.value)
+  newDate.setDate(newDate.getDate() + 1)
+  currentDate.value = newDate
+}
+
+const formatDateTime = (datetime) => {
+  if (!datetime) return ''
+  const date = new Date(datetime)
+  const weekdays = ['日', '一', '二', '三', '四', '五', '六']
+  const day = date.getDate().toString().padStart(2, '0')
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const year = date.getFullYear().toString().slice(-2)
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${day}/${month}/${year}（${weekdays[date.getDay()]}）${hours}:${minutes}`
+}
 
 // 狀態顏色對應
 function statusColor(status) {
   switch (status) {
-    case 'pending': return 'badge-blue'
-    case 'confirmed': return 'badge-pink'
-    case 'cancelled': return 'badge-gray'
-    case 'completed': return 'badge-brown'
-    default: return 'badge-gray'
+    case 'MANUAL': return 'badge-manual'
+    case 'CONFIRMED': return 'badge-prepare'
+    case 'FINISH': return 'badge-finish'
+    default: return 'badge-manual'
+  }
+}
+
+// 狀態文字對應
+function statusText(status) {
+  switch (status) {
+    case 'MANUAL': return '人工溝通'
+    case 'CONFIRMED': return '等待備貨'
+    case 'FINISH': return '訂單完成'
+    default: return status
   }
 }
 
@@ -42,24 +98,20 @@ const filteredData = computed(() => {
 function downloadCSV() {
   const headers = props.columnName
   const rows = props.data.map(row => [
+    row.order_status,
     row.id,
+    row.order_status,
+    row.send_datetime,
+    // new Date(row.send_datetime).toLocaleString(),
     row.customer_name,
     row.customer_phone,
-    row.receipt_address,
-    new Date(row.order_date).toLocaleString(),
-    row.total_amount,
     row.item,
     row.quantity,
     row.note,
+    row.shipment_method === 'store_pickup' ? '店取' : '外送',
+    row.total_amount,
     row.pay_way,
-    row.card_message,
-    row.weekday,
-    new Date(row.send_datetime).toLocaleString(),
-    row.receiver_name,
-    row.receiver_phone,
-    row.delivery_address,
-    row.order_status,
-    row.shipment_method === 'store_pickup' ? '店取' : '外送'
+    row.pay_status
   ])
 
   const csvContent = [headers, ...rows]
@@ -74,6 +126,21 @@ function downloadCSV() {
   link.click()
   document.body.removeChild(link)
 }
+
+const columnWidths = {
+  '訂單編號': '136px',
+  '狀態': '120px',
+  '取貨時間': '200px',
+  '姓名': '96px',
+  '電話': '112px',
+  '商品': '96px',
+  '數量': '96px',
+  '備註': '128px',
+  '取貨方式': '128px',
+  '金額': '96px',
+  '付款方式': '128px',
+  '付款狀態': '112px'
+}
 </script>
 
 <template>
@@ -81,80 +148,73 @@ function downloadCSV() {
     <div class="header">
       <span class="order-title">訂單總覽</span>
     </div>
-    <!-- 分類 bar -->
-    <div class="order-tabs">
-      <button class="tab active">所有訂單</button>
-      <button class="tab">人工溝通</button>
-      <button class="tab">今日訂單</button>
-      <button class="tab">等待備貨</button>
-      <button class="tab">錯誤訊息</button>
-    </div>
-    <!-- 搜尋與下載 -->
-    <div class="order-search-row">
-      <div class="search-group">
-        <input
-          type="text"
-          v-model="searchText"
-          class="search-input"
-          placeholder="搜尋訂單（姓名、編號等）"
-        />
-        <span class="search-icon"><i class="fas fa-search"></i></span>
+    <div class="filter-row">
+      <div class="order-tabs">
+        <button class="tab active">所有訂單</button>
+        <button class="tab">人工溝通</button>
+        <button class="tab">今日訂單</button>
+        <button class="tab">等待備貨</button>
       </div>
-      <button @click="downloadCSV" class="download-btn">
-        <i class="fas fa-download"></i> 下載 CSV
-      </button>
+      <div class="date-filter">
+        <button class="date-nav-btn" @click="goToPreviousDay">
+          <span class="arrow">&#60;</span>
+        </button>
+        <div class="current-date">{{ formatDate(currentDate) }}</div>
+        <button class="date-nav-btn" @click="goToNextDay">
+          <span class="arrow">&#62;</span>
+        </button>
+      </div>
+      <div class="order-search-row">
+        <div class="search-group">
+          <input
+            type="text"
+            v-model="searchText"
+            class="search-input"
+            placeholder="搜尋訂單（姓名、編號等）"
+          />
+          <span class="search-icon"><i class="fas fa-search"></i></span>
+        </div>
+        <button @click="downloadCSV" class="download-btn">
+          <i class="fas fa-download"></i>
+          <span>下載 CSV</span>
+        </button>
+      </div>
     </div>
-    <div class="table-container table-responsive">
-      <table class="table table-hover align-middle">
-        <thead>
-          <tr>
-            <th>訂單ID</th>
-            <th>客戶姓名</th>
-            <th>客戶電話</th>
-            <th>收件地址</th>
-            <th>訂單日期</th>
-            <th>總金額</th>
-            <th>商品</th>
-            <th>數量</th>
-            <th>備註</th>
-            <th>付款方式</th>
-            <th>卡片訊息</th>
-            <th>星期</th>
-            <th>送貨日期時間</th>
-            <th>收件人姓名</th>
-            <th>收件人電話</th>
-            <th>送貨地址</th>
-            <th>訂單狀態</th>
-            <th>送貨方式</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(row, index) in filteredData" :key="index">
-            <td>{{ row.id }}</td>
-            <td>{{ row.customer_name }}</td>
-            <td>{{ row.customer_phone }}</td>
-            <td>{{ row.receipt_address }}</td>
-            <td>{{ new Date(row.order_date).toLocaleString() }}</td>
-            <td><span class="money">NT {{ row.total_amount }}</span></td>
-            <td>{{ row.item }}</td>
-            <td>{{ row.quantity }}</td>
-            <td>{{ row.note }}</td>
-            <td>{{ row.pay_way }}</td>
-            <td>{{ row.card_message }}</td>
-            <td>{{ row.weekday }}</td>
-            <td>{{ new Date(row.send_datetime).toLocaleString() }}</td>
-            <td>{{ row.receiver_name }}</td>
-            <td>{{ row.receiver_phone }}</td>
-            <td>{{ row.delivery_address }}</td>
-            <td>
-              <span :class="['status-badge', statusColor(row.order_status)]">
-                {{ row.order_status === 'confirmed' ? '已確認' : row.order_status }}
-              </span>
-            </td>
-            <td>{{ row.shipment_method === 'store_pickup' ? '店取' : '外送' }}</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="table-container">
+      <div class="table-wrapper">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th v-for="column in columnName" :key="column" :style="{ width: columnWidths[column] }">
+                {{ column }}
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(row, index) in filteredData" :key="index">
+              <td v-for="column in columnName" :key="column" :style="{ width: columnWidths[column] }">
+                <template v-if="column === '匯出工單'">
+                  <button class="work-order-btn">工單</button>
+                </template>
+                <template v-else-if="column === '取貨時間'">
+                  {{ formatDateTime(row[columnMapping[column]]) }}
+                </template>
+                <template v-else-if="column === '取貨方式'">
+                  {{ row[columnMapping[column]] === 'store_pickup' ? '店取' : '外送' }}
+                </template>
+                <template v-else-if="column === '狀態'">
+                  <span :class="['status-badge', statusColor(row[columnMapping[column]])]">
+                    {{ statusText(row[columnMapping[column]]) }}
+                  </span>
+                </template>
+                <template v-else>
+                  {{ row[columnMapping[column]] }}
+                </template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
       <div v-if="filteredData.length === 0" class="no-results">
         <i class="fas fa-search fa-2x mb-3"></i>
         <p>找不到符合條件的訂單</p>
@@ -167,133 +227,280 @@ function downloadCSV() {
 .section {
   background: #fff;
   border-radius: 8px;
-  padding: 24px;
+  padding-top: 24px;
+  padding-bottom: 24px;
+  padding-left: 32px;
+  padding-right: 32px;
+  margin-top: 24px;
   margin-bottom: 32px;
   border-bottom: 1.5px solid #e9e9e9;
 }
 .header {
-  margin-bottom: 0;
-  
+  height: 54px;
+  display: flex;
+  align-items: center;
 }
 .order-title {
   color: #4F51FF;
   font-size: 22px;
   font-weight: 700;
   letter-spacing: 1px;
-  
+  white-space: nowrap;
+}
+.filter-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 .order-tabs {
-  display: flex;
-  gap: 12px;
-  margin: 18px 0 18px 0;
+  display: inline-flex;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #F7F7F7;
+  border-radius: 36px;
+  height: 40px;
+  align-items: center;
+  flex-shrink: 0;
 }
 .tab {
-  background: #f5f6fa;
-  color: #7B61FF;
+  display: flex;
+  align-items: center;
+  padding: 11px 24px;
+  height: 28px;
+  border-radius: 36px;
   border: none;
-  border-radius: 8px 8px 0 0;
-  padding: 8px 22px;
-  font-size: 15px;
+  background: transparent;
+  font-family: 'Noto Sans TC', sans-serif;
   font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 14px;
+  line-height: 112.5%;
+  color: rgba(0, 0, 0, 0.6);
   cursor: pointer;
-  transition: background 0.2s, color 0.2s;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 .tab.active {
-  background: #eaf2ff;
-  color: #4F8CFF;
+  background: #C5C7FF;
 }
 .order-search-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 18px;
-  gap: 16px;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  margin-left: auto;
 }
 .search-group {
   position: relative;
-  width: 340px;
+  width: 360px;
+  min-width: 360px;
+  height: 46px;
+  background: #D8EAFF;
+  border-radius: 36px;
+  display: flex;
+  align-items: center;
+  padding: 11px 24px;
 }
 .search-input {
   width: 100%;
-  padding: 10px 44px 10px 18px;
-  border-radius: 8px;
-  border: 1.5px solid #eaf2ff;
-  background: #f5f6fa;
+  border: none;
+  background: transparent;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 400;
   font-size: 16px;
-  font-weight: 500;
+  line-height: 140%;
+  color: rgba(0, 0, 0, 0.38);
+  padding: 0;
+}
+.search-input::placeholder {
+  color: rgba(0, 0, 0, 0.38);
 }
 .search-icon {
   position: absolute;
-  right: 16px;
+  right: 24px;
   top: 50%;
   transform: translateY(-50%);
-  color: #A3C8FF;
-  font-size: 18px;
+  width: 24px;
+  height: 24px;
+  color: rgba(0, 0, 0, 0.38);
 }
 .download-btn {
-  padding: 10px 20px;
-  background: #4F8CFF;
-  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 12px;
+  width: 113px;
+  height: 46px;
+  background: #77B5FF;
+  box-shadow: 2px 2px 2px rgba(0, 0, 0, 0.25);
+  border-radius: 12px;
   border: none;
-  border-radius: 8px;
   cursor: pointer;
+  transition: all 0.2s;
+  gap: 8px;
+  white-space: nowrap;
+}
+.download-btn i {
+  color: #FFFFFF;
+  font-size: 20px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+}
+.download-btn span {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-style: normal;
   font-weight: 700;
   font-size: 16px;
-  box-shadow: 0 2px 8px rgba(79,140,255,0.08);
-  transition: background 0.2s;
-}
-.download-btn:hover {
-  background: #007AFF;
+  line-height: 112.5%;
+  color: #FFFFFF;
+  white-space: nowrap;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  width: 66px;
+  height: 18px;
+  display: flex;
+  align-items: center;
 }
 .table-container {
   margin-top: 0;
+  width: 100%;
+  overflow: hidden;
 }
-th, td {
-  padding: 14px 10px;
-  text-align: left;
-  border-bottom: 1.5px solid #e9e9e9;
-  font-size: 15px;
-  vertical-align: middle;
+
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  padding: 0 8px;
 }
+
+table {
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  width: max-content;
+  min-width: 100%;
+}
+
+thead {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
 th {
-  background-color: #f5f6fa;
-  font-weight: 700;
-  color: #7B61FF;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: bold;
   font-size: 16px;
-  letter-spacing: 1px;
+  line-height: 140%;
+  color: rgba(0, 0, 0, 0.87);
+  padding: 12px 20px;
+  text-align: left;
+  background-color: #F7F7F7;
+  white-space: nowrap;
+  position: relative;
+  border: 0.5px solid rgba(175, 175, 175, 0.6);
 }
-tr:hover {
+
+th:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  border-right: none;
+}
+
+th:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  border-left: none;
+}
+
+th:not(:first-child):not(:last-child) {
+  border-right: none;
+  border-left: none;
+}
+
+td {
+  padding: 12px 20px;
+  text-align: left;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: bold;
+  font-size: 16px;
+  line-height: 140%;
+  color: rgba(0, 0, 0, 0.6);
+  vertical-align: middle;
+  white-space: normal;
+  word-wrap: break-word;
+  max-width: v-bind('columnWidths[column]');
+  background: #fff;
+  border: 0.5px solid rgba(175, 175, 175, 0.6);
+}
+
+tr {
+  background: #fff;
+  border-radius: 12px;
+}
+
+td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+  border-right: none;
+}
+
+td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  border-left: none;
+}
+
+td:not(:first-child):not(:last-child) {
+  border-right: none;
+  border-left: none;
+}
+
+tr:hover td {
   background-color: #f0f6ff;
 }
+
 .status-badge {
-  display: inline-block;
-  padding: 4px 14px;
-  border-radius: 12px;
-  font-size: 14px;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 16px;
+  gap: 10px;
+  height: 28px;
+  border-radius: 8px;
+  font-family: 'Noto Sans TC', sans-serif;
+  font-style: normal;
   font-weight: 700;
-  letter-spacing: 1px;
+  font-size: 14px;
+  line-height: 112.5%;
+  text-align: center;
+  white-space: nowrap;
 }
-.badge-blue {
-  background: #4F8CFF;
-  color: #fff;
+
+.badge-manual {
+  background: #FFCEE7;
+  color: #FF349A;
 }
-.badge-pink {
-  background: #F8D7E7;
-  color: #FF6F91;
+
+.badge-prepare {
+  background: #C5C7FF;
+  color: #6168FC;
 }
-.badge-purple {
-  background: #E6E6FA;
-  color: #7B61FF;
+
+.badge-finish {
+  background: #EBCDCC;
+  color: #81386A;
 }
-.badge-brown {
-  background: #F5E6DE;
-  color: #BCA37F;
+
+.badge-download {
+  background: #77B5FF;
+  color: #FFFFFF;
 }
-.badge-gray {
-  background: #bdbdbd;
-  color: #fff;
-}
+
 .money {
   color: #4F8CFF;
   font-weight: bold;
@@ -307,6 +514,92 @@ tr:hover {
   text-align: center;
   padding: 40px;
   color: #aaa;
+}
+.date-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px;
+  height: 40px;
+  background: #F7F7F7;
+  border-radius: 36px;
+  margin: 0 8px;
+}
+
+.date-nav-btn {
+  background: #D9D9D9;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  padding: 0;
+}
+
+.date-nav-btn:hover {
+  background: #C5C7FF;
+}
+
+.arrow {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.current-date {
+  font-family: 'Noto Sans TC', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 112.5%;
+  color: rgba(0, 0, 0, 0.6);
+  min-width: 80px;
+  text-align: center;
+}
+
+.work-order-btn {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 16px;
+  gap: 10px;
+
+  width: 60px;
+  max-width: 92px;
+  height: 28px;
+
+  /* Secondary/Default */
+  background: #77B5FF;
+  border-radius: 8px;
+
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+
+  /* Text styling */
+  font-family: 'Noto Sans TC', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 112.5%;
+  color: #FFFFFF;
+  text-align: center;
+
+  /* Button reset */
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.work-order-btn:hover {
+  opacity: 0.8;
 }
 </style>
 
