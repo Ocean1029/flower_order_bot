@@ -59,46 +59,69 @@
 </template>
 
 <script setup>
-import { ref, defineEmits } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps({
-  room: Object
+  orderData: Object
 })
 
 const emit = defineEmits(['close-detail'])
 
 // 可編輯的欄位
 const editableFields = [
-  '姓名', '品項', '電話', '數量', '備註', '取貨方式', '取貨時間', '金額', '付款方式', '付款狀態'
+  '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '品項', '數量', '備註', 
+  '卡片訊息', '取貨方式', '送貨日期', '收件地址', '送貨地址', '付款方式'
 ]
 
 // 依照原本順序組成資料陣列
 const columns = [
-  '訂單編號', '姓名', '品項','電話', '數量', '備註', '取貨方式', '取貨時間', '金額', '付款方式', '付款狀態'
+  '訂單編號', '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', 
+  '品項', '數量', '備註', '卡片訊息', '取貨方式', '送貨日期', '收件地址', 
+  '送貨地址', '訂單日期', '訂單狀態', '付款方式', '星期'
 ]
 
-const dataList = [
-  props.room?.orderId || ' ',
-  props.room?.name || ' ',
-  props.room?.product || ' ',
-  props.room?.qty || ' ',
-  props.room?.note || ' ',
-  props.room?.pickupMethod || ' ',
-  props.room?.pickupTime || ' ',
-  props.room?.amount ? 'NT ' + props.room.amount : ' ',
-  props.room?.paymentMethod || ' ',
-  props.room?.paymentStatus || ' '
-]
+const dataList = computed(() => [
+  props.orderData?.id || ' ',
+  props.orderData?.customer_name || ' ',
+  props.orderData?.customer_phone || ' ',
+  props.orderData?.receiver_name || ' ',
+  props.orderData?.receiver_phone || ' ',
+  props.orderData?.total_amount ? 'NT ' + props.orderData.total_amount : ' ',
+  props.orderData?.item || ' ',
+  props.orderData?.quantity || ' ',
+  props.orderData?.note || ' ',
+  props.orderData?.card_message || ' ',
+  props.orderData?.shipment_method === 'STORE_PICKUP' ? '店取' : '外送',
+  formatDateTime(props.orderData?.send_datetime),
+  props.orderData?.receipt_address || ' ',
+  props.orderData?.delivery_address || ' ',
+  formatDateTime(props.orderData?.order_date),
+  props.orderData?.order_status || ' ',
+  props.orderData?.pay_way || ' ',
+  props.orderData?.weekday || ' '
+])
 
 const isEditing = ref(false)
 const editedData = ref({})
+
+function formatDateTime(dateStr) {
+  if (!dateStr) return ' '
+  const date = new Date(dateStr)
+  return date.toLocaleString('zh-TW', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit'
+  })
+}
 
 function startEditing() {
   isEditing.value = true
   // 初始化編輯數據
   columns.forEach((col, idx) => {
     if (editableFields.includes(col)) {
-      editedData.value[col] = dataList[idx]
+      editedData.value[col] = dataList.value[idx]
     }
   })
 }
@@ -114,7 +137,7 @@ function confirmEditing() {
   // 更新數據
   columns.forEach((col, idx) => {
     if (editableFields.includes(col)) {
-      dataList[idx] = editedData.value[col]
+      dataList.value[idx] = editedData.value[col]
     }
   })
   editedData.value = {}

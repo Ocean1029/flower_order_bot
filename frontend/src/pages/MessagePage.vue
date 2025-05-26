@@ -17,15 +17,16 @@
           :status="selectedRoom.status"
           :showDetail="showDetailPanel"
           @showDetail="showDetailPanel = true"
+          @orderDraftFetched="handleOrderDraftFetched"
         />
       </div>
       <!-- 右側詳細資料 -->
-        <div class="chat-detail-panel" v-if="selectedRoom && showDetailPanel">
-          <DetailPanel
-            :room="selectedRoom"
-            @close-detail="showDetailPanel = false"
-          />
-        </div>
+      <div class="chat-detail-panel" v-if="selectedRoom && showDetailPanel">
+        <DetailPanel
+          :orderData="currentOrderData"
+          @close-detail="showDetailPanel = false"
+        />
+      </div>
     </div>
   </template>
   
@@ -39,6 +40,7 @@
   const chatRooms = ref([])
   const selectedRoom = ref(null)
   const showDetailPanel = ref(false)
+  const currentOrderData = ref(null)
   
   async function loadChatRooms() {
     try {
@@ -57,6 +59,12 @@
   function selectRoom(room) {
     selectedRoom.value = room
     showDetailPanel.value = false // 切換聊天室時自動收起詳細資料
+    currentOrderData.value = null // 清除訂單資料
+  }
+
+  function handleOrderDraftFetched(data) {
+    console.log('Order draft data received in MessagePage:', data)
+    currentOrderData.value = data
   }
 </script>
 
@@ -80,7 +88,6 @@
   flex-direction: column;
   transition: width 0.3s;
   border-right: 1.5px solid #e9e9e9;
-  
 }
 .chat-room-panel.expanded {
   width: calc(100vw - 320px);

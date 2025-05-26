@@ -1,6 +1,13 @@
 <template>
   <div :class="['chat-room', { shrink: showDetail }]">
-    <ChatHeader :roomName="roomName" :avatar="avatar" :status="status" @showDetail="$emit('showDetail')" />
+    <ChatHeader 
+      :roomName="roomName" 
+      :avatar="avatar" 
+      :status="status" 
+      :roomId="roomId"
+      @showDetail="$emit('showDetail')"
+      @orderDraftFetched="handleOrderDraftFetched"
+    />
 
     <!-- 這裡包一層可捲動容器 -->
     <div class="message-list-container">
@@ -11,7 +18,7 @@
     </div>
     <div class="input-wrapper">
       <MessageInput v-model="newMessage" @send="handleSend" />
-    </div>    
+    </div>
   </div>
 </template>
 
@@ -30,7 +37,7 @@ const props = defineProps({
   showDetail: Boolean
 })
 
-const emit = defineEmits(['showDetail', 'open-detail'])
+const emit = defineEmits(['showDetail', 'orderDraftFetched'])
 const messages = ref([])
 const newMessage = ref('')
 const messagesContainer = ref(null)
@@ -50,6 +57,14 @@ async function loadMessages() {
     })
   } catch (error) {
     console.error('Error loading messages:', error)
+  }
+}
+
+function handleOrderDraftFetched(data) {
+  console.log('Order draft data received:', data)
+  if (data) {
+    emit('orderDraftFetched', data)
+    emit('showDetail')
   }
 }
 

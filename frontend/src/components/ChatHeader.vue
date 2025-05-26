@@ -13,7 +13,7 @@
           <i class="fas fa-angle-double-left"></i>
         </button>        
       </div>
-    <button class="order-btn">
+    <button class="order-btn" @click="handleOrderClick">
       <span class="icon">
         <span class="archive">
           <span class="archive-icon">
@@ -30,14 +30,28 @@
 <script setup>
 import { computed } from 'vue'
 import { getStatusDisplay, getStatusClass } from '@/utils/statusMapping'
+import { fetchOrderDraft } from '@/api/orders'
 
 const props = defineProps({
   roomName: String,
   avatar: String,
-  status: String
+  status: String,
+  roomId: String
 })
 
+const emit = defineEmits(['showDetail', 'orderDraftFetched'])
+
 const statusClass = computed(() => getStatusClass(props.status))
+
+const handleOrderClick = async () => {
+  try {
+    const data = await fetchOrderDraft(props.roomId)
+    console.log('Order draft data:', data)
+    emit('orderDraftFetched', data)
+  } catch (error) {
+    console.error('Error fetching order draft:', error)
+  }
+}
 </script>
 
 <style scoped>
