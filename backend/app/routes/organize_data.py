@@ -7,9 +7,9 @@ from app.schemas.order import OrderDraftOut
 from app.services.organize_data import organize_data
 from fastapi import HTTPException, status
 
-api_router = APIRouter(prefix="/organize_data", tags=["Organize Data"])
+api_router = APIRouter()
 
-@api_router.post("/organize_data/{room_id}", response_model=OrderDraftOut)
+@api_router.patch("/organize_data/{room_id}", response_model=OrderDraftOut)
 async def organize_data_by_room_id(
     room_id: int,
     db: AsyncSession = Depends(get_db)
