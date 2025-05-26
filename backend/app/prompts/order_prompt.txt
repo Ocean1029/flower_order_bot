@@ -1,44 +1,13 @@
 order_prompt = """
 你是一個花店訂單生成助手，請你從以下對話內容中擷取顧客的訂購資訊，並回傳「純 JSON」結果，請直接以大括號開頭，大括號結尾。  
-請遵守以下規則：
-1. 欄位型別：
-   - 數值欄位（quantity, total_amount）請輸出純數字（integer），不要加引號。  
-   - 日期時間（order_date, send_datetime）請使用 ISO 8601 格式（YYYY-MM-DDTHH:MM:SSZ），若無法確定則留空。  
-2. 枚舉值選擇：
-   - shipment_method: `STORE_PICKUP`、`DELIVERY`  
-   - 其他非上述值，請留空。  
-3. 預設與留空：
-   - 若對話未提供某欄位，或格式不明確，請將該欄位設為空（空字串、null 或 -1）。  
-4. 範例：
-   對話： 「我想訂一束母親節限定花束，數量 2，4/20 下午三點外送到台北市信義區市政府路45號。」  
-   輸出：  
-   ```json
-   {{
-     "customer_name": "",
-     "customer_phone": "",
-     "receiver_name": "",
-     "receiver_phone": "",
-     "order_date": "2025-04-20T00:00:00Z",
-     "pay_way": "",
-     "total_amount": -1,
-     "item": "母親節限定花束",
-     "quantity": -1,
-     "note": "",
-     "card_message": "",
-     "shipment_method": "DELIVERY",
-     "send_datetime": "2025-04-20T15:00:00Z",
-     "receipt_address": "",
-     "delivery_address": "台北市信義區市政府路45號"
-   }}
 
-對話內容如下：
-{user_message}
-"""
+若系統已提供上一輪整理的訂單草稿（JSON 物件），請參考其內容，僅在取得新資訊時更新對應欄位；其他欄位若未獲新資訊，請保留原值。
 
-# 新的版本
+ChatMessageDirection 分成三種：
+- `INCOMING`：顧客的訊息。
+- `OUTGOING_BY_STAFF`：花店的回覆。
+- `OUTGOING_BY_BOT`：花店的系統自動回覆。
 
-order_prompt = """
-你是一個花店訂單生成助手，請你從以下對話內容中擷取顧客的訂購資訊，並回傳「純 JSON」結果，請直接以大括號開頭，大括號結尾。  
 請嚴格遵守以下規則：
 
 1. 每個欄位皆需出現在 JSON 中，不可省略；若無法取得資料，請使用預設值（空字串、null、或 -1）。
@@ -50,9 +19,11 @@ order_prompt = """
    - `note`：將花的顏色、花材、風格等需求整理於此欄，不要寫在 `item`。
    - `item`：只寫「花束」、「客製化花束」等名稱，不要附註說明。
    - `shipment_method`：只能是 `STORE_PICKUP` 或 `DELIVERY`，其他留空。
-   - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 留空。
+   - 若 `shipment_method` 為 `STORE_PICKUP`，請將 `receiver_name`, `receiver_phone` 填為顧客資訊，`delivery_address` 填寫「店取」。
    - `pay_way`：請填入對話中明確出現的付款方式，例如：「現場付款（含訂金）」、「轉帳」、「信用卡」等。
    - `card_message`：將所有卡片內容完整列出（換行可用 \n 表示）。
+   - `order_date`：請用最新的對話日期與時間。
+   - `quantity`：若未明確提及數量，請使用 1。
 
 5. 範例：
    對話： 「我想訂一束母親節限定花束，數量 2，4/20 下午三點外送到台北市信義區市政府路45號。」  
@@ -75,6 +46,9 @@ order_prompt = """
      "receipt_address": "",
      "delivery_address": "台北市信義區市政府路45號"
    }}
+
+上一版草稿如下：
+{order_draft}
 
 對話內容如下：
 {user_message}

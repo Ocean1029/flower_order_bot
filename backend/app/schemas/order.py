@@ -31,7 +31,6 @@ class OrderDraftBase(BaseModel):
     receiver_phone: Optional[str] = None
 
     # 付款資訊
-    pay_way_id: Optional[int] = None # 付款方式 id
     total_amount: Optional[float] = None
 
     # 商品資訊
@@ -50,89 +49,70 @@ class OrderDraftBase(BaseModel):
         from_attributes = True
 
 class OrderDraftUpdate(OrderDraftBase):
+    pay_way_id: Optional[int] = None
+    pay_way: Optional[str] = None
     pass
 
 class OrderDraftCreate(OrderDraftBase):
+    pay_way_id: Optional[int] = None
+    pay_way: Optional[str] = None
     pass
 
 class OrderDraftOut(OrderDraftBase):
     id: int
     order_date: datetime
     order_status: OrderDraftStatus
+    pay_way: Optional[str]
     weekday: Optional[str]
 
+class OrderDraftStatusOut(BaseModel):
+    id: int
+    status: OrderDraftStatus
+    order_date: datetime
+    weekday: Optional[str] = None
 
 """
 Order:
 """
 
 class OrderBase(BaseModel):
+    # TODO: 待補目前付的錢
+
     # 收件 / 寄件人
-    customer_name: str
-    customer_phone: str
-    receiver_name: str
-    receiver_phone: str
-
-    # order 狀態
-    order_date: datetime
-    order_status: OrderStatus
-
-    # 付款資訊
-    pay_way_id: Optional[int] = None
-    total_amount: float
-
-    # 商品資訊
-    item: str
-    quantity: int
-    note: Optional[str]
-    card_message: Optional[str]
-
-    # 運送資訊
-    shipment_method: ShipmentMethod
-    weekday: str
-    send_datetime: datetime
-    receipt_address: str
-    delivery_address: str
-    class Config:
-        from_attributes = True
-
-class OrderCreate(OrderBase): # TODO 待修改
     customer_name: str
     customer_phone: str
     receiver_name: Optional[str] = None
     receiver_phone: Optional[str] = None
 
-    # order 狀態
-    order_status: OrderStatus = OrderStatus.CONFIRMED
-
     # 付款資訊
-    pay_way_id: Optional[int] = None 
     total_amount: float
 
     # 商品資訊
     item: str
     quantity: int
-    note: Optional[str]
-    card_message: Optional[str]
+    note: Optional[str] = None
+    card_message: Optional[str] = None
 
     # 運送資訊
     shipment_method: ShipmentMethod
     send_datetime: datetime
     receipt_address: Optional[str] = None
     delivery_address: Optional[str] = None
+
     class Config:
         from_attributes = True
 
-class OrderUpdate(BaseModel):
+class OrderUpdate(OrderBase):
+    pay_way_id: Optional[int] = None
     pass
 
+class OrderCreate(OrderBase):
+    pay_way_id: Optional[int] = None
+    pass
 
 class OrderOut(OrderBase):
     id: int
     order_date: datetime
-    weekday: str
-    class Config:
-        from_attributes = True
-
-
-
+    order_status: OrderStatus
+    pay_way: Optional[str]
+    weekday: Optional[str]

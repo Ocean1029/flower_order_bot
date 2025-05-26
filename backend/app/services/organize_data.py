@@ -1,19 +1,36 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select, update
 import json
 from app.models.chat import ChatMessage, ChatRoom
 from app.schemas.order import OrderDraftCreate, OrderDraftOut
-from app.services.order_service import create_order_draft_by_room_id
+from app.services.order_service import create_order_draft_by_room_id, get_order_draft
+from app.utils.line_send_message import LINE_push_message
+from app.services.user_service import get_line_uid_by_chatroom_id
 from fastapi import HTTPException, status
 from app.managers.prompt_manager import PromptManager
+from app.schemas.chat import ChatMessageBase
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+from decimal import Decimal
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai_client = OpenAI(api_key=OPENAI_API_KEY)
 prompt_manager = PromptManager()
+
+def orm_to_dict(obj):
+    if obj is None:
+        return {}
+    result = {}
+    for c in obj.__table__.columns:
+        value = getattr(obj, c.name)
+        if isinstance(value, Decimal):
+            value = float(value)
+        elif isinstance(value, datetime):
+            value = value.isoformat()
+        result[c.name] = value
+    return result
 
 def _clean_parsed_reply(parsed_reply):
     for key, value in parsed_reply.items():
@@ -32,7 +49,7 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             detail="找不到聊天室"
         )
     
-    seven_days_ago = datetime.utcnow() - timedelta(days=7)
+    seven_days_ago = datetime.now(timezone(timedelta(hours=8))) - timedelta(days=7)
     stmt = select(ChatMessage).where(
         ChatMessage.room_id == chat_room_id,
         ChatMessage.created_at >= seven_days_ago,
@@ -48,13 +65,25 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             detail="過去 7 天內沒有尚未處理的對話資料喔～"
         )
 
-    combined_text = "\n".join(reversed([m.text for m in messages]))
-    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text)
+    combined_text = "\n".join(
+        reversed([f"[{message.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {message.text} {message.direction}" for message in messages])
+    )
+    
+    draft = await get_order_draft(db, chat_room.id)
+    
+    gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(orm_to_dict(draft)) or {})
+    print("🔍 GPT 處理中...")
+    print(f"📜 GPT Prompt:\n{gpt_prompt}")
+
     response = openai_client.chat.completions.create(
         model="gpt-4.1",
         messages=[{"role": "system", "content": gpt_prompt}],
         temperature=0
     )
+
+    print("🔍 GPT 處理完成")
+    print(f"💬 GPT 回覆:\n{response.choices[0].message.content.strip()}")
+
     gpt_reply = response.choices[0].message.content.strip()
 
     if not gpt_reply or gpt_reply.strip() == "":
@@ -64,11 +93,11 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     parsed_reply = _clean_parsed_reply(json.loads(gpt_reply))
 
     order_draft_create = OrderDraftCreate(
-        customer_name=parsed_reply.get("name"),
-        customer_phone=parsed_reply.get("phone"),
+        customer_name=parsed_reply.get("customer_name"),
+        customer_phone=parsed_reply.get("customer_phone"),
         receiver_name=parsed_reply.get("receiver_name"),
         receiver_phone=parsed_reply.get("receiver_phone"),
-        pay_way_id=parsed_reply.get("pay_way_id"),
+        pay_way=parsed_reply.get("pay_way"),
         total_amount=parsed_reply.get("total_amount"),
         item=parsed_reply.get("item"),
         quantity=parsed_reply.get("quantity"),
@@ -79,6 +108,46 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         receipt_address=parsed_reply.get("receipt_address"),
         delivery_address=parsed_reply.get("delivery_address"),
     )
+    print(order_draft_create)
+
+    # 傳送草稿中 缺漏的欄位傳給顧客
+    missing_fields = []
+    required_fields = {
+        "customer_name": "顧客姓名",
+        "customer_phone": "顧客電話",
+        "receiver_name": "收件人姓名",
+        "receiver_phone": "收件人電話",
+        "pay_way": "付款方式",
+        "total_amount": "總金額",
+        "item": "商品項目",
+        "quantity": "數量",
+        "shipment_method": "配送方式",
+        "send_datetime": "送達時間",
+        "delivery_address": "收件地址"
+    }
+    for field, label in required_fields.items():
+        if getattr(order_draft_create, field, None) in [None, "", 0]:
+            missing_fields.append(label)
+
+    if missing_fields:
+        # 透過 chat_room_id 反查目前聊天室對應的 LINE UID
+        line_uid = await get_line_uid_by_chatroom_id(db, chat_room.id)
+        print(line_uid)
+
+        warning_msg = (
+                "智慧客服已根據對話內容整理好訂單草稿囉！"
+                "我們發現了一些缺少的資料，請幫我們直接在下方補上～\n"
+                + "\n".join(f"- {f}" for f in missing_fields)
+            )
+        print(warning_msg)
+
+        if line_uid:
+            # 將字串包成 ChatMessageBase，再交給 LINE_push_message
+            await LINE_push_message(line_uid, ChatMessageBase(text=warning_msg))
+        else:
+            print("❗ 無法取得該聊天室對應的 LINE UID，無法推播缺漏提醒。")
+
+
     order_draft_out = await create_order_draft_by_room_id(db=db, room_id=chat_room.id, draft_in=order_draft_create)
     print(f"訂單草稿已建立，ID：{order_draft_out.id}")
     
@@ -87,33 +156,11 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     #     if key not in ["id", "created_at", "updated_at"]:
     #         print(f"{key}: {value}")
 
-    # 將對話訊息設為已處理
-    stmt = update(ChatMessage)\
-        .where(ChatMessage.id.in_([message.id for message in messages]))\
-        .values(processed=True)
-    await db.execute(stmt)
-    await db.commit()
+    # # 將對話訊息設為已處理
+    # stmt = update(ChatMessage)\
+    #     .where(ChatMessage.id.in_([message.id for message in messages]))\
+    #     .values(processed=True)
+    # await db.execute(stmt)
+    # await db.commit()
 
-    return order_draft_out
-
-        # # ---------- 檢查必填欄位 ----------
-        # required_fields = ["name", "phone", "item_type", "quantity"]
-        # missing_fields = [f for f in required_fields if not parsed_reply.get(f)]
-        # if missing_fields:
-        #     # 進入 ORDER_CONFIRM 流程，逐欄位詢問
-        #     order_confirm_cache[user_line_id] = {
-        #         "missing": missing_fields,
-        #         "current_idx": 0,
-        #         "order_data": parsed_reply
-        #     }
-        #     chat_room.stage = ChatRoomStage.ORDER_CONFIRM
-        #     chat_room.bot_step = 0
-        #     await db.commit()
-
-        #     first_field = missing_fields[0]
-        #     display = FIELD_PROMPT_MAP.get(first_field, first_field)
-        #     line_bot_api.reply_message(
-        #         event.reply_token,
-        #         TextSendMessage(text=f"請補充「{display}」：")
-        #     )
-        #     return  # 先跳出，不建草稿
+    # return order_draft_out
