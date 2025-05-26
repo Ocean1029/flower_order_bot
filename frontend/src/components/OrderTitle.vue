@@ -47,9 +47,8 @@ const pageTitle = computed(() => {
 
 <style scoped>
 .order-title-wrapper {
-  position: fixed;
+  position: relative;
   top: 80px;
-  left: 0;
   width: 100vw;
   margin: 0;
   padding: 0;
@@ -60,7 +59,7 @@ const pageTitle = computed(() => {
 .main-title-bar {
   position: relative;
   width: 100vw;
-  height: 64px;
+  height: 80px;
   border-bottom: 1px solid #00000061;
   background: #fff;
   display: flex;
