@@ -54,9 +54,11 @@
 
 <script setup>
 import { ref, computed } from 'vue'
+import { sendOrderDraft } from '@/api/orders'
 
 const props = defineProps({
-  orderData: Object
+  orderData: Object,
+  roomId: String
 })
 
 const emit = defineEmits(['close-detail'])
@@ -125,16 +127,41 @@ function cancelEditing() {
   editedData.value = {}
 }
 
-function confirmEditing() {
-  // 這裡可以添加保存邏輯
-  isEditing.value = false
-  // 更新數據
-  columns.forEach((col, idx) => {
-    if (editableFields.includes(col)) {
-      dataList.value[idx] = editedData.value[col]
+async function confirmEditing() {
+  try {
+    // Format the data according to the API requirements
+    const orderDraftData = {
+      customer_name: editedData.value['客戶姓名'] || '',
+      customer_phone: editedData.value['客戶電話'] || '',
+      receiver_name: editedData.value['收件人姓名'] || '',
+      receiver_phone: editedData.value['收件人電話'] || '',
+      total_amount: parseFloat(editedData.value['總金額']?.replace('NT ', '') || '0'),
+      item: editedData.value['品項'] || '',
+      quantity: parseInt(editedData.value['數量'] || '0'),
+      note: editedData.value['備註'] || '',
+      card_message: editedData.value['卡片訊息'] || '',
+      shipment_method: editedData.value['取貨方式'] === '店取' ? 'STORE_PICKUP' : 'DELIVERY',
+      send_datetime: editedData.value['送貨日期'] 
+        ? new Date(editedData.value['送貨日期']).toISOString().replace(/\.\d{3}Z$/, '.331Z')
+        : new Date().toISOString().replace(/\.\d{3}Z$/, '.331Z'),
+      receipt_address: editedData.value['收件地址'] || '',
+      delivery_address: editedData.value['送貨地址'] || '',
+      pay_way: editedData.value['付款方式'] || '',
+      pay_way_id: 0 // You might want to map this to actual IDs
     }
-  })
-  editedData.value = {}
+
+    console.log('Sending order draft data:', orderDraftData)
+    await sendOrderDraft(props.roomId, orderDraftData)
+    
+    isEditing.value = false
+    editedData.value = {}
+    
+    // Emit an event to refresh the data
+    emit('orderDraftUpdated')
+  } catch (error) {
+    console.error('Error updating order draft:', error)
+    alert('更新訂單失敗: ' + error.message)
+  }
 }
 </script>
 

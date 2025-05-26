@@ -19,7 +19,7 @@ export const fetchOrderDraft = async (room_id) => {
   return res.data
 }
 
-export const keepOrderDraft = async (room_id, order_draft) => {
+export const sendOrderDraft = async (room_id, order_draft) => {
   const res = await axios.patch(`${API_BASE}/orderdraft/${room_id}`, order_draft)
   return res.data
 }

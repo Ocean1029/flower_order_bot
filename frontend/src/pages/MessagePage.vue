@@ -24,7 +24,9 @@
       <div class="chat-detail-panel" v-if="selectedRoom && showDetailPanel">
         <DetailPanel
           :orderData="currentOrderData"
+          :roomId="selectedRoom.id"
           @close-detail="showDetailPanel = false"
+          @orderDraftUpdated="handleOrderDraftUpdated"
         />
       </div>
     </div>
@@ -33,6 +35,7 @@
   <script setup>
   import { ref, onMounted } from 'vue'
   import { getLatestMessages } from '@/api/messages'
+  import { readOrderDraft } from '@/api/orders'
   import ChatListWrapper from '@/components/ChatListWrapper.vue'
   import ChatRoomWrapper from '@/components/ChatRoomWrapper.vue'
   import DetailPanel from '@/components/DetailPanel.vue'
@@ -65,6 +68,17 @@
   function handleOrderDraftFetched(data) {
     console.log('Order draft data received in MessagePage:', data)
     currentOrderData.value = data
+  }
+
+  function handleOrderDraftUpdated() {
+    // Refresh the order draft data
+    if (selectedRoom.value) {
+      readOrderDraft(selectedRoom.value.id).then(data => {
+        if (data) {
+          currentOrderData.value = data
+        }
+      })
+    }
   }
 </script>
 
