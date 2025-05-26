@@ -33,7 +33,13 @@ const statList = computed(() => [
 <style scoped>
 .stat-cards-container {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
   gap: 36px;
+  width: 948px;
+  height: 144px;
+  background: transparent;
 }
 
 .stat-card {
@@ -41,10 +47,13 @@ const statList = computed(() => [
   width: 210px;
   height: 144px;
   background: #fff;
+  box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.25);
   border-radius: 8px;
   cursor: pointer;
   transition: background 0.2s;
-  left: 30px;
+  flex: none;
+  order: 0;
+  flex-grow: 1;
 }
 .stat-card:hover {
   background: #D8EAFF;

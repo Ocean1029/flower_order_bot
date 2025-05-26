@@ -4,14 +4,32 @@ import { ref, onMounted } from 'vue'
 import { fetchOrders} from '@/api/orders'
 
 const columnName = [
-  '訂單ID', '客戶姓名', '客戶電話', '收件地址', '訂單日期', '總金額',
-  '商品', '數量', '備註', '付款方式', '卡片訊息', '星期',
-  '送貨日期時間', '收件人姓名', '收件人電話', '送貨地址', '訂單狀態', '送貨方式'
+  '匯出工單', '訂單編號', '狀態', '取貨時間', '姓名', '電話', '商品', '數量',
+  '備註', '取貨方式', '金額', '付款方式', '付款狀態'
 ]
 
 const orders = ref([])
 const isLoading = ref(true)
 const error = ref(null)
+const currentDate = ref(new Date())
+
+const formatDate = (date) => {
+  return `${date.getMonth() + 1}月${date.getDate()}日`
+}
+
+const goToPreviousDay = () => {
+  const newDate = new Date(currentDate.value)
+  newDate.setDate(newDate.getDate() - 1)
+  currentDate.value = newDate
+  // TODO: Add logic to fetch orders for the new date
+}
+
+const goToNextDay = () => {
+  const newDate = new Date(currentDate.value)
+  newDate.setDate(newDate.getDate() + 1)
+  currentDate.value = newDate
+  // TODO: Add logic to fetch orders for the new date
+}
 
 onMounted(async () => {
   isLoading.value = true
@@ -29,6 +47,11 @@ onMounted(async () => {
 </script>
 
 <template>
+  <div class="order-title-wrapper">
+    <div class="main-title-bar">
+      <span class="main-title">訂單管理</span>
+    </div>
+  </div>
   <div class="page-content">
     <div v-if="error" class="error-message">
       {{ error }}
@@ -41,6 +64,38 @@ onMounted(async () => {
 </template>
 
 <style scoped>
+.order-title-wrapper {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  z-index: 0;
+}
+
+.main-title-bar {
+  position: relative;
+  width: 100vw;
+  height: 80px;
+  border-bottom: 1px solid #00000061
+}
+
+.main-title {
+  position: relative;
+  top: 20px;
+  left: 72px;
+  height: 40px;
+  font-family: 'Noto Sans TC', '思源黑體', 'Microsoft JhengHei', Arial, sans-serif;
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 40px;
+  letter-spacing: 0;
+  color: #6168FC;
+  background: transparent;
+}
+
 .page-content {
   padding-top: 160px;
   padding-left: 8px;
