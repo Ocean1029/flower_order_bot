@@ -138,7 +138,7 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             order_date=order_draft.created_at,
             order_status=order_draft.status,
             
-            pay_way=pay_way.display_name,
+            pay_way=pay_way.display_name if pay_way else None, 
             total_amount=order_draft.total_amount,
             
             item=order_draft.item_type,
