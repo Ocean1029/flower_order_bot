@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from sqlalchemy.orm import selectinload
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.user import User
@@ -6,6 +7,7 @@ from app.models.chat import ChatRoom
 from typing import Optional
 
 from app.schemas.user import UserCreate
+
 
 async def get_line_uid_by_chatroom_id(
         db: AsyncSession,
@@ -21,15 +23,9 @@ async def get_line_uid_by_chatroom_id(
     Returns:
         Optional[str]: LINE UID if the chat room exists and has one, else None.
     """
-    stmt = select(ChatRoom).where(ChatRoom.id == chat_room_id)
-    result = await db.execute(stmt)
-    chat_room = result.scalar_one_or_none()
-
-    if chat_room is None:
-        return None
-
-    # Assuming ChatRoom has an attribute `line_user_id`
-    return getattr(chat_room, "line_user_id", None)
+    user = await get_user_by_chat_room_id(db, chat_room_id)
+    if user and user.line_uid:
+        return user.line_uid
 
 
 async def get_user_by_line_uid(db: AsyncSession, line_uid: str) -> User:
@@ -41,6 +37,32 @@ async def get_user_by_id(db: AsyncSession, user_id: int) -> User:
     stmt = select(User).where(User.id == user_id)
     result = await db.execute(stmt)
     return result.scalar_one_or_none()
+
+async def get_user_by_chat_room_id(
+        db: AsyncSession, 
+        chat_room_id: int
+    ) -> Optional[User]:
+    """
+    Given a chat_room_id, return the associated User.
+
+    Args:
+        db (AsyncSession): SQLAlchemy async session.
+        chat_room_id (int): Primary key of the ChatRoom record.
+
+    Returns:
+        Optional[User]: User object if found, else None.
+    """
+    chat_room = await db.execute(
+        select(ChatRoom).
+        options(selectinload(ChatRoom.user)).
+        where(ChatRoom.id == chat_room_id)
+    )
+    chat_room = chat_room.scalar_one_or_none()
+
+    if not chat_room:
+        raise Exception("Chat room not found")
+
+    return chat_room.user
 
 async def create_user(
         db: AsyncSession, 

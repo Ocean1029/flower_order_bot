@@ -49,10 +49,8 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             detail="找不到聊天室"
         )
     
-    seven_days_ago = datetime.now(timezone(timedelta(hours=8))) - timedelta(days=7)
     stmt = select(ChatMessage).where(
         ChatMessage.room_id == chat_room_id,
-        ChatMessage.created_at >= seven_days_ago,
         ChatMessage.processed == False
     ).order_by(ChatMessage.created_at.asc())
 
@@ -132,7 +130,6 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     if missing_fields:
         # 透過 chat_room_id 反查目前聊天室對應的 LINE UID
         line_uid = await get_line_uid_by_chatroom_id(db, chat_room.id)
-        print(line_uid)
 
         warning_msg = (
                 "智慧客服已根據對話內容整理好訂單草稿囉！"
@@ -143,14 +140,14 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
 
         if line_uid:
             # 將字串包成 ChatMessageBase，再交給 LINE_push_message
-            await LINE_push_message(line_uid, ChatMessageBase(text=warning_msg))
+            LINE_push_message(line_uid, ChatMessageBase(text=warning_msg))
         else:
             print("❗ 無法取得該聊天室對應的 LINE UID，無法推播缺漏提醒。")
-
 
     order_draft_out = await create_order_draft_by_room_id(db=db, room_id=chat_room.id, draft_in=order_draft_create)
     print(f"訂單草稿已建立，ID：{order_draft_out.id}")
     
+    return order_draft_out
     # # 將詳細資料印出來
     # for key, value in order_draft_out.dict().items():
     #     if key not in ["id", "created_at", "updated_at"]:
@@ -162,5 +159,3 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     #     .values(processed=True)
     # await db.execute(stmt)
     # await db.commit()
-
-    # return order_draft_out

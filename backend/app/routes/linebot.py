@@ -227,7 +227,7 @@ async def run_welcome_flow(
         )
 
     await db.commit()
-    db.refresh(chat_room)
+    await db.refresh(chat_room)
 
 
 # ──────────────────────────────────────────────────────────────
