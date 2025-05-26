@@ -10,6 +10,7 @@ class LastMessage(BaseModel):
 class ChatRoomOut(BaseModel):
     room_id: int
     user_name: str
+    user_avatar_url: Optional[str] = None
     unread_count: int
     status: ChatRoomStage
     last_message: Optional[LastMessage]
@@ -21,6 +22,7 @@ class ChatMessageBase(BaseModel):
 
 class ChatMessageOut(BaseModel):
     id: int
+    user_avatar_url: Optional[str] = None
     direction: ChatMessageDirection
     message: ChatMessageBase
     status: ChatMessageStatus

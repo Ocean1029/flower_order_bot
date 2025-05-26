@@ -8,7 +8,9 @@ from app.models.chat import ChatRoom, ChatMessage
 from app.schemas.chat import ChatRoomOut, ChatMessageOut, ChatMessageBase
 from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
 from app.utils.line_send_message import LINE_push_message
-from app.services.user_service import get_user_by_line_uid
+from app.services.user_service import get_user_by_line_uid, get_user_by_id
+
+from fastapi import HTTPException, status
 
 async def get_latest_message(db: AsyncSession, room_id: int) -> Optional[ChatMessageOut]:
     stmt = (
@@ -19,6 +21,20 @@ async def get_latest_message(db: AsyncSession, room_id: int) -> Optional[ChatMes
     )
     result = await db.execute(stmt)
     message = result.scalar_one_or_none()
+    
+    if not message:
+        return None
+    message = ChatMessageOut(
+        id=message.id,
+        direction=message.direction,
+        user_avatar_url=None,
+        message=ChatMessageBase(
+            text=message.text,
+            image_url=message.image_url
+        ),
+        status=message.status,
+        created_at=message.created_at
+    )
     return message
 
 async def get_chat_room_list(db: AsyncSession) -> Optional[List[ChatRoomOut]]:
@@ -37,10 +53,11 @@ async def get_chat_room_list(db: AsyncSession) -> Optional[List[ChatRoomOut]]:
         response.append(ChatRoomOut(
             room_id=room.id,
             user_name=room.user.name if room.user else "未知",
+            user_avatar_url=room.user.avatar_url if room.user else None,
             unread_count=room.unread_count,
             status=room.stage,
             last_message={
-                "text": last_msg.text,
+                "text": last_msg.message.text,
                 "timestamp": last_msg.created_at,
             } if last_msg else None,
         ))
@@ -84,6 +101,13 @@ async def create_chat_room(db: AsyncSession, user_id: int) -> ChatRoom:
     return room
 
 async def get_chat_messages(db: AsyncSession, room_id: int, after: Optional[datetime] = None) -> List[ChatMessageOut]:
+    chatroom = await get_chat_room_by_room_id(db, room_id)
+    if not chatroom:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Chat room not found"
+        )
+    
     stmt = select(ChatMessage).where(ChatMessage.room_id == room_id)
     if after:
         stmt = stmt.where(ChatMessage.created_at > after)
@@ -92,10 +116,16 @@ async def get_chat_messages(db: AsyncSession, room_id: int, after: Optional[date
     result = await db.execute(stmt)
     messages = result.scalars().all()
 
+    user = await get_user_by_id(db, chatroom.user_id)
+    if user:
+        user_avatar_url = user.avatar_url
+    else:
+        user_avatar_url = None
     return [
         ChatMessageOut(
             id=message.id,
             direction=message.direction,
+            user_avatar_url=user_avatar_url,
             message=ChatMessageBase(
                 text=message.text,
                 image_url=message.image_url
@@ -169,6 +199,7 @@ async def create_staff_message(db: AsyncSession, room_id: int, data: ChatMessage
     message_out = ChatMessageOut(
         id=message.id,
         direction=message.direction,
+        user_avatar_url=None, 
         message=ChatMessageBase(
             text=message.text,
             image_url=message.image_url
