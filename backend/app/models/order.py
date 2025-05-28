@@ -52,7 +52,7 @@ class Order(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     receiver_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
-    draft_id: Mapped[int] = mapped_column(ForeignKey("order_draft.id"))
+    
     status: Mapped[str] = mapped_column(
         SAEnum(OrderStatus, name="order_status", validate_strings=True),
         default=OrderStatus.PENDING
