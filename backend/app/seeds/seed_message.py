@@ -1,23 +1,13 @@
-from app.models.chat import ChatRoom, ChatMessage
+from app.models.chat import ChatMessage
 from datetime import datetime, timedelta, timezone
 import random
 from faker import Faker
-from app.enums.chat import ChatRoomStage, ChatMessageStatus, ChatMessageDirection
+from app.enums.chat import ChatMessageStatus, ChatMessageDirection
 
 fake = Faker("zh_TW")
 
-async def create_random_message(session, user):
-    # 創建聊天室
-    room = ChatRoom(
-        user_id=user.id,
-        stage=ChatRoomStage.WELCOME,
-        bot_step=-1,
-        unread_count=random.randint(0, 5),
-        last_message_ts=datetime.now(timezone(timedelta(hours=8))),
-    )
-    session.add(room)
-    await session.flush()
-
+async def create_random_message(session, room):
+    
     # 創建多條訊息來模擬對話
     messages = []
     base_time = datetime.now(timezone(timedelta(hours=8))) - timedelta(hours=random.randint(1, 24))
@@ -80,5 +70,3 @@ async def create_random_message(session, user):
     
     await session.flush()
     await session.commit()
-    
-    return room
