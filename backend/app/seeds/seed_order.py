@@ -4,7 +4,7 @@ from app.models.order import Order, OrderDraft
 from app.models.payment import Payment, PaymentMethod
 from app.models.user import User
 from app.enums.payment import PaymentStatus
-from app.enums.order import OrderStatus, OrderDraftStatus
+from app.enums.order import OrderStatus
 from app.enums.shipment import ShipmentMethod, ShipmentStatus
 from faker import Faker
 from sqlalchemy import select

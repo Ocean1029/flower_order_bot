@@ -14,7 +14,7 @@ from app.models.user import User
 from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
 from app.enums.chat import ChatRoomStage
-from app.enums.order import OrderDraftStatus, OrderStatus
+from app.enums.order import OrderStatus
 from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
 from app.schemas.user import UserCreate
 from app.schemas.order import OrderDraftCreate

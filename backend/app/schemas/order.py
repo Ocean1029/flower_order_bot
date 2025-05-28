@@ -2,7 +2,7 @@ from typing import Optional, Any
 from datetime import datetime
 from pydantic import BaseModel
 
-from app.enums.order import OrderDraftStatus, OrderStatus
+from app.enums.order import OrderStatus
 from app.enums.shipment import ShipmentMethod
 from typing import Optional
 from datetime import datetime
@@ -61,15 +61,8 @@ class OrderDraftCreate(OrderDraftBase):
 class OrderDraftOut(OrderDraftBase):
     id: int
     order_date: datetime
-    order_status: OrderDraftStatus
     pay_way: Optional[str]
     weekday: Optional[str]
-
-class OrderDraftStatusOut(BaseModel):
-    id: int
-    status: OrderDraftStatus
-    order_date: datetime
-    weekday: Optional[str] = None
 
 """
 Order:

@@ -5,7 +5,7 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import datetime
-from app.enums.order import OrderDraftStatus, OrderStatus
+from app.enums.order import OrderStatus
 from app.enums.shipment import ShipmentMethod, ShipmentStatus
 from sqlalchemy import Enum as SAEnum
 

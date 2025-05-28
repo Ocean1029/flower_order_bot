@@ -3,7 +3,6 @@ from faker import Faker
 from app.models.user import User
 from app.models.chat import ChatRoom
 from app.models.order import OrderDraft
-from app.enums.order import OrderDraftStatus
 from app.enums.shipment import ShipmentMethod, ShipmentStatus
 from app.enums.chat import ChatRoomStage
 from datetime import datetime, timedelta, timezone

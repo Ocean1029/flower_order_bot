@@ -10,11 +10,11 @@ from app.models.user import User
 from app.models.order import Order, OrderDraft
 from app.models.payment import Payment
 
-from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate, OrderCreate, OrderDraftStatusOut
+from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate, OrderCreate
 from app.services.payment_service import get_pay_way_by_order_id, get_payment_method_by_id
 from app.services.user_service import get_user_by_id, create_user
 from app.services.message_service import get_chat_room_by_room_id
-from app.enums.order import OrderStatus, OrderDraftStatus
+from app.enums.order import OrderStatus
 
 async def get_order(db: AsyncSession, order_id: int) -> Order:
     stmt = select(Order).where(Order.id == order_id)
@@ -102,7 +102,6 @@ async def get_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft
     stmt = (
         select(OrderDraft)
         .where(OrderDraft.room_id == room_id)
-        .where(OrderDraft.status == OrderDraftStatus.COLLECTING)
         .order_by(OrderDraft.created_at.desc())
         .limit(1)
     )
@@ -115,7 +114,6 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
     stmt = (
         select(OrderDraft)
         .where(OrderDraft.room_id == room_id)
-        .where(OrderDraft.status == OrderDraftStatus.COLLECTING)
         .order_by(OrderDraft.created_at.desc())
         .limit(1)
     )
@@ -136,7 +134,6 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             receiver_phone=receiver_user.phone if receiver_user else user.phone,
 
             order_date=order_draft.created_at,
-            order_status=order_draft.status,
             
             pay_way=pay_way.display_name if pay_way else None, 
             total_amount=order_draft.total_amount,
@@ -161,7 +158,6 @@ async def get_collecting_order_draft(db: AsyncSession, room_id: int) -> Optional
     result = await db.execute(
         select(OrderDraft).where(
             OrderDraft.room_id == room_id,
-            OrderDraft.status == OrderDraftStatus.COLLECTING
         ).limit(1)
     )
     return result.scalar_one_or_none()
@@ -196,7 +192,6 @@ async def create_order_draft_by_room_id(
         order_draft = OrderDraft(
             room_id=room.id,
             user_id=room.user_id,
-            status=OrderDraftStatus.COLLECTING,
             created_at=datetime.now(timezone(timedelta(hours=8))),
             updated_at=datetime.now(timezone(timedelta(hours=8)))
         )
@@ -279,29 +274,3 @@ async def update_order_draft_by_room_id(
     
     # 8. 回傳 OrderDraftOut
     return await get_order_draft_by_room_id(db, room_id)
-
-async def get_all_order_draft_by_status(db: AsyncSession, status: OrderDraftStatus) -> List[OrderDraftStatusOut]:
-    """
-    取得所有訂單草稿的狀態
-        class OrderDraftStatusOut(BaseModel):
-        id: int
-        status: OrderDraftStatus
-        order_date: datetime
-        weekday: Optional[str] = None
-    """
-    
-    stmt = select(OrderDraft).distinct().where(
-        OrderDraft.status == status
-    ).order_by(OrderDraft.created_at.desc())
-    result = await db.execute(stmt)
-    order_drafts = result.scalars().all()
-    status_list = []
-    for order_draft in order_drafts:
-        status_list.append(OrderDraftStatusOut(
-            id=order_draft.id,
-            status=order_draft.status,
-            order_date=order_draft.created_at,
-            weekday=order_draft.created_at.strftime("%A") if order_draft.created_at else None
-        ))
-    
-    return status_list
