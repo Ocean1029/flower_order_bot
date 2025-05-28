@@ -33,6 +33,7 @@ const columnMapping = {
 const searchText = ref('')
 const currentDate = ref(new Date())
 const activeTab = ref('all')
+const dateFilterActive = ref(false)
 
 const formatDate = (date) => {
   const weekdays = ['日', '一', '二', '三', '四', '五', '六']
@@ -43,12 +44,16 @@ const goToPreviousDay = () => {
   const newDate = new Date(currentDate.value)
   newDate.setDate(newDate.getDate() - 1)
   currentDate.value = newDate
+  dateFilterActive.value = true
+  activeTab.value = ''
 }
 
 const goToNextDay = () => {
   const newDate = new Date(currentDate.value)
   newDate.setDate(newDate.getDate() + 1)
   currentDate.value = newDate
+  dateFilterActive.value = true
+  activeTab.value = ''
 }
 
 const formatDateTime = (datetime) => {
@@ -83,17 +88,46 @@ function statusText(status) { //改
   }
 }
 
-// 篩選符合搜尋文字的訂單
+// 篩選符合搜尋文字與日期的訂單
 const filteredData = computed(() => {
   if (!Array.isArray(props.data)) return []
-  
-  if (!searchText.value) return props.data
-  
-  return props.data.filter(row =>
-    Object.values(row || {}).some(value =>
-      String(value).toLowerCase().includes(searchText.value.toLowerCase())
+
+  let result = props.data
+
+  // 1. 先依activeTab篩選
+  if (activeTab.value === 'manual') {
+    result = result.filter(row => row.order_status === 'MANUAL')
+  } else if (activeTab.value === 'prepare') {
+    result = result.filter(row => row.order_status === 'CONFIRMED')
+  } else if (activeTab.value === 'today') {
+    // 今日訂單：依照currentDate
+    const todayStr = currentDate.value.toISOString().slice(0, 10)
+    result = result.filter(row => {
+      if (!row.send_datetime) return false
+      const rowDate = new Date(row.send_datetime).toISOString().slice(0, 10)
+      return rowDate === todayStr
+    })
+  }
+
+  // 2. 日期篩選（data-filter）
+  if (dateFilterActive.value) {
+    const filterStr = currentDate.value.toISOString().slice(0, 10)
+    result = result.filter(row => {
+      if (!row.send_datetime) return false
+      const rowDate = new Date(row.send_datetime).toISOString().slice(0, 10)
+      return rowDate === filterStr
+    })
+  }
+
+  // 3. 搜尋文字
+  if (searchText.value) {
+    result = result.filter(row =>
+      Object.values(row || {}).some(value =>
+        String(value).toLowerCase().includes(searchText.value.toLowerCase())
+      )
     )
-  )
+  }
+  return result
 })
 
 // 匯出成 CSV 檔案
@@ -162,41 +196,53 @@ const columnWidths = {
   '付款方式': '128px',
   '付款狀態': '112px'
 }
+
+// 點擊日期filter按鈕時觸發
+function onDateFilterClick() {
+  dateFilterActive.value = true
+  activeTab.value = '' // 取消tab篩選
+}
+
+// 點擊訂單總覽時觸發
+function onOrderTitleClick() {
+  dateFilterActive.value = false
+  activeTab.value = 'all'
+}
 </script>
 
 <template>
   <div class="section" id="orders">
     <div class="order-title-row">
-      <span class="order-title">訂單總覽</span>
+      <span class="order-title" @click="onOrderTitleClick" style="cursor:pointer;">訂單總覽</span>
     </div>
     <div class="order-filter-row">
       <div class="order-tabs">
         <button 
           class="tab" 
           :class="{ active: activeTab === 'all' }"
-          @click="activeTab = 'all'"
+          @click="activeTab = 'all'; dateFilterActive = false;"
         >所有訂單</button>
         <button 
           class="tab" 
           :class="{ active: activeTab === 'manual' }"
-          @click="activeTab = 'manual'"
+          @click="activeTab = 'manual'; dateFilterActive = false;"
         >人工溝通</button>
         <button 
           class="tab" 
           :class="{ active: activeTab === 'today' }"
-          @click="activeTab = 'today'"
+          @click="activeTab = 'today'; dateFilterActive = false;"
         >今日訂單</button>
         <button 
           class="tab" 
           :class="{ active: activeTab === 'prepare' }"
-          @click="activeTab = 'prepare'"
+          @click="activeTab = 'prepare'; dateFilterActive = false;"
         >等待備貨</button>
       </div>
       <div class="date-filter">
         <button class="date-nav-btn" @click="goToPreviousDay">
           <span class="arrow">&#60;</span>
         </button>
-        <div class="current-date">{{ formatDate(currentDate) }}</div>
+        <div class="current-date" @click="onDateFilterClick" :style="{cursor:'pointer', fontWeight: dateFilterActive ? 'bold' : 'normal', color: dateFilterActive ? '#6168FC' : ''}">{{ formatDate(currentDate) }}</div>
         <button class="date-nav-btn" @click="goToNextDay">
           <span class="arrow">&#62;</span>
         </button>
