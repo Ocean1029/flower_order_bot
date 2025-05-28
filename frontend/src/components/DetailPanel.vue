@@ -20,32 +20,63 @@
         </div>
       </div>
       <div class="order-detail-content">
-        <div
-          class="table-row"
-          v-for="(col, idx) in columns"
-          :key="col"
-        >
-          <div class="table-column">{{ col }}</div>
-          <div class="data-container">
-            <template v-if="isEditing && editableFields.includes(col)">
-              <select 
-                v-if="col === '取貨方式'"
-                v-model="editedData[col]"
-                class="edit-select"
-              >
-                <option value="店取">店取</option>
-                <option value="外送">外送</option>
-              </select>
-              <input 
-                v-else
-                v-model="editedData[col]"
-                class="edit-input"
-                type="text"
-              />
-            </template>
-            <span v-else class="data">{{ dataList[idx] }}</span>
-          </div>
-        </div>        
+        <template v-for="(col, idx) in columns" :key="col">
+          <template v-if="col === '送貨日期'">
+            <!-- 第一行：標題+日期 -->
+            <div class="table-row">
+              <div class="table-column">{{ col }}</div>
+              <div class="data-container">
+                <template v-if="isEditing">
+                  <input
+                    type="date"
+                    v-model="editedData[col + '_date']"
+                    class="edit-input"
+                  />
+                </template>
+                <span v-else class="data">{{ dataList[idx] }}</span>
+              </div>
+            </div>
+            <!-- 第二行：空白+時間 -->
+            <div class="table-row">
+              <div class="table-column"></div>
+              <div class="data-container">
+                <template v-if="isEditing">
+                  <input
+                    type="time"
+                    v-model="editedData[col + '_time']"
+                    class="edit-input"
+                    step="300"
+                  />
+                </template>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <!-- 其他欄位照舊 -->
+            <div class="table-row">
+              <div class="table-column">{{ col }}</div>
+              <div class="data-container">
+                <template v-if="isEditing && editableFields.includes(col)">
+                  <select 
+                    v-if="col === '取貨方式'"
+                    v-model="editedData[col]"
+                    class="edit-select"
+                  >
+                    <option value="店取">店取</option>
+                    <option value="外送">外送</option>
+                  </select>
+                  <input 
+                    v-else
+                    v-model="editedData[col]"
+                    class="edit-input"
+                    type="text"
+                  />
+                </template>
+                <span v-else class="data">{{ dataList[idx] }}</span>
+              </div>
+            </div>
+          </template>
+        </template>        
       </div>
       <!-- bottom: frame-2 兩個新按鈕 -->
       <div class="frame-2">
@@ -75,7 +106,7 @@ const emit = defineEmits(['close-detail'])
 
 // 可編輯的欄位
 const editableFields = [
-  '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '品項', '數量', '備註', 
+  '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', '品項', '數量', '備註', 
   '卡片訊息', '取貨方式', '送貨日期', '收件地址', '送貨地址', '付款方式'
 ]
 
@@ -126,11 +157,16 @@ function startEditing() {
   // 初始化編輯數據
   columns.forEach((col, idx) => {
     if (editableFields.includes(col)) {
-      editedData.value[col] = dataList.value[idx]
+      if (col === '送貨日期') {
+        const date = new Date(dataList.value[idx])
+        editedData.value[col + '_date'] = date.toISOString().split('T')[0]
+        editedData.value[col + '_time'] = date.toTimeString().slice(0, 5)
+      } else {
+        editedData.value[col] = dataList.value[idx]
+      }
     }
   })
 }
-  editedData.value = {}
 
 async function confirmEditing() {
   try {
@@ -146,8 +182,8 @@ async function confirmEditing() {
       note: editedData.value['備註'] || '',
       card_message: editedData.value['卡片訊息'] || '',
       shipment_method: editedData.value['取貨方式'] === '店取' ? 'STORE_PICKUP' : 'DELIVERY',
-      send_datetime: editedData.value['送貨日期'] 
-        ? new Date(editedData.value['送貨日期']).toISOString().replace(/\.\d{3}Z$/, '.331Z')
+      send_datetime: editedData.value['送貨日期_date'] && editedData.value['送貨日期_time']
+        ? new Date(`${editedData.value['送貨日期_date']}T${editedData.value['送貨日期_time']}`).toISOString().replace(/\.\d{3}Z$/, '.331Z')
         : new Date().toISOString().replace(/\.\d{3}Z$/, '.331Z'),
       receipt_address: editedData.value['收件地址'] || '',
       delivery_address: editedData.value['送貨地址'] || '',
@@ -337,20 +373,7 @@ async function confirmEditing() {
   vertical-align: middle;
 }
 
-.edit-input {
-  width: 100%;
-  padding: 8px;
-  border: 1.5px solid #e9e9e9;
-  border-radius: 4px;
-  font-size: 14px;
-  font-family: 'Noto Sans TC', sans-serif;
-  transition: all 0.1s ease;
-}
-
-.edit-input:active {
-  transform: scale(0.98);
-}
-
+.edit-input,
 .edit-select {
   width: 100%;
   padding: 8px;
@@ -358,13 +381,60 @@ async function confirmEditing() {
   border-radius: 4px;
   font-size: 14px;
   font-family: 'Noto Sans TC', sans-serif;
-  background-color: white;
-  cursor: pointer;
   transition: all 0.1s ease;
 }
 
+.edit-input:active,
 .edit-select:active {
   transform: scale(0.98);
+}
+
+.edit-select {
+  background-color: white;
+  cursor: pointer;
+}
+
+.delivery-time-inputs {
+  display: flex;
+  gap: 8px;
+  flex: 1;
+}
+
+.delivery-time-inputs input {
+  flex: 1;
+  height: 32px;
+  padding: 4px 8px;
+  border: 1.5px solid #e9e9e9;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: all 0.1s ease;
+  background-color: white;
+  color: #000;
+}
+
+.delivery-time-inputs input:active {
+  transform: scale(0.98);
+}
+
+.delivery-time-inputs input:focus {
+  border-color: #6168FC;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(97, 104, 252, 0.1);
+}
+
+.delivery-time-inputs input[type="date"]::-webkit-calendar-picker-indicator,
+.delivery-time-inputs input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  padding: 0;
+  margin: 0;
+}
+
+.delivery-time-inputs input[type="date"]::-webkit-calendar-picker-indicator:hover,
+.delivery-time-inputs input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
 }
 
 .frame-2 {
@@ -416,5 +486,76 @@ async function confirmEditing() {
   color: #fff;
   display: flex;
   align-items: center;
+}
+
+/* 下拉選單 */
+.edit-select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #e0e3ed;
+  border-radius: 6px;
+  background: #fafbff;
+  color: #222;
+  font-size: 15px;
+  font-family: 'Noto Sans TC', sans-serif;
+  appearance: none;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: none;
+  outline: none;
+  cursor: pointer;
+  position: relative;
+}
+.edit-select:focus {
+  border-color: #6168FC;
+  box-shadow: 0 0 0 2px #e4e7ff;
+}
+.edit-select:active {
+  transform: scale(0.98);
+}
+
+/* 自訂下拉箭頭 */
+.edit-select {
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='none' stroke='%236168FC' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px 18px;
+}
+
+/* 日期、時間 input */
+input[type='date'].edit-input,
+input[type='time'].edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #e0e3ed;
+  border-radius: 6px;
+  background: #fafbff;
+  color: #222;
+  font-size: 15px;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: none;
+  outline: none;
+}
+input[type='date'].edit-input:focus,
+input[type='time'].edit-input:focus {
+  border-color: #6168FC;
+  box-shadow: 0 0 0 2px #e4e7ff;
+}
+input[type='date'].edit-input:active,
+input[type='time'].edit-input:active {
+  transform: scale(0.98);
+}
+
+/* 日曆、時鐘 icon 簡約化 */
+input[type='date'].edit-input::-webkit-calendar-picker-indicator,
+input[type='time'].edit-input::-webkit-calendar-picker-indicator {
+  filter: invert(38%) sepia(98%) saturate(747%) hue-rotate(202deg) brightness(97%) contrast(92%);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+input[type='date'].edit-input:focus::-webkit-calendar-picker-indicator,
+input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
 }
 </style>
