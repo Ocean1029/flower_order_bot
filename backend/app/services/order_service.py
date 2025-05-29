@@ -133,18 +133,68 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     
     return True
 
-# async def update_order(db: AsyncSession, order_id: int, order_data: dict) -> Order:
-#     stmt = select(Order).where(Order.id == order_id)
-#     result = await db.execute(stmt)
-#     order = result.scalar_one_or_none()
+async def update_order_by_room_id(
+    db: AsyncSession,
+    room_id: int,
+    order_data: dict
+) -> OrderOut:
+    """
+    更新指定房間最新一筆已確認的訂單
+    """
+    # 查詢該房間最新一筆已確認的訂單
+    stmt = (
+        select(Order)
+        .where(
+            Order.room_id == room_id,
+            Order.status == OrderStatus.CONFIRMED
+        )
+        .order_by(Order.created_at.desc())
+        .limit(1)
+    )
+    result = await db.execute(stmt)
+    order = result.scalar_one_or_none()
     
-#     if order:
-#         for key, value in order_data.items():
-#             setattr(order, key, value)
-#         await db.commit()
-#         await db.refresh(order)
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"房間 {room_id} 沒有已確認的訂單"
+        )
     
-#     return order
+    # 更新訂單資料
+    for key, value in order_data.items():
+        if hasattr(order, key):
+            setattr(order, key, value)
+    
+    order.updated_at = datetime.now(timezone(timedelta(hours=8)))
+    
+    await db.commit()
+    await db.refresh(order)
+    
+    # 取得相關資訊以建立 OrderOut
+    user = await get_user_by_id(db, order.user_id)
+    receiver_user = await get_user_by_id(db, order.receiver_user_id)
+    pay_way = await get_pay_way_by_order_id(db, order.id)
+    
+    return OrderOut(
+        id=order.id,
+        customer_name=user.name if user else "未知",
+        customer_phone=user.phone if user else "未知",
+        receiver_name=receiver_user.name if receiver_user else user.name,
+        receiver_phone=receiver_user.phone if receiver_user else user.phone,
+        order_date=order.created_at,
+        order_status=order.status,
+        pay_way=pay_way.display_name if pay_way else None,
+        total_amount=order.total_amount,
+        item=order.item_type,
+        quantity=order.quantity,
+        note=order.notes,
+        card_message=order.card_message,
+        shipment_method=order.shipment_method,
+        weekday=order.created_at.strftime("%A"),
+        send_datetime=order.delivery_datetime or order.created_at,
+        receipt_address=order.receipt_address,
+        delivery_address=order.delivery_address or order.receipt_address or ""
+    )
 
 async def delete_order_by_id(db: AsyncSession, order_id: int) -> bool:
     stmt = select(Order).where(Order.id == order_id)

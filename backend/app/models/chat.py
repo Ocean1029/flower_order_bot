@@ -4,7 +4,7 @@ from sqlalchemy import (
     ForeignKey, Numeric
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from app.enums import ChatRoomStage, ChatMessageStatus, ChatMessageDirection
 from sqlalchemy import Enum as SAEnum
 
@@ -22,8 +22,8 @@ class ChatRoom(Base):
     bot_step: Mapped[int] = mapped_column(SmallInteger, default=0)
     last_message_ts: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     unread_count: Mapped[int] = mapped_column(Integer, default=0)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
     
     messages = relationship("ChatMessage", back_populates="room")
     user = relationship("User", back_populates="chat_rooms")
@@ -47,7 +47,7 @@ class ChatMessage(Base):
     image_url: Mapped[str] = mapped_column(Text, nullable=True)
     line_msg_id: Mapped[str] = mapped_column(String, nullable=True)
     processed: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
 
     room = relationship("ChatRoom", back_populates="messages")

@@ -4,7 +4,7 @@ from sqlalchemy import (
     ForeignKey, Numeric
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from app.enums.payment import PaymentStatus
 from sqlalchemy import Enum as SAEnum
 
@@ -23,8 +23,8 @@ class Payment(Base):
     screenshot_url: Mapped[str] = mapped_column(Text, nullable=True)
     paid_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
     confirmed_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
     
     order = relationship("Order", back_populates="payments")
     method = relationship("PaymentMethod", backref="payments")

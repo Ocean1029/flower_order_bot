@@ -4,7 +4,7 @@ from sqlalchemy import (
     ForeignKey, Numeric, Enum
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 
 class User(Base):
     __tablename__ = "user"
@@ -15,8 +15,8 @@ class User(Base):
     phone: Mapped[str] = mapped_column(String, nullable=True)
     avatar_url: Mapped[str] = mapped_column(String, nullable=True)
     has_ordered: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
 
     orders = relationship("Order", foreign_keys="Order.user_id", back_populates="user")
     received_orders = relationship("Order", foreign_keys="Order.receiver_user_id", back_populates="receiver")
