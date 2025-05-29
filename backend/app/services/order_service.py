@@ -65,11 +65,15 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
 
     return results
 
-async def create_order(db: AsyncSession, order_draft: OrderDraft) -> Order:
-    # step 1: 根據 order_draft 建立 order
-    # step 2: 將 order_draft 的 status 改成 completed
-    # step 3: 回傳 order
-    pass
+async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
+    order_draft = await get_order_draft_by_room(db, room_id)
+    if not order_draft:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order draft for room {room_id} not found."
+        )
+    
+
 
 # async def update_order(db: AsyncSession, order_id: int, order_data: dict) -> Order:
 #     stmt = select(Order).where(Order.id == order_id)
@@ -100,7 +104,7 @@ async def delete_order_by_id(db: AsyncSession, order_id: int) -> bool:
     await db.refresh(order)
     return True
     
-async def get_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft]:
+async def get_order_draft_by_room(db: AsyncSession, room_id: int) -> Optional[OrderDraft]:
     stmt = (
         select(OrderDraft)
         .where(OrderDraft.room_id == room_id)
@@ -112,7 +116,7 @@ async def get_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft
     
     return order_draft
 
-async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional[OrderDraftOut]:
+async def get_order_draft_out_by_room(db: AsyncSession, room_id: int) -> Optional[OrderDraftOut]:
     stmt = (
         select(OrderDraft)
         .where(OrderDraft.room_id == room_id)
@@ -147,36 +151,23 @@ async def get_order_draft_by_room_id(db: AsyncSession, room_id: int) -> Optional
             
             shipment_method=order_draft.shipment_method,
             weekday=order_draft.created_at.strftime("%A"),
-            send_datetime=order_draft.delivery_datetime or order_draft.created_at, # TODO fix datetime error
+            send_datetime=order_draft.delivery_datetime or None, # 這裡指的是取貨時間
             receipt_address=order_draft.receipt_address,
             delivery_address=order_draft.delivery_address or order_draft.receipt_address or ""
         )
     
     return None
 
-
-
-async def get_collecting_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft]:
-    result = await db.execute(
-        select(OrderDraft).where(
-            OrderDraft.room_id == room_id,
-        ).limit(1)
-    )
-    return result.scalar_one_or_none()
-
-
 async def create_order_draft_by_room_id(
     db: AsyncSession,
     room_id: int,
-    draft_in: OrderDraftCreate
 ) -> OrderDraft:
     
     """
-    依據 room_id 新建一筆 collecting 狀態的 order_draft
+    依據 room_id 新建一筆 order_draft
     -----------------------------------------------------------------
     - 若 room_id 查無聊天室 → 404
-    - 若該 room 中沒有訂單，或是有 status=COMPLETED 的訂單 → 新建一個新的 order_draft
-      若該 room 中已有 status=collecting 的草稿 -> update
+      若該 room 中已有草稿 -> 400
     - 回傳 *OrderDraft ORM*，呼叫端可再轉成 Pydantic
     """
 
@@ -188,20 +179,25 @@ async def create_order_draft_by_room_id(
             detail=f"Chat room with id {room_id} not found."
         )
 
-    # 2. 檢查該聊天室是否有訂單，若沒有則新建一個
-    order_draft = await get_collecting_order_draft(db, room_id)
-    if not order_draft:
-        order_draft = OrderDraft(
-            room_id=room.id,
-            user_id=room.user_id,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8)))
+    order_draft = await get_order_draft_by_room(db, room_id)
+    if order_draft:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Order draft for room {room_id} already exists."
         )
-        db.add(order_draft)
-        await db.commit()
-        await db.refresh(order_draft)
     
-    return await update_order_draft_by_room_id(db, room_id, draft_in)
+    order_draft = OrderDraft(
+        room_id=room.id,
+        user_id=room.user_id,
+        receiver_user_id=room.user_id,
+        created_at=datetime.now(timezone(timedelta(hours=8))),
+        updated_at=datetime.now(timezone(timedelta(hours=8)))
+    )
+    db.add(order_draft)
+    await db.commit()
+    await db.refresh(order_draft)
+
+    return await order_draft
 
 async def update_order_draft_by_room_id(
     db: AsyncSession, room_id: int, draft_in: OrderDraftUpdate
@@ -215,7 +211,7 @@ async def update_order_draft_by_room_id(
             detail=f"Chat room with id {room_id} not found."
         )
 
-    order_draft = await get_collecting_order_draft(db, room_id)
+    order_draft = await get_order_draft_by_room(db, room_id)
     if not order_draft:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -275,4 +271,4 @@ async def update_order_draft_by_room_id(
     await db.refresh(order_draft)
     
     # 8. 回傳 OrderDraftOut
-    return await get_order_draft_by_room_id(db, room_id)
+    return await get_order_draft_out_by_room(db, room_id)

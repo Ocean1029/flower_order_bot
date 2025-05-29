@@ -20,7 +20,7 @@ from app.schemas.user import UserCreate
 from app.schemas.order import OrderDraftCreate
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
 from app.services.message_service import get_chat_room_by_user_id, create_chat_room
-from app.services.order_service import create_order_draft_by_room_id
+from app.services.order_service import create_order_draft_by_room_id, get_order_draft_by_room
 from app.utils.line_send_message import send_quick_reply_message, send_confirm
 from app.utils.line_get_profile import fetch_user_profile
 import os
@@ -81,12 +81,14 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
             user.avatar_url = profile.picture_url if profile.picture_url else ""
             await db.commit()
             
-
     # 取得或創建聊天室
     chat_room = await get_chat_room_by_user_id(db, user.id)
     if not chat_room:
         chat_room = await create_chat_room(db, user.id)
         print(f"新聊天室已創建，使用者 {user_line_id} 的聊天室 ID：{chat_room.id}")
+    
+    if await get_order_draft_by_room(db, chat_room.id) is None:
+        order_draft = await create_order_draft_by_room_id(db, chat_room.id)
 
     # 儲存訊息
     message = ChatMessage(
@@ -121,12 +123,6 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         if chat_room.stage == ChatRoomStage.BOT_ACTIVE:
             await run_bot_flow(chat_room, "", event, db)
         return
-
-    # if chat_room.stage == ChatRoomStage.ORDER_CONFIRM:
-    #     await run_order_confirm_flow(
-    #         chat_room, user_message, user_line_id, event, db
-    #     )
-    #     return
 
     # Bot 自動回覆流程
     if chat_room.stage == ChatRoomStage.BOT_ACTIVE:

@@ -3,7 +3,7 @@ from sqlalchemy import select, update
 import json
 from app.models.chat import ChatMessage, ChatRoom
 from app.schemas.order import OrderDraftCreate, OrderDraftOut
-from app.services.order_service import create_order_draft_by_room_id, get_order_draft
+from app.services.order_service import create_order_draft_by_room_id, get_order_draft_by_room, update_order_draft_by_room_id
 from app.utils.line_send_message import LINE_push_message
 from app.services.user_service import get_line_uid_by_chatroom_id
 from fastapi import HTTPException, status
@@ -49,6 +49,12 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             detail="找不到聊天室"
         )
     
+    draft = await get_order_draft_by_room(db, chat_room.id)
+    if not draft:
+        print("🔍 找不到訂單草稿，正在建立新的草稿...")
+        draft = create_order_draft_by_room_id(db, room_id=chat_room.id)
+    
+    
     stmt = select(ChatMessage).where(
         ChatMessage.room_id == chat_room_id,
         ChatMessage.processed == False
@@ -67,7 +73,6 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         reversed([f"[{message.created_at.strftime('%Y-%m-%d %H:%M:%S')}] {message.text} {message.direction}" for message in messages])
     )
     
-    draft = await get_order_draft(db, chat_room.id)
     
     gpt_prompt = prompt_manager.load_prompt("order_prompt", user_message=combined_text, order_draft=json.dumps(orm_to_dict(draft)) or {})
     print("🔍 GPT 處理中...")
@@ -144,7 +149,12 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         else:
             print("❗ 無法取得該聊天室對應的 LINE UID，無法推播缺漏提醒。")
 
-    order_draft_out = await create_order_draft_by_room_id(db=db, room_id=chat_room.id, draft_in=order_draft_create)
+    # 更新訂單草稿
+    order_draft_out = await update_order_draft_by_room_id(
+        db=db,
+        room_id=chat_room.id,
+        draft_in=order_draft_create
+    )
     print(f"訂單草稿已建立，ID：{order_draft_out.id}")
     
     return order_draft_out
