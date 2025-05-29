@@ -169,7 +169,7 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     line_uid = await get_line_uid_by_chatroom_id(db, room.id)
 
     msg = (
-            "[自動回覆已傳送] 訂單已經由後台送出囉～"
+            "訂單已經由後台送出囉～"
         )
     print("已傳送訊息: ", msg)
 
@@ -181,7 +181,7 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
         message = ChatMessage(
             room_id=room.id,
             direction=ChatMessageDirection.OUTGOING_BY_BOT,
-            text=msg,
+            text="[自動回覆已傳送]" + msg,
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=True, # 之後不需要讓 GPT 讀到這個
