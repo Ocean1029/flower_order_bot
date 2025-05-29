@@ -13,13 +13,12 @@ from app.models.chat import ChatRoom, ChatMessage
 from app.models.user import User
 from app.models.order import Order, OrderDraft
 from app.managers.prompt_manager import PromptManager
-from app.enums.chat import ChatRoomStage
 from app.enums.order import OrderStatus
 from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
 from app.schemas.user import UserCreate
 from app.schemas.order import OrderDraftCreate
 from app.services.user_service import get_user_by_line_uid, create_user, update_user_info
-from app.services.message_service import get_chat_room_by_user_id, create_chat_room
+from app.services.message_service import get_chat_room_by_user_id, create_chat_room, get_latest_message
 from app.services.order_service import create_order_draft_by_room_id, get_order_draft_by_room
 from app.utils.line_send_message import send_quick_reply_message, send_confirm
 from app.utils.line_get_profile import fetch_user_profile
@@ -86,6 +85,26 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
     if not chat_room:
         chat_room = await create_chat_room(db, user.id)
         print(f"新聊天室已創建，使用者 {user_line_id} 的聊天室 ID：{chat_room.id}")
+
+    # TODO: 檢查 chatroom 的最新訊息，如果超過一定時間(如 一個禮拜)，自動將 stage 重置為 WELCOME
+    # Check inactivity: if the latest message is older than one week, reset the flow
+    latest_msg = await get_latest_message(db, chat_room.id)
+    tz = timezone(timedelta(hours=8))
+    one_week_ago = datetime.now(tz) - timedelta(days=7)
+
+    if latest_msg:
+        msg_time = latest_msg.created_at
+        # Ensure the message timestamp is timezone‑aware
+        if msg_time.tzinfo is None:
+            msg_time = msg_time.replace(tzinfo=tz)
+
+        if msg_time < one_week_ago:
+            chat_room.stage = ChatRoomStage.WELCOME
+            chat_room.bot_step = -1
+            await db.commit()
+            await db.refresh(chat_room)
+            print("上次傳訊息是很久以前，已重設成 welcome")
+    
     
     if await get_order_draft_by_room(db, chat_room.id) is None:
         order_draft = await create_order_draft_by_room_id(db, chat_room.id)
@@ -108,6 +127,7 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
     print(f"User {user_line_id} 發送訊息：{user_message}")
 
+    # -------------- For internal use only.
     if user_message == "Again":
         # 回到 welcome, -1
         chat_room.stage = ChatRoomStage.WELCOME
@@ -116,6 +136,8 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         await db.refresh(chat_room)
         print("回到 welcome")
         return
+    # ----------------
+
 
     if chat_room.stage == ChatRoomStage.WELCOME:
         await run_welcome_flow(chat_room, user_message, event, db)
@@ -128,6 +150,18 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
     if chat_room.stage == ChatRoomStage.BOT_ACTIVE:
         await run_bot_flow(chat_room, user_message, event, db)
         return
+    
+    # 訂單完成後，還出現訊息？ -> 找老闆
+    if chat_room.stage == ChatRoomStage.ORDER_CONFIRM:
+        chat_room.stage = ChatRoomStage.WAITING_OWNER
+        chat_room.bot_step = -1
+        await db.commit()
+        await db.refresh(chat_room)
+        print("訂單確認後出現訊息，轉交「人工回覆」模式。")
+
+
+
+
 
 
 @handler.add(FollowEvent)

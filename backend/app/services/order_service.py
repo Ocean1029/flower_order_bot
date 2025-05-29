@@ -15,6 +15,7 @@ from app.services.user_service import get_user_by_id, update_user_info
 from app.services.message_service import get_chat_room_by_room_id
 from app.enums.order import OrderStatus
 from app.enums.shipment import ShipmentStatus
+from app.enums.chat import ChatRoomStage
 
 async def get_order(db: AsyncSession, order_id: int) -> Order:
     stmt = select(Order).where(Order.id == order_id)
@@ -143,6 +144,22 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     db.add(order)
     await db.commit()
     await db.refresh(order)
+
+    # 從 room_id 獲取 chat_room，修改 stage 為 order_confirm
+
+    # 取得聊天室
+    room = await get_chat_room_by_room_id(db, room_id)
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chat room with id {room_id} not found."
+        )
+    # 更新聊天室的 stage
+    room.stage = ChatRoomStage.ORDER_CONFIRM
+    await db.commit()
+    await db.refresh(room)
+    print("聊天室，已設定成「訂單確認」模式")
+
     
     return True
 

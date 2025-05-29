@@ -13,6 +13,8 @@ from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from decimal import Decimal
+from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
+
 
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -146,6 +148,20 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
         if line_uid:
             # 將字串包成 ChatMessageBase，再交給 LINE_push_message
             LINE_push_message(line_uid, ChatMessageBase(text=warning_msg))
+            
+            # 儲存提醒訊息的動作
+            message = ChatMessage(
+                room_id=chat_room.id,
+                direction=ChatMessageDirection.OUTGOING_BY_BOT,
+                text=warning_msg,
+                image_url="",
+                status=ChatMessageStatus.PENDING,
+                processed=True, # 之後不需要讓 GPT 讀到這個
+                created_at=datetime.now(timezone(timedelta(hours=8))),
+                updated_at=datetime.now(timezone(timedelta(hours=8)))
+                )
+            db.add(message)
+            await db.commit()
         else:
             print("❗ 無法取得該聊天室對應的 LINE UID，無法推播缺漏提醒。")
 
