@@ -80,22 +80,22 @@
       </div>
       <!-- bottom: frame-2 兩個新按鈕 -->
       <div class="frame-2">
-          <div class="order-btn update" :class="{ editing: isEditing }">
-            <i class="fas fa-upload btn-icon"></i>
-            <span class="btn-text">更新工單</span>
-          </div>
-          <div class="order-btn create" :class="{ editing: isEditing }">
-            <i class="fas fa-plus btn-icon"></i>
-            <span class="btn-text">建立新工單</span>
-          </div>
+        <div class="order-btn update" :class="{ editing: isEditing }" @click="isEditing ? confirmEditing() : null">
+          <i class="fas fa-upload btn-icon"></i>
+          <span class="btn-text">更新工單</span>
         </div>
+        <div class="order-btn create" :class="{ editing: isEditing }" @click="handleCreateOrder">
+          <i class="fas fa-plus btn-icon"></i>
+          <span class="btn-text">建立新工單</span>
+        </div>
+      </div>
     </div>
   </transition>
 </template>
 
 <script setup>
 import { ref, computed } from 'vue'
-import { sendOrderDraft } from '@/api/orders'
+import { sendOrderDraft, createOrder_FromDraft } from '@/api/orders'
 
 const props = defineProps({
   orderData: Object,
@@ -202,6 +202,29 @@ async function confirmEditing() {
   } catch (error) {
     console.error('Error updating order draft:', error)
     alert('更新訂單失敗: ' + error.message)
+  }
+}
+
+async function handleCreateOrder() {
+  try {
+    if (!props.roomId) {
+      throw new Error('No room ID provided')
+    }
+
+    // If in editing mode, save the draft first
+    if (isEditing.value) {
+      await confirmEditing()
+    }
+
+    // Create the order
+    const response = await createOrder_FromDraft(props.roomId)
+    console.log('Order created:', response)
+    alert('工單建立成功！')
+    // Emit an event to refresh the data
+    emit('orderDraftUpdated')
+  } catch (error) {
+    console.error('Error creating order:', error)
+    alert('建立工單失敗: ' + error.message)
   }
 }
 </script>
