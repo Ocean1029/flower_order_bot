@@ -9,11 +9,12 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.models.order import Order, OrderDraft
 
-from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate, OrderCreate
+from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderCreate
 from app.services.payment_service import get_pay_way_by_order_id, get_payment_method_by_id
 from app.services.user_service import get_user_by_id, update_user_info
 from app.services.message_service import get_chat_room_by_room_id
 from app.enums.order import OrderStatus
+from app.enums.shipment import ShipmentStatus
 
 async def get_order(db: AsyncSession, order_id: int) -> Order:
     stmt = select(Order).where(Order.id == order_id)
@@ -62,7 +63,34 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
             delivery_address=order.delivery_address or order.receipt_address or ""
         ))
 
+    # 依照 id descending 排序
+    results.sort(key=lambda x: x.id, reverse=True)
     return results
+
+async def validate_order_draft_required_fields(order_draft: OrderDraft) -> tuple[bool, list[str]]:
+    """
+    檢查訂單草稿的必要欄位是否完整
+    回傳: (是否完整, 缺少的欄位列表)
+    """
+    if not order_draft:
+        return False, ["訂單草稿不存在"]
+    
+    # 定義必要欄位及其顯示名稱
+    required_fields = {
+        "user_id": "訂購人ID",
+        "receiver_user_id": "收件人ID",
+        "item_type": "商品類型",
+        "quantity": "數量",
+        "total_amount": "總金額",
+        "shipment_method": "運送方式",
+    }
+    
+    missing_fields = []
+    for field, display_name in required_fields.items():
+        if not getattr(order_draft, field):
+            missing_fields.append(display_name)
+    
+    return len(missing_fields) == 0, missing_fields
 
 async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     order_draft = await get_order_draft_by_room(db, room_id)
@@ -72,7 +100,38 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
             detail=f"Order draft for room {room_id} not found."
         )
     
+    is_complete, missing_fields = await validate_order_draft_required_fields(order_draft)
+    if not is_complete:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"訂單草稿不完整，缺少以下欄位：{', '.join(missing_fields)}"
+        )
+    
 
+    order = Order(
+        room_id=order_draft.room_id,
+        user_id=order_draft.user_id,
+        receiver_user_id=order_draft.receiver_user_id,
+        status=OrderStatus.CONFIRMED,
+        item_type=order_draft.item_type,
+        quantity=order_draft.quantity,
+        total_amount=order_draft.total_amount,
+        notes=order_draft.notes,
+        card_message=order_draft.card_message,
+        shipment_method=order_draft.shipment_method,
+        shipment_status=ShipmentStatus.PENDING,
+        receipt_address=order_draft.receipt_address,
+        delivery_address=order_draft.delivery_address,
+        delivery_datetime=order_draft.delivery_datetime,
+        created_at=datetime.now(timezone(timedelta(hours=8))),
+        updated_at=datetime.now(timezone(timedelta(hours=8)))
+    )
+    
+    db.add(order)
+    await db.commit()
+    await db.refresh(order)
+    
+    return True
 
 # async def update_order(db: AsyncSession, order_id: int, order_data: dict) -> Order:
 #     stmt = select(Order).where(Order.id == order_id)
@@ -161,7 +220,6 @@ async def create_order_draft_by_room_id(
     db: AsyncSession,
     room_id: int,
 ) -> OrderDraft:
-    
     """
     依據 room_id 新建一筆 order_draft
     -----------------------------------------------------------------
