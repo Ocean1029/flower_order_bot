@@ -28,18 +28,27 @@ async def create_random_order(session, user: User, serial_number: int) -> Order:
     shipment_method = random.choice([ShipmentMethod.STORE_PICKUP, ShipmentMethod.DELIVERY])
     item_type = random.choice(["花束", "盆花"])
     
+    # 獲取使用者的聊天室
+    chat_room = await session.execute(
+        select(ChatRoom).where(ChatRoom.user_id == user.id)
+    )
+    chat_room = chat_room.scalar_one()
+    
     # 建立正式訂單
     order = Order(
         id=await create_id_prefix(session, serial_number),
+        room_id=chat_room.id,  # 使用使用者的聊天室ID
         user_id=user.id,
         receiver_user_id=user.id,  # 預設收件人就是訂購人
+
+        status=OrderStatus.CONFIRMED,
+
         item_type=item_type,
         quantity=quantity,
         notes=note,
         card_message=card,
         receipt_address=fake.address() if shipment_method == ShipmentMethod.DELIVERY else None,
         total_amount=total,
-        status=OrderStatus.CONFIRMED,
         shipment_method=shipment_method,
         shipment_status=ShipmentStatus.PENDING,
         delivery_address=fake.address() if shipment_method == ShipmentMethod.DELIVERY else None,

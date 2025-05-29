@@ -24,8 +24,9 @@ class ChatRoom(Base):
     unread_count: Mapped[int] = mapped_column(Integer, default=0)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
     messages = relationship("ChatMessage", back_populates="room")
-    user = relationship("User", backref="chat_rooms")
+    user = relationship("User", back_populates="chat_rooms")
     assigned_staff = relationship("StaffUser", backref="assigned_rooms")
     order_drafts = relationship("OrderDraft", back_populates="room")
     

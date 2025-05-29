@@ -6,7 +6,7 @@ Create Date: 2025-05-29 00:20:03.956419
 
 """
 from typing import Sequence, Union
-from app.enums.order import OrderDraftStatus
+OrderDraftStatus = Union[str, Sequence[str]]
 from alembic import op
 import sqlalchemy as sa
 

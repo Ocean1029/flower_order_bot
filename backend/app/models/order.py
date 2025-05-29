@@ -15,8 +15,10 @@ class OrderDraft(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("chat_room.id"))
+    
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     receiver_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"), nullable=True)
+    
     item_type: Mapped[str] = mapped_column(String, nullable=True)
     quantity: Mapped[int] = mapped_column(Integer, nullable=True)
     total_amount: Mapped[float] = mapped_column(Numeric(10, 2), nullable=True)
@@ -46,6 +48,8 @@ class Order(Base):
     __tablename__ = "order"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    room_id: Mapped[int] = mapped_column(ForeignKey("chat_room.id"))
+    
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     receiver_user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
     

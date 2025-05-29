@@ -11,18 +11,10 @@ from sqlalchemy import select
 
 fake = Faker("zh_TW")
 
-async def create_id_prefix(session, serial_number) -> str:
-    """Create a prefix based on the current date in yymmddMMM format."""
-    id_prefix = datetime.now().strftime("%y%m%d")
-    id = f"{id_prefix}{serial_number:03d}"
-    return id
-
 async def create_random_user(session: AsyncSession, serial_number) -> User:
-    id = await create_id_prefix(session, serial_number)
     avatar_url = fake.image_url(width=200, height=200)
 
     user = User(
-        id=id,
         line_uid=fake.uuid4(),
         name=fake.name(),
         phone=fake.phone_number(),
