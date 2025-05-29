@@ -55,8 +55,8 @@ def upgrade() -> None:
             sa.Column('name', sa.String(), nullable=False),
             sa.Column('role', sa.Enum('OWNER', 'CLERK', 'ADMIN', name='staff_role'), nullable=False),
             sa.Column('password_hash', sa.String(), nullable=False),
-            sa.Column('created_at', sa.DateTime(), nullable=False),
-            sa.Column('updated_at', sa.DateTime(), nullable=False),
+            sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+            sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
             sa.PrimaryKeyConstraint('id'),
             sa.UniqueConstraint('line_uid')
         )
@@ -67,8 +67,8 @@ def upgrade() -> None:
             sa.Column('name', sa.String(), nullable=False),
             sa.Column('phone', sa.String(), nullable=True),
             sa.Column('has_ordered', sa.Boolean(), nullable=False),
-            sa.Column('created_at', sa.DateTime(), nullable=False),
-            sa.Column('updated_at', sa.DateTime(), nullable=False),
+            sa.Column('created_at', sa.DateTime(timezone=True), nullable=False),
+            sa.Column('updated_at', sa.DateTime(timezone=True), nullable=False),
             sa.PrimaryKeyConstraint('id'),
             sa.UniqueConstraint('line_uid')
         )
