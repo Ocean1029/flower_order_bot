@@ -61,6 +61,8 @@
                     v-if="col === '取貨方式'"
                     v-model="editedData[col]"
                     class="edit-select"
+                    :ref="el => setInputRef(el, col)"
+                    @keydown.enter.prevent="handleEnterKey(col)"
                   >
                     <option value="店取">店取</option>
                     <option value="外送">外送</option>
@@ -70,6 +72,8 @@
                     v-model="editedData[col]"
                     class="edit-input"
                     type="text"
+                    :ref="el => setInputRef(el, col)"
+                    @keydown.enter.prevent="handleEnterKey(col)"
                   />
                 </template>
                 <span v-else class="data">{{ dataList[idx] }}</span>
@@ -94,7 +98,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 import { sendOrderDraft, createOrder_FromDraft } from '@/api/orders'
 
 const props = defineProps({
@@ -112,12 +116,11 @@ const editableFields = [
 
 // 依照原本順序組成資料陣列
 const columns = [
-  '訂單編號', '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', 
+  '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', 
   '品項', '數量', '備註', '卡片訊息', '取貨方式', '送貨日期', '收件地址', 
-  '送貨地址', '訂單日期', '訂單狀態', '付款方式', '星期'
+  '送貨地址', '訂單日期', '付款方式', '星期'
 ]
 const dataList = computed(() => [
-  props.orderData?.id || ' ',
   props.orderData?.customer_name || ' ',
   props.orderData?.customer_phone || ' ',
   props.orderData?.receiver_name || ' ',
@@ -132,13 +135,32 @@ const dataList = computed(() => [
   props.orderData?.receipt_address || ' ',
   props.orderData?.delivery_address || ' ',
   formatDateTime(props.orderData?.order_date),
-  props.orderData?.order_status || ' ',
   props.orderData?.pay_way || ' ',
   props.orderData?.weekday || ' '
 ])
 
 const isEditing = ref(false)
 const editedData = ref({})
+
+// 獲取所有可編輯欄位的索引
+const editableIndices = computed(() => {
+  return columns.reduce((indices, col, idx) => {
+    if (editableFields.includes(col)) {
+      indices.push(idx);
+    }
+    return indices;
+  }, []);
+});
+
+// 用於存儲所有輸入框的引用
+const inputRefs = ref({})
+
+// 設置輸入框引用
+function setInputRef(el, col) {
+  if (el) {
+    inputRefs.value[col] = el
+  }
+}
 
 function formatDateTime(dateStr) {
   if (!dateStr) return ' '
@@ -225,6 +247,20 @@ async function handleCreateOrder() {
   } catch (error) {
     console.error('Error creating order:', error)
     alert('建立工單失敗: ' + error.message)
+  }
+}
+
+// 處理 Enter 鍵事件
+function handleEnterKey(currentCol) {
+  const currentIndex = editableFields.indexOf(currentCol)
+  if (currentIndex < editableFields.length - 1) {
+    const nextCol = editableFields[currentIndex + 1]
+    const nextInput = inputRefs.value[nextCol]
+    if (nextInput) {
+      nextTick(() => {
+        nextInput.focus()
+      })
+    }
   }
 }
 </script>
@@ -399,12 +435,22 @@ async function handleCreateOrder() {
 .edit-input,
 .edit-select {
   width: 100%;
-  padding: 8px;
-  border: 1.5px solid #e9e9e9;
-  border-radius: 4px;
-  font-size: 14px;
+  padding: 8px 12px;
+  border: 1.5px solid #e0e3ed;
+  border-radius: 6px;
+  background: #fafbff;
+  color: #222;
+  font-size: 15px;
   font-family: 'Noto Sans TC', sans-serif;
-  transition: all 0.1s ease;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: none;
+  outline: none;
+}
+
+.edit-input:focus,
+.edit-select:focus {
+  border-color: #6168FC;
+  box-shadow: 0 0 0 2px #e4e7ff;
 }
 
 .edit-input:active,
@@ -412,9 +458,53 @@ async function handleCreateOrder() {
   transform: scale(0.98);
 }
 
+/* 自訂下拉箭頭 */
 .edit-select {
-  background-color: white;
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' fill='none' stroke='%236168FC' stroke-width='2' viewBox='0 0 24 24'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px 18px;
+}
+
+/* 日期、時間 input */
+input[type='date'].edit-input,
+input[type='time'].edit-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #e0e3ed;
+  border-radius: 6px;
+  background: #fafbff;
+  color: #222;
+  font-size: 15px;
+  font-family: 'Noto Sans TC', sans-serif;
+  transition: border 0.2s, box-shadow 0.2s;
+  box-shadow: none;
+  outline: none;
+}
+
+input[type='date'].edit-input:focus,
+input[type='time'].edit-input:focus {
+  border-color: #6168FC;
+  box-shadow: 0 0 0 2px #e4e7ff;
+}
+
+input[type='date'].edit-input:active,
+input[type='time'].edit-input:active {
+  transform: scale(0.98);
+}
+
+/* 日曆、時鐘 icon 簡約化 */
+input[type='date'].edit-input::-webkit-calendar-picker-indicator,
+input[type='time'].edit-input::-webkit-calendar-picker-indicator {
+  filter: invert(38%) sepia(98%) saturate(747%) hue-rotate(202deg) brightness(97%) contrast(92%);
+  opacity: 0.7;
+  transition: opacity 0.2s;
   cursor: pointer;
+}
+
+input[type='date'].edit-input:focus::-webkit-calendar-picker-indicator,
+input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
+  opacity: 1;
 }
 
 .delivery-time-inputs {
