@@ -221,7 +221,7 @@ async def run_welcome_flow(
         message = ChatMessage(
         room_id=chat_room.id,
         direction=ChatMessageDirection.OUTGOING_BY_BOT,
-        text="詢問是否要訂購客製化花束。",
+        text="[自動回覆已傳送] 詢問是否要訂購客製化花束。",
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,
@@ -254,6 +254,20 @@ async def run_welcome_flow(
             event.reply_token,
             TextSendMessage("好的！已轉交給客服人員，請稍候。")
         )
+
+        # 儲存詢問的動作
+        message = ChatMessage(
+            room_id=chat_room.id,
+            direction=ChatMessageDirection.OUTGOING_BY_BOT,
+            text="[自動回覆已傳送] 好的！已轉交給客服人員，請稍候。",
+            image_url="",
+            status=ChatMessageStatus.PENDING,
+            processed=False,
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            )
+        db.add(message)
+        await db.commit()
 
     await db.commit()
     await db.refresh(chat_room)
@@ -309,7 +323,7 @@ async def ask_budget(user_text, event, db, chat_room):
             message = ChatMessage(
             room_id=chat_room.id,
             direction=ChatMessageDirection.OUTGOING_BY_BOT,
-            text="詢問預算金額。",
+            text="[自動回覆已傳送] 詢問預算金額。",
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
@@ -341,7 +355,7 @@ async def ask_color(user_text, event, db, chat_room):
         message = ChatMessage(
             room_id=chat_room.id,
             direction=ChatMessageDirection.OUTGOING_BY_BOT,
-            text="詢問顏色。",
+            text="[自動回覆已傳送] 詢問顏色。",
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
@@ -364,7 +378,7 @@ async def ask_type(user_text, event, db, chat_room):
         message = ChatMessage(
             room_id=chat_room.id,
             direction=ChatMessageDirection.OUTGOING_BY_BOT,
-            text="詢問花材。",
+            text="[自動回覆已傳送] 詢問花材。",
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
@@ -388,7 +402,7 @@ async def last(user_text, event, db, chat_room):
     message = ChatMessage(
         room_id=chat_room.id,
         direction=ChatMessageDirection.OUTGOING_BY_BOT,
-        text="通知，轉接給客服人員人工處理。",
+        text="[自動回覆已傳送] 👌 了解！已記錄～我們客服會盡快聯繫你確認細節。",
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,

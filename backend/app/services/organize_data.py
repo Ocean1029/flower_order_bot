@@ -153,7 +153,7 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
             message = ChatMessage(
                 room_id=chat_room.id,
                 direction=ChatMessageDirection.OUTGOING_BY_BOT,
-                text=warning_msg,
+                text="[自動回覆已傳送]" + warning_msg,
                 image_url="",
                 status=ChatMessageStatus.PENDING,
                 processed=True, # 之後不需要讓 GPT 讀到這個

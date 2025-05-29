@@ -9,13 +9,19 @@ from fastapi import HTTPException, status
 from app.models.user import User
 from app.models.order import Order, OrderDraft
 
+from app.models.chat import ChatRoom, ChatMessage
 from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderCreate
 from app.services.payment_service import get_pay_way_by_order_id, get_payment_method_by_id
-from app.services.user_service import get_user_by_id, update_user_info
+from app.services.user_service import get_user_by_id, update_user_info, get_line_uid_by_chatroom_id
 from app.services.message_service import get_chat_room_by_room_id
 from app.enums.order import OrderStatus
 from app.enums.shipment import ShipmentStatus
-from app.enums.chat import ChatRoomStage
+from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirection
+from app.utils.line_send_message import LINE_push_message
+from app.schemas.chat import ChatMessageBase
+
+
+
 
 async def get_order(db: AsyncSession, order_id: int) -> Order:
     stmt = select(Order).where(Order.id == order_id)
@@ -146,7 +152,6 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     await db.refresh(order)
 
     # 從 room_id 獲取 chat_room，修改 stage 為 order_confirm
-
     # 取得聊天室
     room = await get_chat_room_by_room_id(db, room_id)
     if not room:
@@ -160,7 +165,34 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     await db.refresh(room)
     print("聊天室，已設定成「訂單確認」模式")
 
-    
+   # 透過 room_id 反查目前聊天室對應的 LINE UID
+    line_uid = await get_line_uid_by_chatroom_id(db, room.id)
+
+    msg = (
+            "[自動回覆已傳送] 訂單已經由後台送出囉～"
+        )
+    print("已傳送訊息: ", msg)
+
+    if line_uid:
+        # 將字串包成 ChatMessageBase，再交給 LINE_push_message
+        LINE_push_message(line_uid, ChatMessageBase(text=msg))
+        
+        # 儲存提醒訊息的動作
+        message = ChatMessage(
+            room_id=room.id,
+            direction=ChatMessageDirection.OUTGOING_BY_BOT,
+            text=msg,
+            image_url="",
+            status=ChatMessageStatus.PENDING,
+            processed=True, # 之後不需要讓 GPT 讀到這個
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            )
+        db.add(message)
+        await db.commit()
+    else:
+        print("❗ 無法取得該聊天室對應的 LINE UID，無法推播已送出訂單提醒。")
+
     return True
 
 async def update_order_by_room_id(
