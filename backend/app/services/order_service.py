@@ -67,7 +67,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     results.sort(key=lambda x: x.id, reverse=True)
     return results
 
-async def validate_order_draft_required_fields(order_draft: OrderDraft) -> tuple[bool, list[str]]:
+async def validate_order_draft_required_fields(db, order_draft: OrderDraft) -> tuple[bool, list[str]]:
     """
     檢查訂單草稿的必要欄位是否完整
     回傳: (是否完整, 缺少的欄位列表)
@@ -90,6 +90,19 @@ async def validate_order_draft_required_fields(order_draft: OrderDraft) -> tuple
         if not getattr(order_draft, field):
             missing_fields.append(display_name)
     
+    # 檢查 user 的 name 和 phone
+    user = await get_user_by_id(db, order_draft.user_id)
+    if not user:
+        missing_fields.append("訂購人資訊")
+    elif not user.name or not user.phone:
+        missing_fields.append("訂購人姓名或電話")
+    
+    receiver_user = await get_user_by_id(db, order_draft.receiver_user_id)
+    if not receiver_user:
+        missing_fields.append("收件人資訊")
+    elif not receiver_user.name or not receiver_user.phone:
+        missing_fields.append("收件人姓名或電話")
+
     return len(missing_fields) == 0, missing_fields
 
 async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
@@ -100,7 +113,7 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
             detail=f"Order draft for room {room_id} not found."
         )
     
-    is_complete, missing_fields = await validate_order_draft_required_fields(order_draft)
+    is_complete, missing_fields = await validate_order_draft_required_fields(db, order_draft)
     if not is_complete:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
