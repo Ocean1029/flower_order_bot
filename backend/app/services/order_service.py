@@ -84,20 +84,22 @@ async def create_order(db: AsyncSession, order_draft: OrderDraft) -> Order:
     
 #     return order
 
-async def delete_order(db: AsyncSession, order_id: int) -> bool:
+async def delete_order_by_id(db: AsyncSession, order_id: int) -> bool:
     stmt = select(Order).where(Order.id == order_id)
     result = await db.execute(stmt)
     order = result.scalar_one_or_none()
     
-    if order:
-        # 把 order 的 status 改成 cancelled
-        order.status = OrderStatus.CANCELLED
-        await db.commit()
-        await db.refresh(order)
-        return True
+    if not order:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order with id {order_id} not found."
+        )
     
-    return False
-
+    order.status = OrderStatus.CANCELLED
+    await db.commit()
+    await db.refresh(order)
+    return True
+    
 async def get_order_draft(db: AsyncSession, room_id: int) -> Optional[OrderDraft]:
     stmt = (
         select(OrderDraft)
