@@ -197,7 +197,7 @@ async def create_order_draft_by_room_id(
     await db.commit()
     await db.refresh(order_draft)
 
-    return await order_draft
+    return order_draft
 
 async def update_order_draft_by_room_id(
     db: AsyncSession, room_id: int, draft_in: OrderDraftUpdate
