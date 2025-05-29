@@ -8,11 +8,10 @@ from fastapi import HTTPException, status
 
 from app.models.user import User
 from app.models.order import Order, OrderDraft
-from app.models.payment import Payment
 
 from app.schemas.order import OrderOut, OrderDraftOut, OrderDraftUpdate, OrderDraftCreate, OrderCreate
 from app.services.payment_service import get_pay_way_by_order_id, get_payment_method_by_id
-from app.services.user_service import get_user_by_id, create_user
+from app.services.user_service import get_user_by_id, update_user_info
 from app.services.message_service import get_chat_room_by_room_id
 from app.enums.order import OrderStatus
 
@@ -202,8 +201,6 @@ async def create_order_draft_by_room_id(
 async def update_order_draft_by_room_id(
     db: AsyncSession, room_id: int, draft_in: OrderDraftUpdate
 ) -> OrderDraftOut:
-    
-    # 1. 取得聊天室
     room = await get_chat_room_by_room_id(db, room_id)
     if not room:
         raise HTTPException(
@@ -218,7 +215,35 @@ async def update_order_draft_by_room_id(
             detail=f"Order draft with room id {room_id} not found."
         )
     
-    # 4. 填入草稿資訊
+    if draft_in.customer_name is not None or draft_in.customer_phone is not None:
+        user = await get_user_by_id(db, order_draft.user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"User with id {order_draft.user_id} not found."
+            )
+        user = await update_user_info(
+            db,
+            user.id,
+            name=draft_in.customer_name or user.name,
+            phone=draft_in.customer_phone or user.phone
+        )
+
+    # 5. 新增收件人資訊
+    if draft_in.receiver_name or draft_in.receiver_phone:
+        # just create the receiver user directly, TODO: Add a "order relation" table to store the relation between the customer and receiver
+        receiver_user = User(
+            name=draft_in.receiver_name,
+            phone=draft_in.receiver_phone,
+            created_at=datetime.now(timezone(timedelta(hours=8))),
+            updated_at=datetime.now(timezone(timedelta(hours=8))),
+        )
+        db.add(receiver_user)
+        await db.commit()
+        await db.refresh(receiver_user)
+
+        order_draft.receiver_user_id = receiver_user.id
+    
     if draft_in.item is not None:
         order_draft.item_type = draft_in.item
     if draft_in.quantity is not None:
@@ -239,21 +264,6 @@ async def update_order_draft_by_room_id(
         order_draft.delivery_address = draft_in.delivery_address
     order_draft.updated_at = datetime.now(timezone(timedelta(hours=8)))
 
-    # 5. 新增收件人資訊
-    if draft_in.receiver_name or draft_in.receiver_phone:
-        # just create the receiver user directly, TODO: Add a "order relation" table to store the relation between the customer and receiver
-        receiver_user = User(
-            name=draft_in.receiver_name,
-            phone=draft_in.receiver_phone,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8))),
-        )
-        db.add(receiver_user)
-        await db.commit()
-        await db.refresh(receiver_user)
-
-        order_draft.receiver_user_id = receiver_user.id
-    
     # 6. 若有付款方式（pay_way）等欄位可在此擴充 
     if draft_in.pay_way_id:
         # check if the pay_way is valid
