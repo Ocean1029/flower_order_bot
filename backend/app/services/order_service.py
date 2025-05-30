@@ -32,7 +32,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     results = []
 
     # 撈出所有訂單
-    order_stmt = select(Order)
+    order_stmt = select(Order).where(Order.status != OrderStatus.CANCELLED)
     order_result = await db.execute(order_stmt)
     orders = order_result.scalars().all()
 
