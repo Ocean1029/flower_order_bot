@@ -19,6 +19,11 @@ export const createOrder_FromDraft = async (room_id) => {
   return res.data
 }
 
+export const updateOrder = async (room_id, order_draft) => {
+  const res = await axios.patch(`${API_BASE}/order/${room_id}`, order_draft)
+  return res.data
+}
+
 export const deleteOrder = async (order_id) => {
   const res = await axios.delete(`${API_BASE}/order/${order_id}`)
   return res.data
@@ -33,6 +38,8 @@ export const sendOrderDraft = async (room_id, order_draft) => {
   const res = await axios.patch(`${API_BASE}/orderdraft/${room_id}`, order_draft)
   return res.data
 }
+
+
 
 export const readOrderDraft = async (room_id) => {
   console.log('Reading order draft for room:', room_id)
