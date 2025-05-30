@@ -84,7 +84,7 @@
       </div>
       <!-- bottom: frame-2 兩個新按鈕 -->
       <div class="frame-2">
-        <div class="order-btn update" :class="{ editing: isEditing }" @click="isEditing ? confirmEditing() : null">
+        <div class="order-btn update" :class="{ editing: isEditing }" @click="handleUpdateOrder">
           <i class="fas fa-upload btn-icon"></i>
           <span class="btn-text">更新工單</span>
         </div>
@@ -99,7 +99,7 @@
 
 <script setup>
 import { ref, computed, nextTick } from 'vue'
-import { sendOrderDraft, createOrder_FromDraft } from '@/api/orders'
+import { sendOrderDraft, createOrder_FromDraft, updateOrder } from '@/api/orders'
 
 const props = defineProps({
   orderData: Object,
@@ -247,6 +247,50 @@ async function handleCreateOrder() {
   } catch (error) {
     console.error('Error creating order:', error)
     alert('建立工單失敗: ' + error.message)
+  }
+}
+
+async function handleUpdateOrder() {
+  try {
+    if (!props.roomId) {
+      throw new Error('No room ID provided')
+    }
+
+    // If in editing mode, save the draft first
+    if (isEditing.value) {
+      await confirmEditing()
+    }
+
+    // Format the data according to the API requirements
+    const orderDraftData = {
+      customer_name: editedData.value['客戶姓名'] || props.orderData?.customer_name || '',
+      customer_phone: editedData.value['客戶電話'] || props.orderData?.customer_phone || '',
+      receiver_name: editedData.value['收件人姓名'] || props.orderData?.receiver_name || '',
+      receiver_phone: editedData.value['收件人電話'] || props.orderData?.receiver_phone || '',
+      total_amount: parseFloat(editedData.value['總金額']?.replace('NT ', '') || props.orderData?.total_amount || '0'),
+      item: editedData.value['品項'] || props.orderData?.item || '',
+      quantity: parseInt(editedData.value['數量'] || props.orderData?.quantity || '0'),
+      note: editedData.value['備註'] || props.orderData?.note || '',
+      card_message: editedData.value['卡片訊息'] || props.orderData?.card_message || '',
+      shipment_method: editedData.value['取貨方式'] === '店取' ? 'STORE_PICKUP' : 'DELIVERY',
+      send_datetime: editedData.value['送貨日期_date'] && editedData.value['送貨日期_time']
+        ? new Date(`${editedData.value['送貨日期_date']}T${editedData.value['送貨日期_time']}`).toISOString().replace(/\.\d{3}Z$/, '.331Z')
+        : props.orderData?.send_datetime || new Date().toISOString().replace(/\.\d{3}Z$/, '.331Z'),
+      receipt_address: editedData.value['收件地址'] || props.orderData?.receipt_address || '',
+      delivery_address: editedData.value['送貨地址'] || props.orderData?.delivery_address || '',
+      pay_way: editedData.value['付款方式'] || props.orderData?.pay_way || '',
+      pay_way_id: 0
+    }
+
+    console.log('Updating order with data:', orderDraftData)
+    await updateOrder(props.roomId, orderDraftData)
+    
+    alert('工單更新成功！')
+    // Emit an event to refresh the data
+    emit('orderDraftUpdated')
+  } catch (error) {
+    console.error('Error updating order:', error)
+    alert('更新工單失敗: ' + error.message)
   }
 }
 

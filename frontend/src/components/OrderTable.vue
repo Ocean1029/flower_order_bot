@@ -662,7 +662,7 @@ tr:hover td {
   font-weight: 700;
   font-size: 14px;
   line-height: 112.5%;
-  color: rgba(0, 0, 0, 0.6);
+  color: rgba(0, 0, 0, 0.4);
   min-width: 80px;
   text-align: center;
 }
