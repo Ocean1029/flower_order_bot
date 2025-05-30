@@ -27,7 +27,8 @@ const columnMapping = {
   '取貨方式': 'shipment_method',
   '金額': 'total_amount',
   '付款方式': 'pay_way',
-  '付款狀態': 'pay_status'
+  '付款狀態': 'pay_status',
+  '取消訂單':'id'
 }
 
 const searchText = ref('')
@@ -65,7 +66,7 @@ const formatDateTime = (datetime) => {
   const year = date.getFullYear().toString().slice(-2)
   const hours = date.getHours().toString().padStart(2, '0')
   const minutes = date.getMinutes().toString().padStart(2, '0')
-  return `${day}/${month}/${year}（${weekdays[date.getDay()]}）${hours}:${minutes}`
+  return `${year}/${month}/${day}（${weekdays[date.getDay()]}）${hours}:${minutes}`
 }
 
 // 狀態顏色對應
@@ -147,7 +148,8 @@ function downloadCSV() {
     row.shipment_method === 'store_pickup' ? '店取' : '外送',
     row.total_amount,
     row.pay_way,
-    row.pay_status
+    row.pay_status,
+    row.id
   ])
 
   const csvContent = [headers, ...rows]
@@ -182,6 +184,23 @@ const handleExportDocx = async (orderId) => {
   }
 }
 
+const handleCancelOrder = async (orderId) => {
+  try {
+    const response = await fetch(`/api/order/${orderId}`, {
+      method: 'DELETE',
+    });
+    if (response.ok) {
+      // Refresh the orders list
+      window.location.reload();
+    } else {
+      throw new Error('Failed to cancel order');
+    }
+  } catch (error) {
+    console.error('Error canceling order:', error);
+    alert('取消訂單失敗: ' + error.message);
+  }
+};
+
 const columnWidths = {
   '訂單編號': '136px',
   '狀態': '120px',
@@ -194,7 +213,8 @@ const columnWidths = {
   '取貨方式': '128px',
   '金額': '96px',
   '付款方式': '128px',
-  '付款狀態': '112px'
+  '付款狀態': '112px',
+  '取消訂單':'96px' 
 }
 
 // 點擊日期filter按鈕時觸發
@@ -276,6 +296,9 @@ function onOrderTitleClick() {
               <td v-for="column in columnName" :key="column" :style="{ width: columnWidths[column] }">
                 <template v-if="column === '匯出工單'">
                   <button class="work-order-btn" @click="handleExportDocx(row.id)">工單</button>
+                </template>
+                <template v-else-if="column === '取消訂單'">
+                  <button class="cancel-order-btn" @click="handleCancelOrder(row.id)">刪除</button>
                 </template>
                 <template v-else-if="column === '取貨時間'">
                   {{ formatDateTime(row[columnMapping[column]]) }}
@@ -684,6 +707,47 @@ tr:hover td {
 }
 
 .work-order-btn:hover {
+  opacity: 0.8;
+}
+
+.cancel-order-btn {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 16px;
+  gap: 10px;
+
+  width: 60px;
+  max-width: 92px;
+  height: 28px;
+
+  /* Alert/Default */
+  background: #AE1914;
+  border-radius: 8px;
+
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+
+  /* Text styling */
+  font-family: 'Noto Sans TC', sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 112.5%;
+  color: #EBCDCC;
+  text-align: center;
+
+  /* Button reset */
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.cancel-order-btn:hover {
   opacity: 0.8;
 }
 </style>
