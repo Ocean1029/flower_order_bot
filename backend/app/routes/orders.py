@@ -17,7 +17,7 @@ async def delete_order(order_id: int, db: AsyncSession = Depends(get_db)):
     return await delete_order_by_id(db, order_id)
 
 # 新增 order
-@api_router.post("/order/{room_id}", response_model=bool)
+@api_router.post("/order/{room_id}", response_model=list[str])
 async def create_order(room_id: int, db: AsyncSession = Depends(get_db)):
     return await create_order_by_room(db, room_id)
 

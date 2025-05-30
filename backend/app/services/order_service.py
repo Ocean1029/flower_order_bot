@@ -77,39 +77,50 @@ async def validate_order_draft_required_fields(db, order_draft: OrderDraft) -> t
     回傳: (是否完整, 缺少的欄位列表)
     """
     if not order_draft:
-        return False, ["訂單草稿不存在"]
+        return False, ["order_draft"]
     
-    # 定義必要欄位及其顯示名稱
-    required_fields = {
-        "user_id": "訂購人ID",
-        "receiver_user_id": "收件人ID",
-        "item_type": "商品類型",
-        "quantity": "數量",
-        "total_amount": "總金額",
-        "shipment_method": "運送方式",
-    }
+    # 定義必要欄位
+    required_fields = [
+        "user_id",
+        "receiver_user_id",
+        "item_type",
+        "quantity",
+        "total_amount",
+        "shipment_method",
+    ]
     
     missing_fields = []
-    for field, display_name in required_fields.items():
+    for field in required_fields:
         if not getattr(order_draft, field):
-            missing_fields.append(display_name)
+            missing_fields.append(field)
     
     # 檢查 user 的 name 和 phone
     user = await get_user_by_id(db, order_draft.user_id)
     if not user:
-        missing_fields.append("訂購人資訊")
-    elif not user.name or not user.phone:
-        missing_fields.append("訂購人姓名或電話")
+        missing_fields.append("user")
+    elif not user.name:
+        missing_fields.append("user_name")
+    elif not user.phone:
+        missing_fields.append("user_phone")
     
     receiver_user = await get_user_by_id(db, order_draft.receiver_user_id)
     if not receiver_user:
-        missing_fields.append("收件人資訊")
-    elif not receiver_user.name or not receiver_user.phone:
-        missing_fields.append("收件人姓名或電話")
+        missing_fields.append("receiver")
+    elif not receiver_user.name:
+        missing_fields.append("receiver_name")
+    elif not receiver_user.phone:
+        missing_fields.append("receiver_phone")
 
     return len(missing_fields) == 0, missing_fields
 
-async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
+async def create_order_by_room(db: AsyncSession, room_id: int) -> list[str]:
+    room = await get_chat_room_by_room_id(db, room_id)
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chat room with id {room_id} not found."
+        )
+    
     order_draft = await get_order_draft_by_room(db, room_id)
     if not order_draft:
         raise HTTPException(
@@ -119,11 +130,7 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     
     is_complete, missing_fields = await validate_order_draft_required_fields(db, order_draft)
     if not is_complete:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"訂單草稿不完整，缺少以下欄位：{', '.join(missing_fields)}"
-        )
-    
+        return missing_fields
 
     order = Order(
         room_id=order_draft.room_id,
@@ -148,14 +155,6 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
     await db.commit()
     await db.refresh(order)
 
-    # 從 room_id 獲取 chat_room，修改 stage 為 order_confirm
-    # 取得聊天室
-    room = await get_chat_room_by_room_id(db, room_id)
-    if not room:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Chat room with id {room_id} not found."
-        )
     # 更新聊天室的 stage
     room.stage = ChatRoomStage.ORDER_CONFIRM
     await db.commit()
@@ -164,33 +163,27 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
 
    # 透過 room_id 反查目前聊天室對應的 LINE UID
     line_uid = await get_line_uid_by_chatroom_id(db, room.id)
-
-    msg = (
-            "訂單已經由後台送出囉～"
-        )
+    msg = f"訂單已經由後台送出囉～\n\n"
+    if not line_uid:
+        print("❗ 無法取得 LINE UID，無法推播訂單已送出提醒。")
+    LINE_push_message(line_uid, ChatMessageBase(text=msg))
     print("已傳送訊息: ", msg)
-
-    if line_uid:
-        # 將字串包成 ChatMessageBase，再交給 LINE_push_message
-        LINE_push_message(line_uid, ChatMessageBase(text=msg))
-        
-        # 儲存提醒訊息的動作
-        message = ChatMessage(
-            room_id=room.id,
-            direction=ChatMessageDirection.OUTGOING_BY_BOT,
-            text="[自動回覆已傳送]" + msg,
-            image_url="",
-            status=ChatMessageStatus.PENDING,
-            processed=True, # 之後不需要讓 GPT 讀到這個
-            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
-            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
-            )
-        db.add(message)
-        await db.commit()
-    else:
-        print("❗ 無法取得該聊天室對應的 LINE UID，無法推播已送出訂單提醒。")
-
-    return True
+    
+    # 儲存提醒訊息的動作
+    message = ChatMessage(
+        room_id=room.id,
+        direction=ChatMessageDirection.OUTGOING_BY_BOT,
+        text="[自動回覆已傳送]" + msg,
+        image_url="",
+        status=ChatMessageStatus.PENDING,
+        processed=True, 
+        created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+        updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
+        )
+    db.add(message)
+    await db.commit()
+    
+    return []
 
 async def update_order_by_room_id(
     db: AsyncSession,
