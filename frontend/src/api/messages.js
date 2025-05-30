@@ -12,7 +12,7 @@ export const getLatestMessages = async () => {
         lastMessageTime: room.last_message ? new Date(room.last_message.timestamp) : null,
         unreadCount: room.unread_count,
         status: room.status,
-        avatar: '' // You might want to add avatar to your API response
+        avatar: room.user_avatar_url || '' // Map user_avatar_url to avatar field
     }))
 }
 
