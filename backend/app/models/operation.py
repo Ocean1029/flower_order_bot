@@ -27,7 +27,7 @@ class Notification(Base):
         default=NotificationStatus.QUEUED
     )
     send_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
 
 class AuditLog(Base):
     __tablename__ = "audit_log"
@@ -38,4 +38,4 @@ class AuditLog(Base):
     target_table: Mapped[str] = mapped_column(String)
     target_id: Mapped[int] = mapped_column(Integer)
     diff: Mapped[str] = mapped_column(Text, nullable=True)
-    logged_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
+    logged_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))

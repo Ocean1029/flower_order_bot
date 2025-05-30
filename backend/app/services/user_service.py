@@ -90,7 +90,7 @@ async def update_user_info(
         user.name = name
     if phone:
         user.phone = phone
-    user.updated_at = datetime.now(timezone(timedelta(hours=8)))
+    user.updated_at = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     await db.commit()
     await db.refresh(user)
     return user

@@ -32,7 +32,7 @@ async def get_all_orders(db: AsyncSession) -> Optional[List[OrderOut]]:
     results = []
 
     # 撈出所有訂單
-    order_stmt = select(Order)
+    order_stmt = select(Order).where(Order.status != OrderStatus.CANCELLED)
     order_result = await db.execute(order_stmt)
     orders = order_result.scalars().all()
 
@@ -143,8 +143,8 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
         receipt_address=order_draft.receipt_address,
         delivery_address=order_draft.delivery_address,
         delivery_datetime=order_draft.delivery_datetime,
-        created_at=datetime.now(timezone(timedelta(hours=8))),
-        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+        updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     )
     
     db.add(order)
@@ -185,8 +185,8 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=True, # 之後不需要讓 GPT 讀到這個
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
             )
         db.add(message)
         await db.commit()
@@ -227,7 +227,7 @@ async def update_order_by_room_id(
         if hasattr(order, key):
             setattr(order, key, value)
     
-    order.updated_at = datetime.now(timezone(timedelta(hours=8)))
+    order.updated_at = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     
     await db.commit()
     await db.refresh(order)
@@ -359,8 +359,8 @@ async def create_order_draft_by_room_id(
         room_id=room.id,
         user_id=room.user_id,
         receiver_user_id=room.user_id,
-        created_at=datetime.now(timezone(timedelta(hours=8))),
-        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+        updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     )
     db.add(order_draft)
     await db.commit()
@@ -405,8 +405,8 @@ async def update_order_draft_by_room_id(
         receiver_user = User(
             name=draft_in.receiver_name,
             phone=draft_in.receiver_phone,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8))),
+            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
         )
         db.add(receiver_user)
         await db.commit()
@@ -428,11 +428,13 @@ async def update_order_draft_by_room_id(
         order_draft.shipment_method = draft_in.shipment_method
     if draft_in.send_datetime is not None:
         order_draft.delivery_datetime = draft_in.send_datetime
+        # 把 send_datetime 轉成 UTC +8
+        order_draft.delivery_datetime = draft_in.send_datetime.astimezone(timezone(timedelta(hours=8))).replace(tzinfo=None)
     if draft_in.receipt_address is not None:
         order_draft.receipt_address = draft_in.receipt_address
     if draft_in.delivery_address is not None:
         order_draft.delivery_address = draft_in.delivery_address
-    order_draft.updated_at = datetime.now(timezone(timedelta(hours=8)))
+    order_draft.updated_at = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
 
     # 6. 若有付款方式（pay_way）等欄位可在此擴充 
     if draft_in.pay_way_id:

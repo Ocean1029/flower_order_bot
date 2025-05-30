@@ -10,7 +10,7 @@ async def create_random_message(session, room):
     
     # 創建多條訊息來模擬對話
     messages = []
-    base_time = datetime.now(timezone(timedelta(hours=8))) - timedelta(hours=random.randint(1, 24))
+    base_time = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None) - timedelta(hours=random.randint(1, 24))
     
     # 第一條訊息一定是機器人的歡迎訊息
     welcome_message = ChatMessage(
