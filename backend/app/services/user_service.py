@@ -26,6 +26,8 @@ async def get_line_uid_by_chatroom_id(
     user = await get_user_by_chat_room_id(db, chat_room_id)
     if user and user.line_uid:
         return user.line_uid
+    else:
+        return None
 
 
 async def get_user_by_line_uid(db: AsyncSession, line_uid: str) -> User:
