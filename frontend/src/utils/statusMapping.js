@@ -2,7 +2,8 @@ export const statusMapping = {
   'WELCOME': '歡迎',
   'ORDER_CONFIRM': '等待備貨',
   'WAITING_OWNER': '人工溝通',
-  'BOT_ACTIVE': '自動回覆'
+  'BOT_ACTIVE': '自動回覆',
+  'ORDER_CONFIRM': '送出訂單'
 }
 
 export function getStatusDisplay(status) {
