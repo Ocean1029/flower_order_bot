@@ -188,6 +188,11 @@ const handleExportDocx = async (orderId) => {
 
 const handleCancelOrder = async (orderId) => {
   try {
+    // Add confirmation dialog
+    if (!confirm('確定要刪除此訂單嗎？此操作無法復原。')) {
+      return
+    }
+
     await deleteOrder(orderId)
     // Show success message
     alert('訂單已成功取消')
