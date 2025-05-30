@@ -372,7 +372,7 @@ async def ask_type(user_text, event, db, chat_room):
         send_quick_reply_message(
             event.reply_token,
             "想要什麼類型的花材？",
-            ["大欸米", "中欸米", "小欸米", "其他"]
+            ["玫瑰花", "滿天星", "向日葵", "其他"]
         )
         # 儲存詢問的動作
         message = ChatMessage(
