@@ -24,16 +24,17 @@
           <template v-if="col === '送貨日期'">
             <!-- 第一行：標題+日期 -->
             <div class="table-row">
-              <div class="table-column">{{ col }}</div>
+              <div class="table-column" :class="{ 'missing-field': isFieldMissing(col) }">{{ col }}</div>
               <div class="data-container">
                 <template v-if="isEditing">
                   <input
                     type="date"
                     v-model="editedData[col + '_date']"
                     class="edit-input"
+                    :class="{ 'missing-field-input': isFieldMissing(col) }"
                   />
                 </template>
-                <span v-else class="data">{{ dataList[idx] }}</span>
+                <span v-else class="data" :class="{ 'missing-field': isFieldMissing(col) }">{{ dataList[idx] }}</span>
               </div>
             </div>
             <!-- 第二行：空白+時間 -->
@@ -45,6 +46,7 @@
                     type="time"
                     v-model="editedData[col + '_time']"
                     class="edit-input"
+                    :class="{ 'missing-field-input': isFieldMissing(col) }"
                     step="300"
                   />
                 </template>
@@ -54,13 +56,14 @@
           <template v-else>
             <!-- 其他欄位照舊 -->
             <div class="table-row">
-              <div class="table-column">{{ col }}</div>
+              <div class="table-column" :class="{ 'missing-field': isFieldMissing(col) }">{{ col }}</div>
               <div class="data-container">
                 <template v-if="isEditing && editableFields.includes(col)">
                   <select 
                     v-if="col === '取貨方式'"
                     v-model="editedData[col]"
                     class="edit-select"
+                    :class="{ 'missing-field-input': isFieldMissing(col) }"
                     :ref="el => setInputRef(el, col)"
                     @keydown.enter.prevent="handleEnterKey(col)"
                   >
@@ -71,12 +74,13 @@
                     v-else
                     v-model="editedData[col]"
                     class="edit-input"
+                    :class="{ 'missing-field-input': isFieldMissing(col) }"
                     type="text"
                     :ref="el => setInputRef(el, col)"
                     @keydown.enter.prevent="handleEnterKey(col)"
                   />
                 </template>
-                <span v-else class="data">{{ dataList[idx] }}</span>
+                <span v-else class="data" :class="{ 'missing-field': isFieldMissing(col) }">{{ dataList[idx] }}</span>
               </div>
             </div>
           </template>
@@ -107,6 +111,7 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['close-detail'])
+const missingFields = ref([])
 
 // 可編輯的欄位
 const editableFields = [
@@ -241,12 +246,29 @@ async function handleCreateOrder() {
     // Create the order
     const response = await createOrder_FromDraft(props.roomId)
     console.log('Order created:', response)
-    alert('工單建立成功！')
-    // Emit an event to refresh the data
-    emit('orderDraftUpdated')
+    
+    // Only show success message if response is null (successful creation)
+    if (response === null) {
+      alert('工單建立成功！')
+      // Reset missing fields
+      missingFields.value = []
+      // Emit an event to refresh the data
+      emit('orderDraftUpdated')
+    } else {
+      // If response contains missing fields, show them
+      alert('請填入缺少的資料')
+      if (Array.isArray(response)) {
+        missingFields.value = response
+      }
+    }
   } catch (error) {
     console.error('Error creating order:', error)
-    alert('建立工單失敗: ' + error.message)
+    // Check if the error response contains missing fields
+    if (error.response?.data && Array.isArray(error.response.data)) {
+      missingFields.value = error.response.data
+    } else {
+      alert('建立工單失敗: ' + error.message)
+    }
   }
 }
 
@@ -306,6 +328,25 @@ function handleEnterKey(currentCol) {
       })
     }
   }
+}
+
+// Add a function to check if a field is missing
+function isFieldMissing(field) {
+  const fieldMapping = {
+    '數量': 'quantity',
+    '總金額': 'total_amount',
+    '品項': 'item',
+    '客戶姓名': 'customer_name',
+    '客戶電話': 'customer_phone',
+    '收件人姓名': 'receiver_name',
+    '收件人電話': 'receiver_phone',
+    '取貨方式': 'shipment_method',
+    '送貨日期': 'send_datetime',
+    '收件地址': 'receipt_address',
+    '送貨地址': 'delivery_address',
+    '付款方式': 'pay_way'
+  }
+  return missingFields.value.includes(fieldMapping[field])
 }
 </script>
 
@@ -714,5 +755,19 @@ input[type='time'].edit-input::-webkit-calendar-picker-indicator {
 input[type='date'].edit-input:focus::-webkit-calendar-picker-indicator,
 input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
   opacity: 1;
+}
+
+.missing-field {
+  color: #dc3545 !important;
+  font-weight: bold;
+}
+
+.missing-field-input {
+  border-color: #dc3545 !important;
+  background-color: #fff5f5 !important;
+}
+
+.missing-field-input:focus {
+  box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
 }
 </style>
