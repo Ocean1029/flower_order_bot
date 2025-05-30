@@ -110,17 +110,18 @@ const emit = defineEmits(['close-detail'])
 
 // 可編輯的欄位
 const editableFields = [
-  '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', '品項', '數量', '備註', 
-  '卡片訊息', '取貨方式', '送貨日期', '收件地址', '送貨地址', '付款方式'
+  '送貨日期', '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', '品項', '數量', '備註', 
+  '卡片訊息', '取貨方式', '收件地址', '送貨地址', '付款方式'
 ]
 
 // 依照原本順序組成資料陣列
 const columns = [
-  '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', 
-  '品項', '數量', '備註', '卡片訊息', '取貨方式', '送貨日期', '收件地址', 
-  '送貨地址', '訂單日期', '付款方式', '星期'
+  '送貨日期', '客戶姓名', '客戶電話', '收件人姓名', '收件人電話', '總金額', 
+  '品項', '數量', '備註', '卡片訊息', '取貨方式', '收件地址', 
+  '送貨地址', '付款方式', '星期'
 ]
 const dataList = computed(() => [
+  formatDateTime(props.orderData?.send_datetime),
   props.orderData?.customer_name || ' ',
   props.orderData?.customer_phone || ' ',
   props.orderData?.receiver_name || ' ',
@@ -131,10 +132,8 @@ const dataList = computed(() => [
   props.orderData?.note || ' ',
   props.orderData?.card_message || ' ',
   props.orderData?.shipment_method === 'STORE_PICKUP' ? '店取' : '外送',
-  formatDateTime(props.orderData?.send_datetime),
   props.orderData?.receipt_address || ' ',
   props.orderData?.delivery_address || ' ',
-  formatDateTime(props.orderData?.order_date),
   props.orderData?.pay_way || ' ',
   props.orderData?.weekday || ' '
 ])

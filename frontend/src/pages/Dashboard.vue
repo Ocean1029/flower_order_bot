@@ -17,7 +17,12 @@
         <div v-if="isLoading" class="loading-message">
           載入中...
         </div>
-        <OrderTable v-else :data="orders" :columnName="columnName" />
+        <OrderTable 
+          v-else 
+          :data="orders" 
+          :columnName="columnName" 
+          @orderDeleted="handleOrderDeleted"
+        />
       </div>
     </div>
   </div>
@@ -46,6 +51,21 @@ const statics = ref({
 })
 const isLoading = ref(true)
 const error = ref(null)
+
+const handleOrderDeleted = async (orderId) => {
+  try {
+    // Refresh both orders and statistics after deletion
+    const [ordersData, statsData] = await Promise.all([
+      fetchOrders(),
+      fetchStaticData()
+    ])
+    orders.value = ordersData
+    statics.value = statsData
+  } catch (err) {
+    console.error('Error refreshing data:', err)
+    error.value = '無法更新資料，請稍後再試'
+  }
+}
 
 onMounted(async () => {
   isLoading.value = true

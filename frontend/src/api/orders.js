@@ -19,6 +19,10 @@ export const createOrder_FromDraft = async (room_id) => {
   return res.data
 }
 
+export const deleteOrder = async (order_id) => {
+  const res = await axios.delete(`${API_BASE}/order/${order_id}`)
+  return res.data
+}
 
 export const fetchOrderDraft = async (room_id) => {
   const res = await axios.patch(`${API_BASE}/organize_data/${room_id}`)

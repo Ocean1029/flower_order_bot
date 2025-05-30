@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { exportDocx } from '@/api/orders'
+import { exportDocx, deleteOrder } from '@/api/orders'
 
 const props = defineProps({
   data: {
@@ -12,6 +12,8 @@ const props = defineProps({
     required: true
   }
 })
+
+const emit = defineEmits(['orderDeleted'])
 
 // Add mapping between column names and data properties
 const columnMapping = {
@@ -186,20 +188,16 @@ const handleExportDocx = async (orderId) => {
 
 const handleCancelOrder = async (orderId) => {
   try {
-    const response = await fetch(`/api/order/${orderId}`, {
-      method: 'DELETE',
-    });
-    if (response.ok) {
-      // Refresh the orders list
-      window.location.reload();
-    } else {
-      throw new Error('Failed to cancel order');
-    }
+    await deleteOrder(orderId)
+    // Show success message
+    alert('訂單已成功取消')
+    // Emit event to refresh the order list
+    emit('orderDeleted', orderId)
   } catch (error) {
-    console.error('Error canceling order:', error);
-    alert('取消訂單失敗: ' + error.message);
+    console.error('Error canceling order:', error)
+    alert('取消訂單時發生錯誤：' + (error.response?.data?.detail || error.message))
   }
-};
+}
 
 const columnWidths = {
   '訂單編號': '136px',
