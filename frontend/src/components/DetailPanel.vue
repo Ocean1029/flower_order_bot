@@ -655,8 +655,10 @@ input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #6168FC;
+  background: #77B5FF;
   transition: all 0.1s ease;
+  border: none !important;
+  outline: none !important;
 }
 .order-btn:active {
   transform: scale(0.95);
@@ -769,5 +771,23 @@ input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
 
 .missing-field-input:focus {
   box-shadow: 0 0 0 2px rgba(220, 53, 69, 0.25) !important;
+}
+
+.order-btn.update {
+  background: #77B5FF !important;
+  box-shadow: none;
+}
+.order-btn.update[disabled], .order-btn.update:disabled {
+  background: #D8EAFF !important;
+  box-shadow: 2px 2px 2px 0px #00000040 !important;
+}
+
+.order-btn.create {
+  background: #6168FC;
+  box-shadow: none;
+}
+.order-btn.create[disabled], .order-btn.create:disabled {
+  background: #C5C7FF !important;
+  box-shadow: 2px 2px 2px 0px #00000040 !important;
 }
 </style>
