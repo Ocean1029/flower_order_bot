@@ -26,11 +26,11 @@
       <div class="filter-bar">
         <button
           v-for="tab in tabs"
-          :key="tab"
-          :class="['filter-btn', { active: currentTab === tab }]"
-          @click="currentTab = tab"
+          :key="tab.key"
+          :class="['filter-btn', { active: currentTab === tab.key }]"
+          @click="currentTab = tab.key"
         >
-          <span class="filter-label">{{ tab }}</span>
+          <span class="filter-label">{{ tab.label }}</span>
         </button>
       </div>
 
@@ -104,11 +104,10 @@ function selectRoom(room) {
 }
 
 const tabs = [
-  '所有訂單',
-  '人工溝通',
-  '今日訂單',
-  '等待備貨',
-  '自動回覆'
+  { key: 'WELCOME', label: '歡迎' },
+  { key: 'ORDER_CONFIRM', label: '等待備貨' },
+  { key: 'WAITING_OWNER', label: '人工溝通' },
+  { key: 'BOT_ACTIVE', label: '自動回覆' }
 ]
 const currentTab = ref('所有訂單')
 
@@ -403,10 +402,10 @@ watch(filteredRooms, () => {
   background: #77B5FF;
   border-radius: 50%;  
 }
-.frame2.manual { background: #FFCEE7; }
+.frame2.welcome { background: #FFCEE7; }
 .frame2.auto { background: #D8EAFF; }
 .frame2.wait { background: #C5C7FF; }
-.frame2.done { background: #EBCDCC; }
+.frame2.prepare { background: #EBCDCC; }
 .frame2 {
   display: flex;
   align-items: center;
@@ -417,10 +416,10 @@ watch(filteredRooms, () => {
   /* 其他你要的設定 */
 }
 
-.status-label.manual { color: #FF349A; background: transparent; }
+.status-label.welcome { color: #FF349A; background: transparent; }
 .status-label.auto { color: #528DD2; background: transparent; }
 .status-label.wait { color: #6168FC; background: transparent; }
-.status-label.done { color: #81386A; background: transparent; }
+.status-label.prepare { color: #81386A; background: transparent; }
 
 .status-label {
   font-family: 'Noto Sans TC';
@@ -429,8 +428,12 @@ watch(filteredRooms, () => {
   line-height: 113%;
   letter-spacing: 0%;
   text-align: center;
-  vertical-align: middle;
-  padding: 0 12px
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 12px;
+  width: 100%;
+  height: 100%;
 }
 
 .filter-bar::-webkit-scrollbar {
