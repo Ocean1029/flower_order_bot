@@ -104,15 +104,16 @@ function selectRoom(room) {
 }
 
 const tabs = [
+  { key: 'ALL', label: '所有訂單' },
   { key: 'WELCOME', label: '歡迎' },
   { key: 'ORDER_CONFIRM', label: '等待備貨' },
   { key: 'WAITING_OWNER', label: '人工溝通' },
-  { key: 'BOT_ACTIVE', label: '自動回覆' }
+  { key: 'BOT_ACTIVE', label: '自動回覆' },
 ]
-const currentTab = ref('所有訂單')
+const currentTab = ref('ALL')
 
 const filteredRooms = computed(() => {
-  if (currentTab.value === '所有訂單') return localRooms.value
+  if (currentTab.value === 'ALL') return localRooms.value
   return localRooms.value.filter(r => r.status === currentTab.value)
 })
 
