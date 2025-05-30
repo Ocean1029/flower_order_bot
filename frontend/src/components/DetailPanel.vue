@@ -248,13 +248,14 @@ async function handleCreateOrder() {
     console.log('Order created:', response)
     
     // Only show success message if response is null (successful creation)
-    if (response === null) {
+    if (response == '') {
       alert('工單建立成功！')
       // Reset missing fields
       missingFields.value = []
       // Emit an event to refresh the data
       emit('orderDraftUpdated')
-    } else {
+    } 
+    else {
       // If response contains missing fields, show them
       alert('請填入缺少的資料')
       if (Array.isArray(response)) {
