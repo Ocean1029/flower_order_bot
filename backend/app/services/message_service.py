@@ -201,7 +201,6 @@ async def create_staff_message(db: AsyncSession, room_id: int, data: ChatMessage
     )
     
     # 更新聊天室狀態
-    room.stage = ChatRoomStage.IDLE
     room.updated_at = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     db.add(room)
     await db.commit()

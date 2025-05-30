@@ -173,15 +173,17 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
     )
     print(f"訂單草稿已建立，ID：{order_draft_out.id}")
     
-    return order_draft_out
-    # # 將詳細資料印出來
-    # for key, value in order_draft_out.dict().items():
-    #     if key not in ["id", "created_at", "updated_at"]:
-    #         print(f"{key}: {value}")
+    # 將詳細資料印出來
+    for key, value in order_draft_out.dict().items():
+        if key not in ["id", "created_at", "updated_at"]:
+            print(f"{key}: {value}")
 
-    # # 將對話訊息設為已處理
-    # stmt = update(ChatMessage)\
-    #     .where(ChatMessage.id.in_([message.id for message in messages]))\
-    #     .values(processed=True)
-    # await db.execute(stmt)
-    # await db.commit()
+    # 將對話訊息設為已處理
+    stmt = update(ChatMessage)\
+        .where(ChatMessage.id.in_([message.id for message in messages]))\
+        .values(processed=True)
+    await db.execute(stmt)
+    await db.commit()
+
+    return order_draft_out
+
