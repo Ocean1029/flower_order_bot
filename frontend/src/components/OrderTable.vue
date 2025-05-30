@@ -100,7 +100,7 @@ function normalizeStatus(status) {
     case 'WAITING_OWNER':
     case 'BOT_ACTIVE':
       return status
-    // 這裡可以根據實際後端回傳的其他狀態做對應
+      
     case 'MANUAL':
       return 'WAITING_OWNER'
     case 'CONFIRMED':
