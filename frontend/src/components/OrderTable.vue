@@ -373,7 +373,6 @@ function onOrderTitleClick() {
     margin-bottom: 16px;
 }
 .order-tabs {
-  width: 440px;
   display: inline-flex;
   gap: 4px;
   padding: 6px 12px;
@@ -407,7 +406,6 @@ function onOrderTitleClick() {
   border-radius: 36px;
 }
 .date-filter {
-  width: 203px;
   height: 28px;
   display: flex;
   align-items: center;
@@ -683,6 +681,7 @@ tr:hover td {
   color: rgba(0, 0, 0, 0.4);
   min-width: 80px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .work-order-btn {
