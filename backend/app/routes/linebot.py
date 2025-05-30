@@ -117,8 +117,8 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,
-        created_at=datetime.now(timezone(timedelta(hours=8))),
-        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+        updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     )
     
     db.add(message)
@@ -225,8 +225,8 @@ async def run_welcome_flow(
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,
-        created_at=datetime.now(timezone(timedelta(hours=8))),
-        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+        updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
         )
         
         db.add(message)
@@ -263,8 +263,8 @@ async def run_welcome_flow(
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
             )
         db.add(message)
         await db.commit()
@@ -327,8 +327,8 @@ async def ask_budget(user_text, event, db, chat_room):
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
             )
             db.add(message)
             await db.commit()
@@ -359,8 +359,8 @@ async def ask_color(user_text, event, db, chat_room):
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
             )
         db.add(message)
         await db.commit()
@@ -382,8 +382,8 @@ async def ask_type(user_text, event, db, chat_room):
             image_url="",
             status=ChatMessageStatus.PENDING,
             processed=False,
-            created_at=datetime.now(timezone(timedelta(hours=8))),
-            updated_at=datetime.now(timezone(timedelta(hours=8)))
+            created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+            updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
             )
         db.add(message)
         await db.commit()
@@ -406,8 +406,8 @@ async def last(user_text, event, db, chat_room):
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,
-        created_at=datetime.now(timezone(timedelta(hours=8))),
-        updated_at=datetime.now(timezone(timedelta(hours=8)))
+        created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+        updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
         )
     db.add(message)
     await db.commit()

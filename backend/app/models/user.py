@@ -15,8 +15,8 @@ class User(Base):
     phone: Mapped[str] = mapped_column(String, nullable=True)
     avatar_url: Mapped[str] = mapped_column(String, nullable=True)
     has_ordered: Mapped[bool] = mapped_column(Boolean, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None), onupdate=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
 
     orders = relationship("Order", foreign_keys="Order.user_id", back_populates="user")
     received_orders = relationship("Order", foreign_keys="Order.receiver_user_id", back_populates="receiver")

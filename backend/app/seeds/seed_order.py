@@ -14,7 +14,7 @@ fake = Faker("zh_TW")
 
 async def create_id_prefix(session, serial_number) -> str:
     """Create a prefix based on the current date in yymmddMMM format."""
-    id_prefix = datetime.now(timezone(timedelta(hours=8))).strftime("%y%m%d")
+    id_prefix = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None).strftime("%y%m%d")
     id = f"{id_prefix}{serial_number:03d}"
     return id
 
@@ -24,7 +24,7 @@ async def create_random_order(session, user: User, serial_number: int) -> Order:
     quantity = random.randint(1, 5)
     note = fake.sentence(nb_words=10)
     card = fake.sentence(nb_words=5)
-    delivery_datetime = datetime.now(timezone(timedelta(hours=8))) + timedelta(days=random.randint(1, 3))
+    delivery_datetime = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None) + timedelta(days=random.randint(1, 3))
     shipment_method = random.choice([ShipmentMethod.STORE_PICKUP, ShipmentMethod.DELIVERY])
     item_type = random.choice(["花束", "盆花"])
     
@@ -75,8 +75,8 @@ async def create_random_order(session, user: User, serial_number: int) -> Order:
     #     method_id=payment_method.id,
     #     amount=total,
     #     status=PaymentStatus.PAID,
-    #     paid_at=datetime.now(timezone(timedelta(hours=8))),
-    #     confirmed_at=datetime.now(timezone(timedelta(hours=8))),
+    #     paid_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+    #     confirmed_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
     # )
     # session.add(payment)
 

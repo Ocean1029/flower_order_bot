@@ -157,8 +157,8 @@ async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
                 image_url="",
                 status=ChatMessageStatus.PENDING,
                 processed=True, # 之後不需要讓 GPT 讀到這個
-                created_at=datetime.now(timezone(timedelta(hours=8))),
-                updated_at=datetime.now(timezone(timedelta(hours=8)))
+                created_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
+                updated_at=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
                 )
             db.add(message)
             await db.commit()

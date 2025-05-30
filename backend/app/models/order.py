@@ -37,8 +37,8 @@ class OrderDraft(Base):
     receipt_address: Mapped[str] = mapped_column(String, nullable=True)
     delivery_address: Mapped[str] = mapped_column(Text, nullable=True)
     delivery_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None), onupdate=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
 
     user = relationship("User", foreign_keys=[user_id], back_populates="order_drafts")
     receiver = relationship("User", foreign_keys=[receiver_user_id], back_populates="received_order_drafts")
@@ -73,8 +73,8 @@ class Order(Base):
     receipt_address: Mapped[str] = mapped_column(String, nullable=True)
     delivery_address: Mapped[str] = mapped_column(Text, nullable=True)
     delivery_datetime: Mapped[datetime] = mapped_column(DateTime, nullable=True)
-    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))))
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))), onupdate=datetime.now(timezone(timedelta(hours=8))))
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None), onupdate=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None))
 
     user = relationship("User", foreign_keys=[user_id], back_populates="orders")
     receiver = relationship("User", foreign_keys=[receiver_user_id], back_populates="received_orders")

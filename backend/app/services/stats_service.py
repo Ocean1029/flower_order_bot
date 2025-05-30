@@ -5,7 +5,7 @@ from app.models.order import Order
 from app.models.user import User
 
 async def get_stats(session: AsyncSession):
-    now = datetime.now(timezone(timedelta(hours=8)))
+    now = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
     today_start = datetime(now.year, now.month, now.day)
     month_start = datetime(now.year, now.month, 1)
 

@@ -29,7 +29,7 @@ async def create_random_user(session: AsyncSession, serial_number) -> User:
         stage=ChatRoomStage.WELCOME,
         bot_step=-1,
         unread_count=random.randint(0, 5),
-        last_message_ts=datetime.now(timezone(timedelta(hours=8))),
+        last_message_ts=datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None),
     )
 
     session.add(room)
