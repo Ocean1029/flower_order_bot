@@ -20,9 +20,6 @@ from app.enums.chat import ChatMessageStatus, ChatRoomStage, ChatMessageDirectio
 from app.utils.line_send_message import LINE_push_message
 from app.schemas.chat import ChatMessageBase
 
-
-
-
 async def get_order(db: AsyncSession, order_id: int) -> Order:
     stmt = select(Order).where(Order.id == order_id)
     result = await db.execute(stmt)
@@ -198,65 +195,72 @@ async def create_order_by_room(db: AsyncSession, room_id: int) -> bool:
 async def update_order_by_room_id(
     db: AsyncSession,
     room_id: int,
-    order_data: dict
-) -> OrderOut:
+) -> bool:
     """
     更新指定房間最新一筆已確認的訂單
     """
-    # 查詢該房間最新一筆已確認的訂單
+    # 1. 取得聊天室
+    room = await get_chat_room_by_room_id(db, room_id)
+    if not room:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Chat room with id {room_id} not found."
+        )
+
+    # 2. 取得 order draft
+    order_draft = await get_order_draft_by_room(db, room_id)
+    if not order_draft:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Order draft for room {room_id} not found."
+        )
+    
+    # 2.5 validate order_draft
+    is_complete = await validate_order_draft_required_fields(db, order_draft)
+    if not is_complete[0]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"訂單草稿不完整，缺少以下欄位：{', '.join(is_complete[1])}"
+        )
+
+    # 3. 取得最新的訂單
     stmt = (
         select(Order)
-        .where(
-            Order.room_id == room_id,
-            Order.status == OrderStatus.CONFIRMED
-        )
+        .where(Order.room_id == room.id, Order.status == OrderStatus.CONFIRMED)
         .order_by(Order.created_at.desc())
         .limit(1)
     )
     result = await db.execute(stmt)
     order = result.scalar_one_or_none()
-    
+
     if not order:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"房間 {room_id} 沒有已確認的訂單"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No confirmed order found for room {room_id}."
         )
+
+    # 3. 依據 OrderDraft 的資料更新最新一筆 Order
     
-    # 更新訂單資料
-    for key, value in order_data.items():
-        if hasattr(order, key):
-            setattr(order, key, value)
-    
+    order.user_id = order_draft.user_id
+    order.receiver_user_id = order_draft.receiver_user_id
+    order.item_type = order_draft.item_type
+    order.quantity = order_draft.quantity
+    order.total_amount = order_draft.total_amount
+    order.notes = order_draft.notes
+    order.card_message = order_draft.card_message
+    order.shipment_method = order_draft.shipment_method
+    order.receipt_address = order_draft.receipt_address
+    order.delivery_address = order_draft.delivery_address
+    order.delivery_datetime = order_draft.delivery_datetime
     order.updated_at = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None)
-    
+
+
+    # 4. 提交並 refresh
+    db.add(order)
     await db.commit()
     await db.refresh(order)
-    
-    # 取得相關資訊以建立 OrderOut
-    user = await get_user_by_id(db, order.user_id)
-    receiver_user = await get_user_by_id(db, order.receiver_user_id)
-    pay_way = await get_pay_way_by_order_id(db, order.id)
-    
-    return OrderOut(
-        id=order.id,
-        customer_name=user.name if user else "未知",
-        customer_phone=user.phone if user else "未知",
-        receiver_name=receiver_user.name if receiver_user else user.name,
-        receiver_phone=receiver_user.phone if receiver_user else user.phone,
-        order_date=order.created_at,
-        order_status=order.status,
-        pay_way=pay_way.display_name if pay_way else None,
-        total_amount=order.total_amount,
-        item=order.item_type,
-        quantity=order.quantity,
-        note=order.notes,
-        card_message=order.card_message,
-        shipment_method=order.shipment_method,
-        weekday=order.created_at.strftime("%A"),
-        send_datetime=order.delivery_datetime or order.created_at,
-        receipt_address=order.receipt_address,
-        delivery_address=order.delivery_address or order.receipt_address or ""
-    )
+
+    return True
 
 async def delete_order_by_id(db: AsyncSession, order_id: int) -> bool:
     stmt = select(Order).where(Order.id == order_id)

@@ -22,15 +22,15 @@ async def create_order(room_id: int, db: AsyncSession = Depends(get_db)):
     return await create_order_by_room(db, room_id)
 
 # 更新 order
-@api_router.patch("/order/{room_id}", response_model=Optional[OrderOut])
-async def update_order(room_id: int, order: OrderDraftUpdate, db: AsyncSession = Depends(get_db)):
-    return await update_order_by_room_id(db, room_id, order)
+@api_router.patch("/order/{room_id}", response_model=bool)
+async def update_order(room_id: int, db: AsyncSession = Depends(get_db)):
+    return await update_order_by_room_id(db, room_id)
 
 @api_router.get("/orderdraft/{room_id}", response_model=Optional[OrderDraftOut])
 async def get_order_draft(room_id: int, db: AsyncSession = Depends(get_db)):
     return await get_order_draft_out_by_room(db, room_id)
 
-@api_router.patch("/orderdraft/{room_id}", response_model=Optional[OrderDraftOut])
+@api_router.patch("/orderdraft/{room_id}", response_model= Optional[OrderDraftOut])
 async def update_order_draft(room_id: int, order_draft: OrderDraftUpdate, db: AsyncSession = Depends(get_db)):
     return await update_order_draft_by_room_id(db, room_id, order_draft)
 

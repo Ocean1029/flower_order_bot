@@ -26,7 +26,6 @@ class OrderDraft(Base):
     card_message: Mapped[str] = mapped_column(Text, nullable=True)
     shipment_method: Mapped[str] = mapped_column(
         SAEnum(ShipmentMethod, name="shipment_method", validate_strings=True),
-        default=ShipmentMethod.STORE_PICKUP,
         nullable=True
     )
     shipment_status: Mapped[str] = mapped_column(
