@@ -90,7 +90,7 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
     # Check inactivity: if the latest message is older than one week, reset the flow
     latest_msg = await get_latest_message(db, chat_room.id)
     tz = timezone(timedelta(hours=8))
-    one_week_ago = datetime.now(tz) - timedelta(days=7)
+    one_week_ago = datetime.now(tz).replace(tzinfo=None) - timedelta(days=7)
 
     if latest_msg:
         msg_time = latest_msg.created_at
@@ -372,7 +372,7 @@ async def ask_type(user_text, event, db, chat_room):
         send_quick_reply_message(
             event.reply_token,
             "想要什麼類型的花材？",
-            ["玫瑰花", "滿天星", "向日葵", "其他"]
+                ["玫瑰花", "滿天星", "向日葵", "其他"]
         )
         # 儲存詢問的動作
         message = ChatMessage(

@@ -24,6 +24,9 @@ def _clean_parsed_reply(parsed_reply):
     for key, value in parsed_reply.items():
         if isinstance(value, str) and value.strip() == "":
             parsed_reply[key] = None
+        # 將 datetime 轉成無時區的 datetime
+        if isinstance(value, str) and value.strip() != "":
+            parsed_reply[key] = datetime.strptime(value, "%Y-%m-%d %H:%M:%S").replace(tzinfo=None)
     return parsed_reply
 
 async def organize_data(db, chat_room_id: int) -> OrderDraftOut:
