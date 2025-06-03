@@ -149,7 +149,7 @@ def upgrade() -> None:
     )
     op.create_table('payment',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('order_id', sa.String(), nullable=False),
+    sa.Column('order_id', sa.Integer(), nullable=False),
     sa.Column('status', sa.Enum('PENDING', 'PAID', 'FAILED', 'REFUNDED', name='payment_status'), nullable=False),
     sa.Column('method_id', sa.Integer(), nullable=False),
     sa.Column('amount', sa.Numeric(precision=10, scale=2), nullable=False),
