@@ -94,9 +94,6 @@ async def handle_text_message(event: MessageEvent, db: AsyncSession):
 
     if latest_msg:
         msg_time = latest_msg.created_at
-        # Ensure the message timestamp is timezone‑aware
-        if msg_time.tzinfo is None:
-            msg_time = msg_time.replace(tzinfo=tz)
 
         if msg_time < one_week_ago:
             chat_room.stage = ChatRoomStage.WELCOME
