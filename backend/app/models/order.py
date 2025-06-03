@@ -46,7 +46,7 @@ class OrderDraft(Base):
 class Order(Base):
     __tablename__ = "order"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
+    id: Mapped[str] = mapped_column(String, primary_key=True)
     room_id: Mapped[int] = mapped_column(ForeignKey("chat_room.id"))
     
     user_id: Mapped[int] = mapped_column(ForeignKey("user.id"))
