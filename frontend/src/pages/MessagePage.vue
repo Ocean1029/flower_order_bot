@@ -33,7 +33,7 @@
   </template>
   
   <script setup>
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, onUnmounted } from 'vue'
   import { getLatestMessages } from '@/api/messages'
   import { readOrderDraft } from '@/api/orders'
   import ChatListWrapper from '@/components/ChatListWrapper.vue'
@@ -45,6 +45,8 @@
   const showDetailPanel = ref(false)
   const currentOrderData = ref(null)
   
+  let chatRoomsInterval = null
+
   async function loadChatRooms() {
     try {
       const response = await getLatestMessages()
@@ -57,7 +59,14 @@
     }
   }
   
-  onMounted(loadChatRooms)
+  onMounted(() => {
+    loadChatRooms()
+    chatRoomsInterval = setInterval(loadChatRooms, 5000)
+  })
+
+  onUnmounted(() => {
+    if (chatRoomsInterval) clearInterval(chatRoomsInterval)
+  })
   
   function selectRoom(room) {
     selectedRoom.value = room

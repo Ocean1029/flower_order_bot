@@ -35,7 +35,7 @@ const columnMapping = {
 
 const searchText = ref('')
 const currentDate = ref(new Date())
-const activeTab = ref('all')
+const activeTab = ref('WELCOME')
 const dateFilterActive = ref(false)
 
 const formatDate = (date) => {
@@ -82,37 +82,49 @@ function statusColor(status) {
 }
 
 // 狀態文字對應
-function statusText(status) { //改
+function statusText(status) {
   switch (status) {
-    case 'MANUAL': return '人工溝通'
-    case 'CONFIRMED': return '等待備貨'
-    case 'FINISH': return '訂單完成'
+    case 'WELCOME': return '歡迎'
+    case 'ORDER_CONFIRM': return '等待備貨'
+    case 'WAITING_OWNER': return '人工溝通'
+    case 'BOT_ACTIVE': return '自動回覆'
     default: return status
   }
 }
 
-// 篩選符合搜尋文字與日期的訂單
+// 狀態 mapping，確保只會有四個狀態
+function normalizeStatus(status) {
+  switch (status) {
+    case 'WELCOME':
+    case 'ORDER_CONFIRM':
+    case 'WAITING_OWNER':
+    case 'BOT_ACTIVE':
+      return status
+      
+    case 'MANUAL':
+      return 'WAITING_OWNER'
+    case 'CONFIRMED':
+      return 'ORDER_CONFIRM'
+    case 'AUTO':
+      return 'BOT_ACTIVE'
+    // 其他未對應的狀態預設為 WAITING_OWNER
+    default:
+      return 'WAITING_OWNER'
+  }
+}
+
+// 只根據四個狀態 tab 並做狀態正規化
 const filteredData = computed(() => {
   if (!Array.isArray(props.data)) return []
-
-  let result = props.data
-
-  // 1. 先依activeTab篩選
-  if (activeTab.value === 'manual') {
-    result = result.filter(row => row.order_status === 'MANUAL')
-  } else if (activeTab.value === 'prepare') {
-    result = result.filter(row => row.order_status === 'CONFIRMED')
-  } else if (activeTab.value === 'today') {
-    // 今日訂單：依照currentDate
-    const todayStr = currentDate.value.toISOString().slice(0, 10)
-    result = result.filter(row => {
-      if (!row.send_datetime) return false
-      const rowDate = new Date(row.send_datetime).toISOString().slice(0, 10)
-      return rowDate === todayStr
-    })
+  let result = props.data.map(row => ({
+    ...row,
+    order_status: normalizeStatus(row.order_status)
+  }))
+  // 狀態 tab 篩選
+  if (['WELCOME', 'ORDER_CONFIRM', 'WAITING_OWNER', 'BOT_ACTIVE'].includes(activeTab.value)) {
+    result = result.filter(row => row.order_status === activeTab.value)
   }
-
-  // 2. 日期篩選（data-filter）
+  // 日期篩選
   if (dateFilterActive.value) {
     const filterStr = currentDate.value.toISOString().slice(0, 10)
     result = result.filter(row => {
@@ -121,8 +133,7 @@ const filteredData = computed(() => {
       return rowDate === filterStr
     })
   }
-
-  // 3. 搜尋文字
+  // 搜尋文字
   if (searchText.value) {
     result = result.filter(row =>
       Object.values(row || {}).some(value =>
@@ -236,30 +247,30 @@ function onOrderTitleClick() {
 <template>
   <div class="section" id="orders">
     <div class="order-title-row">
-      <span class="order-title" @click="onOrderTitleClick" style="cursor:pointer;">訂單總覽</span>
+      <span class="order-title">訂單總覽</span>
     </div>
     <div class="order-filter-row">
       <div class="order-tabs">
         <button 
           class="tab" 
-          :class="{ active: activeTab === 'all' }"
-          @click="activeTab = 'all'; dateFilterActive = false;"
-        >所有訂單</button>
+          :class="{ active: activeTab === 'WELCOME' }"
+          @click="activeTab = 'WELCOME'; dateFilterActive = false;"
+        >歡迎</button>
         <button 
           class="tab" 
-          :class="{ active: activeTab === 'manual' }"
-          @click="activeTab = 'manual'; dateFilterActive = false;"
+          :class="{ active: activeTab === 'ORDER_CONFIRM' }"
+          @click="activeTab = 'ORDER_CONFIRM'; dateFilterActive = false;"
+        >等待備貨</button>
+        <button 
+          class="tab" 
+          :class="{ active: activeTab === 'WAITING_OWNER' }"
+          @click="activeTab = 'WAITING_OWNER'; dateFilterActive = false;"
         >人工溝通</button>
         <button 
           class="tab" 
-          :class="{ active: activeTab === 'today' }"
-          @click="activeTab = 'today'; dateFilterActive = false;"
-        >今日訂單</button>
-        <button 
-          class="tab" 
-          :class="{ active: activeTab === 'prepare' }"
-          @click="activeTab = 'prepare'; dateFilterActive = false;"
-        >等待備貨</button>
+          :class="{ active: activeTab === 'BOT_ACTIVE' }"
+          @click="activeTab = 'BOT_ACTIVE'; dateFilterActive = false;"
+        >自動回覆</button>
       </div>
       <div class="date-filter">
         <button class="date-nav-btn" @click="goToPreviousDay">
@@ -295,7 +306,7 @@ function onOrderTitleClick() {
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(row, index) in filteredData" :key="index">
+            <tr v-for="row in filteredData" :key="row.id">
               <td v-for="column in columnName" :key="column" :style="{ width: columnWidths[column] }">
                 <template v-if="column === '匯出工單'">
                   <button class="work-order-btn" @click="handleExportDocx(row.id)">工單</button>
@@ -358,8 +369,8 @@ function onOrderTitleClick() {
   align-items: center;
   gap: 16px;
   flex-wrap: nowrap;
-  width: 100%;
-  margin-bottom: 16px;
+  width: 440px;
+    margin-bottom: 16px;
 }
 .order-tabs {
   display: inline-flex;
@@ -370,6 +381,7 @@ function onOrderTitleClick() {
   height: 40px;
   align-items: center;
   flex-shrink: 0;
+  overflow-x: auto;
 }
 .tab {
   display: flex;
@@ -394,7 +406,6 @@ function onOrderTitleClick() {
   border-radius: 36px;
 }
 .date-filter {
-  width: 203px;
   height: 28px;
   display: flex;
   align-items: center;
@@ -592,7 +603,7 @@ tr:hover td {
   white-space: nowrap;
 }
 
-.badge-manual {
+.badge-welcome {
   background: #FFCEE7;
   color: #FF349A;
 }
@@ -602,14 +613,14 @@ tr:hover td {
   color: #6168FC;
 }
 
-.badge-finish {
+.badge-wait {
   background: #EBCDCC;
   color: #81386A;
 }
 
-.badge-download {
-  background: #77B5FF;
-  color: #FFFFFF;
+.badge-auto {
+  background: #D8EAFF;
+  color: #6168FC;
 }
 
 .money {
@@ -670,6 +681,7 @@ tr:hover td {
   color: rgba(0, 0, 0, 0.4);
   min-width: 80px;
   text-align: center;
+  white-space: nowrap;
 }
 
 .work-order-btn {

@@ -651,19 +651,18 @@ input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
   height: 40px;
   border-radius: 12px;
   padding: 12px 12px;
-  box-shadow: 2px 2px 2px 0px #00000040;
+  box-shadow: none;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  background: #77B5FF;
+  background: #6168FC;
   transition: all 0.1s ease;
   border: none !important;
   outline: none !important;
 }
 .order-btn:active {
   transform: scale(0.95);
-  box-shadow: 1px 1px 1px 0px #00000040;
 }
 .order-btn.editing {
   background: #C5C7FF;
@@ -778,17 +777,23 @@ input[type='time'].edit-input:focus::-webkit-calendar-picker-indicator {
   background: #77B5FF !important;
   box-shadow: none;
 }
-.order-btn.update[disabled], .order-btn.update:disabled {
+.order-btn.update[disabled] {
   background: #D8EAFF !important;
   box-shadow: 2px 2px 2px 0px #00000040 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+  pointer-events: none;
 }
 
 .order-btn.create {
   background: #6168FC;
   box-shadow: none;
 }
-.order-btn.create[disabled], .order-btn.create:disabled {
+.order-btn.create[disabled] {
   background: #C5C7FF !important;
   box-shadow: 2px 2px 2px 0px #00000040 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
+  pointer-events: none;
 }
 </style>

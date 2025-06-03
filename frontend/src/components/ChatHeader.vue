@@ -352,8 +352,8 @@ async function handleOrderClick() {
   border-radius: 4px;
 }
 
-.status-badge.manual { color: #FF349A; background: #FFCEE7; }
+.status-badge.welcome { color: #FF349A; background: #FFCEE7; }
 .status-badge.auto { color: #528DD2; background: #D8EAFF; }
 .status-badge.wait { color: #6168FC; background: #C5C7FF; }
-.status-badge.done { color: #81386A; background: #EBCDCC; }
+.status-badge.prepare { color: #81386A; background: #EBCDCC; }
 </style> 

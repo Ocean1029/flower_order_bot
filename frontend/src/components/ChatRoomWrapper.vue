@@ -23,7 +23,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, nextTick } from 'vue'
+import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { getRoomMessages, sendMessage as apiSendMessage } from '@/api/messages'
 import ChatHeader from './ChatHeader.vue'
 import MessageList from './MessageList.vue'
@@ -41,6 +41,7 @@ const emit = defineEmits(['showDetail', 'orderDraftFetched'])
 const messages = ref([])
 const newMessage = ref('')
 const messagesContainer = ref(null)
+let messageInterval = null
 
 async function loadMessages() {
   try {
@@ -69,7 +70,15 @@ function handleOrderDraftFetched(data) {
   }
 }
 
-onMounted(loadMessages)
+onMounted(() => {
+  loadMessages()
+  messageInterval = setInterval(loadMessages, 10000)
+})
+
+onUnmounted(() => {
+  if (messageInterval) clearInterval(messageInterval)
+})
+
 watch(() => props.roomId, loadMessages)
 
 async function handleSend() {
@@ -77,7 +86,8 @@ async function handleSend() {
   
   try {
     await apiSendMessage(props.roomId, {
-      text: newMessage.value
+      text: newMessage.value,
+      image_url: null  // Set to null for text-only messages
     })
     newMessage.value = ''
     await loadMessages() // Reload messages to get the latest state
