@@ -12,10 +12,11 @@ from app.models.chat import ChatRoom
 
 fake = Faker("zh_TW")
 
-async def create_id_prefix(session, serial_number) -> str:
+async def create_id_prefix(session, serial_number) -> int:
     """Create a prefix based on the current date in yymmddMMM format."""
     id_prefix = datetime.now(timezone(timedelta(hours=8))).replace(tzinfo=None).strftime("%y%m%d")
-    id = f"{id_prefix}{serial_number:03d}"
+    id = int(f"{id_prefix}{serial_number:03d}")
+
     return id
 
 async def create_random_order(session, user: User, serial_number: int) -> Order:

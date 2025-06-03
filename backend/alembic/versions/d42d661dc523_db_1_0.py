@@ -103,7 +103,7 @@ def upgrade() -> None:
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('order',
-    sa.Column('id', sa.String(), nullable=False),
+    sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('room_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('receiver_user_id', sa.Integer(), nullable=False),
