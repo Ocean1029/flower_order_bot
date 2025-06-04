@@ -207,7 +207,7 @@ async def run_welcome_flow(
     if chat_room.bot_step == -1:  # 第一次進入
         send_confirm(
             event.reply_token,
-            "想要客製化花束嗎？",
+            "您好，歡迎來到奇美花店，若想要訂購客製化花束，請按「是」~",
             yes_txt="是",
             no_txt="否",
             yes_reply="啟動智慧訂購流程",
@@ -312,7 +312,7 @@ async def ask_budget(user_text, event, db, chat_room):
         if user_text.strip() == "":
             send_quick_reply_message(
                 event.reply_token,
-                "好的～預算大概多少呢？",
+                "好的～請問預算大概多少呢？",
                 ["500以下", "500-1000", "1000以上"]
             )
             
@@ -345,7 +345,7 @@ async def ask_color(user_text, event, db, chat_room):
     if chat_room.bot_step == 2:
         send_quick_reply_message(
             event.reply_token,
-            "想要什麼顏色的客製化花束？",
+            "請問想要什麼顏色的客製化花束？",
             ["紅", "白", "粉", "其他"]
         )
         # 儲存詢問的動作
@@ -368,7 +368,7 @@ async def ask_type(user_text, event, db, chat_room):
     if chat_room.bot_step == 3:
         send_quick_reply_message(
             event.reply_token,
-            "想要什麼類型的花材？",
+            "請問想要什麼類型的花材？",
                 ["玫瑰花", "滿天星", "向日葵", "其他"]
         )
         # 儲存詢問的動作
@@ -393,13 +393,13 @@ async def last(user_text, event, db, chat_room):
     # TODO validate, save
     line_bot_api.reply_message(
         event.reply_token,
-        TextSendMessage("👌 了解！已記錄～我們客服會盡快聯繫你確認細節。")
+        TextSendMessage("👌了解！已記錄到後臺～接下來會交由老闆與您聯繫確認細節。")
     )
     # 儲存詢問的動作
     message = ChatMessage(
         room_id=chat_room.id,
         direction=ChatMessageDirection.OUTGOING_BY_BOT,
-        text="[自動回覆已傳送] 👌 了解！已記錄～我們客服會盡快聯繫你確認細節。",
+        text="[自動回覆已傳送] 👌了解！已記錄到後臺～接下來會交由老闆與您聯繫確認細節。",
         image_url="",
         status=ChatMessageStatus.PENDING,
         processed=False,
